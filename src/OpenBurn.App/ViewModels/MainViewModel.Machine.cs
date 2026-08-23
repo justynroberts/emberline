@@ -108,7 +108,10 @@ public sealed partial class MainViewModel
             {
                 ConnectionKind.Serial => SelectedPort,
                 ConnectionKind.Virtual => null,
-                _ => string.IsNullOrWhiteSpace(NetworkAddress) ? Settings.LastNetworkAddress : NetworkAddress,
+                // What is in the box, and nothing else. Falling back to a
+                // remembered address would connect to a machine the panel is not
+                // showing.
+                _ => NetworkAddress,
             };
 
             if (kind == ConnectionKind.Serial && string.IsNullOrWhiteSpace(address))

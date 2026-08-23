@@ -3,6 +3,7 @@ using OpenBurn.App.ViewModels;
 using OpenBurn.Core.Documents;
 using OpenBurn.Core.Geometry;
 using OpenBurn.Core.Storage;
+using OpenBurn.Core.Machines;
 using Xunit;
 
 namespace OpenBurn.App.Tests;
@@ -140,5 +141,46 @@ public class InspectorTests
 
         shell.SelectInspectorTabCommand.Execute("nonsense");
         Assert.Equal(InspectorTab.Machine, shell.InspectorTab);
+    }
+}
+
+/// <summary>
+/// What the machine panel says it will connect to must be what it connects to.
+/// </summary>
+public class ConnectionAddressTests
+{
+    private static MainViewModel Shell(AppSettings settings)
+    {
+        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
+        AppPaths.EnsureCreated();
+        return new MainViewModel(settings);
+    }
+
+    [AvaloniaFact]
+    public void TheRememberedAddressIsShownRatherThanKeptOutOfSight()
+    {
+        var shell = Shell(AppSettings.Default with { LastNetworkAddress = "192.168.3.52:8080" });
+
+        Assert.Equal("192.168.3.52:8080", shell.NetworkAddress);
+    }
+
+    [AvaloniaFact]
+    public void WithNothingRememberedTheBoxStartsEmpty()
+    {
+        Assert.Equal(string.Empty, Shell(AppSettings.Default).NetworkAddress);
+    }
+
+    [AvaloniaFact]
+    public async Task ConnectingWithAnEmptyBoxRefusesInsteadOfGuessing()
+    {
+        // Previously this fell back to the remembered address, so a press
+        // connected to a machine whose address was nowhere on screen.
+        var shell = Shell(AppSettings.Default with { LastNetworkAddress = "192.168.3.52:8080" });
+        shell.NetworkAddress = "";
+
+        await shell.ConnectAsync(ConnectionKind.Tcp);
+
+        Assert.False(shell.IsConnected);
+        Assert.Contains(shell.Console.Lines, l => l.Text.Contains("address", StringComparison.OrdinalIgnoreCase));
     }
 }

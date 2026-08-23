@@ -48,6 +48,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Undo.Changed += RaiseUndoState;
         SelectedMachine = Machines.Find(settings.LastMachineId ?? string.Empty) ?? Machines.Default;
 
+        // Show the address that a Wi-Fi press will actually use. It used to be
+        // remembered in settings but left out of the box, so the panel showed an
+        // empty field with placeholder text while Connect quietly fell back to
+        // the last machine — the operator could not see what they were about to
+        // open a connection to, and a stray press reached real hardware with
+        // nothing on screen to say which.
+        NetworkAddress = settings.LastNetworkAddress ?? string.Empty;
+
         DisplayUnit = settings.DisplayUnit;
         Theme = settings.Theme;
         ShowGrid = settings.ShowGridLines;
