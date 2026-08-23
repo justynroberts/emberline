@@ -6,6 +6,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using OpenBurn.App.Controls;
 using OpenBurn.App.ViewModels;
+using OpenBurn.Core.Machines;
 
 namespace OpenBurn.App.Views;
 
@@ -120,6 +121,17 @@ public partial class MainWindow : Window
 
         var dialog = new SettingsWindow(model.CreateSettingsEditor());
         await dialog.ShowDialog(this);
+    }
+
+    private async void OnEditMachines(object? sender, RoutedEventArgs e)
+    {
+        if (Model is not { } model) return;
+
+        var editor = new MachineEditorViewModel(model.Machines, model.SelectedMachine, text => model.Console.AppendInfo(text));
+        var dialog = new MachineWindow(editor);
+        await dialog.ShowDialog(this);
+
+        model.ReloadMachines(dialog.Result?.Id);
     }
 
     private async void OnShowJobLibrary(object? sender, RoutedEventArgs e)

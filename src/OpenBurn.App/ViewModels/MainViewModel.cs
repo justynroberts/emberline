@@ -339,6 +339,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         SelectedLayer = Layers.FirstOrDefault();
     }
 
+    /// <summary>
+    /// Re-read the machine list after the profile editor has been used, keeping
+    /// the selection on whatever was being edited.
+    /// </summary>
+    public void ReloadMachines(string? selectId)
+    {
+        OnPropertyChanged(nameof(Machines));
+
+        var wanted = selectId ?? SelectedMachine.Id;
+        if (Machines.Find(wanted) is { } found) SelectedMachine = found;
+
+        OnPropertyChanged(nameof(BedWidthMm));
+        OnPropertyChanged(nameof(BedHeightMm));
+        OnPropertyChanged(nameof(MachineHasRotary));
+        QueueRegenerate();
+    }
+
     public void SetCursor(Vec2 mm) =>
         CursorText = $"{UnitConvert.FromMm(mm.X, DisplayUnit):0.0}, {UnitConvert.FromMm(mm.Y, DisplayUnit):0.0} {DisplayUnit.Suffix()}";
 

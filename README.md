@@ -143,6 +143,10 @@ with no account of any kind.
 Drop a JSON file in `devices/`. No code, no rebuild. See
 [`devices/README.md`](devices/README.md) for the fields.
 
+Or use **Machines → ⋯** in the app: add, duplicate and edit profiles there, with
+every field explained. Bundled profiles are never overwritten — editing one saves
+your own copy, so an update cannot revert a bed size you measured.
+
 If your machine needs behaviour the generic GRBL driver does not have, run
 **Machine → Protocol probe** first. It sends a set of read-only queries and writes
 a Markdown transcript of exactly what the controller answered. That transcript is
@@ -175,7 +179,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 329 tests, no hardware required
+dotnet test                     # 338 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -185,7 +189,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-329 tests, no hardware required. The ones that matter most run complete jobs
+338 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

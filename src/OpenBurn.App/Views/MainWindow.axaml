@@ -190,7 +190,8 @@
                 <!-- Connection -->
                 <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="14,14,14,0">
                     <TextBlock Classes="sectionTitle" Text="MACHINE" />
-                    <ComboBox ItemsSource="{Binding Machines.Profiles}"
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding Machines.Profiles}"
                               SelectedItem="{Binding SelectedMachine}"
                               HorizontalAlignment="Stretch">
                         <ComboBox.ItemTemplate>
@@ -199,6 +200,9 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
+                        <Button Grid.Column="1" Content="⋯" Width="34" Padding="0"
+                                ToolTip.Tip="Add or edit machine profiles" Click="OnEditMachines" />
+                    </Grid>
 
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
                         <ComboBox Grid.Column="0" ItemsSource="{Binding SerialPorts}"
