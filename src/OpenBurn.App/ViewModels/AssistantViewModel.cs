@@ -65,9 +65,114 @@ public sealed partial class AssistantViewModel : ObservableObject
     public bool IsConfigured => Options.IsUsable;
 
     public string SetupHint =>
-        "The assistant is optional and off until you give it a key. Set ANTHROPIC_API_KEY in your environment, " +
-        "or save the key in a file named 'anthropic.key' in the OpenBurn application data folder, then reopen " +
-        "this panel. Everything else in OpenBurn works without it.";
+        "The assistant is optional and everything else works without it. Paste an Anthropic API key below to " +
+        "switch it on. Nothing is sent anywhere until you type a question, and the only host it ever talks to " +
+        "is api.anthropic.com.";
+
+    // ------------------------------------------------------------- the key
+
+    /// <summary>What is typed into the key box. Never persisted from here directly.</summary>
+    [ObservableProperty]
+    private string _apiKeyInput = string.Empty;
+
+    [ObservableProperty]
+    private bool _isEditingKey;
+
+    public bool HasStoredKey => !string.IsNullOrWhiteSpace(Options.ApiKey);
+
+    /// <summary>An environment key wins, and the application must not overwrite it.</summary>
+    public bool KeyIsFromEnvironment => AiOptions.KeyComesFromEnvironment;
+
+    public string KeyStatus
+    {
+        get
+        {
+            if (KeyIsFromEnvironment) return $"Using ANTHROPIC_API_KEY from your environment ({AiOptions.Mask(Options.ApiKey)}).";
+            if (HasStoredKey) return $"Key saved ({AiOptions.Mask(Options.ApiKey)}). It is stored in {AiOptions.KeyFilePath}, readable only by you.";
+            return "No key yet.";
+        }
+    }
+
+    /// <summary>Show the entry box: when there is no key, or when asked to change one.</summary>
+    public bool ShowKeyEntry => IsEditingKey || (!HasStoredKey && !KeyIsFromEnvironment);
+
+    public bool CanSaveKey => ApiKeyInput.Trim().Length > 10;
+
+    partial void OnApiKeyInputChanged(string value) => OnPropertyChanged(nameof(CanSaveKey));
+
+    partial void OnIsEditingKeyChanged(bool value) => OnPropertyChanged(nameof(ShowKeyEntry));
+
+    [RelayCommand]
+    private void SaveKey()
+    {
+        var key = ApiKeyInput.Trim();
+        if (key.Length <= 10)
+        {
+            StatusMessage = "That does not look like a key.";
+            return;
+        }
+
+        try
+        {
+            AiOptions.SaveApiKey(key);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not save the key: {ex.Message}";
+            return;
+        }
+
+        // Never leave it sitting in a bound property.
+        ApiKeyInput = string.Empty;
+        IsEditingKey = false;
+        Reload();
+
+        StatusMessage = Options.IsUsable
+            ? "Key saved. The assistant is ready."
+            : "Key saved, but the assistant still could not start.";
+    }
+
+    [RelayCommand]
+    private void ChangeKey()
+    {
+        ApiKeyInput = string.Empty;
+        IsEditingKey = true;
+        StatusMessage = null;
+    }
+
+    [RelayCommand]
+    private void ForgetKey()
+    {
+        try
+        {
+            AiOptions.SaveApiKey(null);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not remove the key: {ex.Message}";
+            return;
+        }
+
+        ApiKeyInput = string.Empty;
+        IsEditingKey = false;
+        Options = AiOptions.Load();
+        _assistant = null;
+        RaiseKeyState();
+
+        StatusMessage = KeyIsFromEnvironment
+            ? "Removed the saved key. ANTHROPIC_API_KEY is still set in your environment, so that one is being used."
+            : "Key removed.";
+    }
+
+    private void RaiseKeyState()
+    {
+        OnPropertyChanged(nameof(IsConfigured));
+        OnPropertyChanged(nameof(HasStoredKey));
+        OnPropertyChanged(nameof(KeyIsFromEnvironment));
+        OnPropertyChanged(nameof(KeyStatus));
+        OnPropertyChanged(nameof(ShowKeyEntry));
+        OnPropertyChanged(nameof(CanSaveKey));
+    }
 
     /// <summary>Re-read the key and enable the assistant, so no restart is needed.</summary>
     [RelayCommand]
@@ -75,11 +180,11 @@ public sealed partial class AssistantViewModel : ObservableObject
     {
         Options = AiOptions.Load() with { Enabled = true };
         _assistant = null;
-        OnPropertyChanged(nameof(IsConfigured));
+        RaiseKeyState();
 
         StatusMessage = Options.IsUsable
             ? null
-            : "Still no API key found. Check ANTHROPIC_API_KEY or the anthropic.key file.";
+            : "Still no API key. Paste one below, or set ANTHROPIC_API_KEY in your environment.";
 
         if (Options.IsUsable) Options.Save();
     }

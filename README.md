@@ -202,6 +202,15 @@ same source again with different settings and keep whichever you prefer.
 
 ## The assistant
 
+Optional, and off until you give it a key. Open the assistant drawer and paste an
+Anthropic key from `console.anthropic.com` — it takes effect immediately, no
+restart. `ANTHROPIC_API_KEY` in your environment still works and takes precedence.
+
+The key is written to `anthropic.key` in the application data folder, with
+owner-only permissions, and never into `settings.json` — that is the file people
+paste into forum posts when asking for help. It is shown back masked, and can be
+removed again from the same panel.
+
 Optional and off until you give it a key. Set `ANTHROPIC_API_KEY` in your
 environment, or save the key in `anthropic.key` inside the application data
 folder, then open the assistant panel (✦ in the tool rail).
@@ -272,7 +281,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 457 tests, no hardware required
+dotnet test                     # 465 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -282,7 +291,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-457 tests, no hardware required. The ones that matter most run complete jobs
+465 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

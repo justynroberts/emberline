@@ -814,7 +814,7 @@
                 IsVisible="{Binding ShowAssistant}" Padding="14">
             <DockPanel LastChildFill="True">
 
-                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,10">
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,10">
                     <TextBlock Grid.Column="0" Classes="sectionTitle" Text="ASSISTANT" Margin="0" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="thinking…" Classes="label" Margin="10,0,0,0"
                                VerticalAlignment="Center" IsVisible="{Binding Assistant.IsThinking}" />
@@ -823,9 +823,37 @@
                             Command="{Binding Assistant.CancelCommand}" />
                     <Button ToolTip.Tip="Clear the conversation." Grid.Column="3" Content="Clear" Classes="ghost" Padding="8,2"
                             Command="{Binding Assistant.ClearCommand}" />
+                    <Button ToolTip.Tip="Change or remove the Anthropic API key." Grid.Column="4" Content="Key"
+                            Classes="ghost" Padding="8,2"
+                            IsVisible="{Binding Assistant.HasStoredKey}"
+                            Command="{Binding Assistant.ChangeKeyCommand}" />
                 </Grid>
 
                 <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
+
+                    <!-- Setting the key. Shown when there is not one, and reachable
+                         afterwards from the Key button in the header. -->
+                    <Border Classes="card" IsVisible="{Binding Assistant.ShowKeyEntry}">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding Assistant.SetupHint}" TextWrapping="Wrap"
+                                       FontSize="{DynamicResource FontSmall}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Grid.Column="0" Text="{Binding Assistant.ApiKeyInput}"
+                                         PasswordChar="•" PlaceholderText="sk-ant-…"
+                                         ToolTip.Tip="Your Anthropic API key, from console.anthropic.com. It is written to a file only you can read, never into settings.json — that is the file people paste into forum posts when asking for help." />
+                                <Button Grid.Column="1" Content="Save" Classes="primary"
+                                        IsEnabled="{Binding Assistant.CanSaveKey}"
+                                        Command="{Binding Assistant.SaveKeyCommand}"
+                                        ToolTip.Tip="Store the key and switch the assistant on. No restart needed." />
+                            </Grid>
+                            <TextBlock Text="{Binding Assistant.KeyStatus}" Classes="label" TextWrapping="Wrap" />
+                            <Button Content="Forget the saved key" Classes="ghost" HorizontalAlignment="Left"
+                                    IsVisible="{Binding Assistant.HasStoredKey}"
+                                    Command="{Binding Assistant.ForgetKeyCommand}"
+                                    ToolTip.Tip="Delete the stored key from this computer. The assistant switches off; everything else keeps working." />
+                        </StackPanel>
+                    </Border>
+
                     <TextBlock Text="{Binding Assistant.StatusMessage}" TextWrapping="Wrap"
                                Foreground="{DynamicResource StateHold}" FontSize="{DynamicResource FontSmall}"
                                IsVisible="{Binding Assistant.StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

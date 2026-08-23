@@ -274,7 +274,8 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
   It never starts the job.
 - Workpiece definition with presets and saved custom sizes, drawn on the canvas
   and checked during validation.
-- 457 tests, none requiring hardware, including headless UI tests that drive the
+- The assistant's API key can be set from the interface, stored outside settings.
+- 465 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons

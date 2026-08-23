@@ -82,6 +82,64 @@ public sealed record AiOptions
         }
     }
 
+    /// <summary>Where the key lives when it is not in the environment.</summary>
+    public static string KeyFilePath => Path.Combine(AppPaths.Root, "anthropic.key");
+
+    /// <summary>True when the key comes from the environment, which the app must not overwrite.</summary>
+    public static bool KeyComesFromEnvironment =>
+        !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY"));
+
+    /// <summary>
+    /// Write the key to its own file, readable only by this user.
+    ///
+    /// Deliberately not settings.json: that is the file people paste into forum
+    /// posts when asking for help, and a key in it would be published with the
+    /// question. Passing null or blank deletes the file rather than storing an
+    /// empty one, so "clear it" genuinely clears it.
+    /// </summary>
+    public static void SaveApiKey(string? key)
+    {
+        Directory.CreateDirectory(AppPaths.Root);
+        var path = KeyFilePath;
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            if (File.Exists(path)) File.Delete(path);
+            return;
+        }
+
+        File.WriteAllText(path, key.Trim());
+        RestrictToOwner(path);
+    }
+
+    /// <summary>Owner read/write only. Best effort — Windows has no equivalent mode.</summary>
+    private static void RestrictToOwner(string path)
+    {
+        if (OperatingSystem.IsWindows()) return;
+
+        try
+        {
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+        {
+            // The key is still no more exposed than the folder it sits in.
+        }
+    }
+
+    /// <summary>
+    /// A key with its middle removed, for showing that one is stored without
+    /// putting it back on screen where it can be read over a shoulder.
+    /// </summary>
+    public static string Mask(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return "";
+        var trimmed = key.Trim();
+        return trimmed.Length <= 12
+            ? new string('•', trimmed.Length)
+            : $"{trimmed[..7]}…{trimmed[^4..]}";
+    }
+
     public void Save()
     {
         Directory.CreateDirectory(AppPaths.Root);
