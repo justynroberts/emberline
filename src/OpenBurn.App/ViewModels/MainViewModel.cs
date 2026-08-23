@@ -148,6 +148,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public JobProgress JobProgress => _device?.Progress ?? JobProgress.Empty;
     public bool IsHomed => _device?.IsHomed ?? false;
 
+    /// <summary>How many controller settings have been read. Zero means none yet.</summary>
+    public int MachineSettingCount => _device?.Settings.Count ?? 0;
+
     public bool IsJobRunning => JobState is JobState.Running;
     public bool IsJobPaused => JobState is JobState.Paused;
     public bool IsJobActive => JobState.IsActive();

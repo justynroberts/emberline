@@ -78,6 +78,8 @@
                     <Separator />
                     <Button Classes="tool" Content="▶" ToolTip.Tip="Simulate the job" Command="{Binding PlaySimulationCommand}" />
                     <Button Classes="tool" Content="⌗" ToolTip.Tip="Inspect the G-code" Command="{Binding ToggleGcodeCommand}" />
+                    <Button Classes="tool" Content="⧗" ToolTip.Tip="Job history" Click="OnShowJobLibrary" />
+                    <Button Classes="tool" Content="⚙" ToolTip.Tip="Controller settings" Click="OnShowSettings" />
                     <Separator />
                     <Button Classes="tool" Content="≣" ToolTip.Tip="Machine console" Command="{Binding ToggleConsoleCommand}" />
                     <Button Classes="tool" Content="✦" ToolTip.Tip="Assistant" Command="{Binding ToggleAssistantCommand}" />
@@ -684,8 +686,9 @@
             <DockPanel LastChildFill="True">
                 <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
                     <TextBlock Grid.Column="0" Classes="sectionTitle" Text="MACHINE CONSOLE" Margin="0" VerticalAlignment="Center" />
-                    <Button Grid.Column="1" Content="Read $$" Classes="ghost" Padding="8,2"
-                            Command="{Binding ReadSettingsCommand}" />
+                    <Button Grid.Column="1" Content="Settings" Classes="ghost" Padding="8,2"
+                            ToolTip.Tip="Open the controller settings editor"
+                            Click="OnShowSettings" />
                     <Button Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
                             Command="{Binding Console.ClearCommand}" />
                 </Grid>

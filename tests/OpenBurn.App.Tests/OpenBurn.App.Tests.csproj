@@ -24,6 +24,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\OpenBurn.App\OpenBurn.App.csproj" />
     <ProjectReference Include="..\..\src\OpenBurn.Core\OpenBurn.Core.csproj" />
+    <ProjectReference Include="..\..\src\OpenBurn.Devices\OpenBurn.Devices.csproj" />
+    <ProjectReference Include="..\..\src\OpenBurn.Transport\OpenBurn.Transport.csproj" />
+    <ProjectReference Include="..\..\src\OpenBurn.VirtualLaser\OpenBurn.VirtualLaser.csproj" />
+    <ProjectReference Include="..\..\src\OpenBurn.GCode\OpenBurn.GCode.csproj" />
   </ItemGroup>
 
 </Project>

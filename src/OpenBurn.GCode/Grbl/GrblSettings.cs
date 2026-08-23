@@ -9,7 +9,19 @@ public sealed record GrblSettingDef(
     SettingKind Kind,
     string Group,
     string Description,
-    string[]? Bits = null);
+    string[]? Bits = null)
+{
+    /// <summary>
+    /// Set on the settings where a wrong value drives the machine into itself.
+    ///
+    /// The PRD asks that dangerous configuration commands require confirmation,
+    /// and this is the list that deserves it: invert a homing direction and the
+    /// next $H drives the gantry into the far end of the rails at seek speed.
+    /// </summary>
+    public string? DangerNote { get; init; }
+
+    public bool IsDangerous => DangerNote is not null;
+}
 
 /// <summary>
 /// The <c>$</c> settings registry.
@@ -46,23 +58,41 @@ public static class GrblSettings
             new(0, "Step pulse time", "µs", SettingKind.Microseconds, GroupStepper, "Width of the step pulse sent to the drivers. 10 µs suits most boards; the firmware rejects anything below 3."),
             new(1, "Step idle delay", "ms", SettingKind.Milliseconds, GroupStepper, "How long motors stay energised after a move. 255 keeps them locked permanently, which holds position but runs hot."),
             new(2, "Step pulse invert", "mask", SettingKind.Mask, GroupStepper, "Inverts the step signal per axis. Only needed for unusual driver wiring.", AxisBits),
-            new(3, "Step direction invert", "mask", SettingKind.Mask, GroupStepper, "Flips travel direction per axis. This is the setting to change when an axis moves the wrong way.", AxisBits),
+            new(3, "Step direction invert", "mask", SettingKind.Mask, GroupStepper, "Flips travel direction per axis. This is the setting to change when an axis moves the wrong way.", AxisBits)
+            {
+                DangerNote = "Reversing an axis changes which way the machine moves. If homing is enabled, the next homing cycle will drive that axis away from its switch and into the end of its travel.",
+            },
             new(4, "Invert step enable pin", "bool", SettingKind.Bool, GroupStepper, "Inverts the stepper-enable output for drivers expecting active-high."),
-            new(5, "Invert limit pins", "bool", SettingKind.Bool, GroupLimits, "Set to 1 for normally-closed limit switches. Getting this wrong is the usual cause of ALARM:8."),
+            new(5, "Invert limit pins", "bool", SettingKind.Bool, GroupLimits, "Set to 1 for normally-closed limit switches. Getting this wrong is the usual cause of ALARM:8.")
+            {
+                DangerNote = "With this wrong, the controller believes a switch is pressed when it is not — or misses it entirely and runs the axis into its end stop.",
+            },
             new(6, "Invert probe pin", "bool", SettingKind.Bool, GroupLimits, "Inverts the probe input."),
             new(10, "Status report mask", "mask", SettingKind.Mask, GroupReporting, "Which fields appear in the ? status report. OpenBurn wants position and buffer state, which is $10=3.", ["Machine position", "Buffer state"]),
             new(11, "Junction deviation", "mm", SettingKind.Float, GroupMotion, "How aggressively the planner rounds corners. Higher is faster and less accurate; 0.01 suits lasers."),
             new(12, "Arc tolerance", "mm", SettingKind.Float, GroupMotion, "Chord error when the firmware breaks an arc into segments. 0.002 mm is finer than any laser can resolve."),
             new(13, "Report in inches", "bool", SettingKind.Bool, GroupReporting, "Reports position in inches. OpenBurn works in millimetres — leave this at 0."),
             new(20, "Soft limits", "bool", SettingKind.Bool, GroupLimits, "Refuses moves that would leave the bed. Requires homing ($22) and correct $130–$132."),
-            new(21, "Hard limits", "bool", SettingKind.Bool, GroupLimits, "Raises an immediate alarm when a limit switch closes. Needs switches that are not electrically noisy."),
+            new(21, "Hard limits", "bool", SettingKind.Bool, GroupLimits, "Raises an immediate alarm when a limit switch closes. Needs switches that are not electrically noisy.")
+            {
+                DangerNote = "Turning hard limits on with noisy or unwired switches will alarm mid-job. Turning them off removes the machine's last protection against running off its rails.",
+            },
             new(22, "Homing cycle", "bool", SettingKind.Bool, GroupLimits, "Enables $H. Without it the machine has no absolute reference and soft limits cannot work."),
-            new(23, "Homing direction invert", "mask", SettingKind.Mask, GroupLimits, "Which way each axis travels to find its switch. Most diode lasers home front-left, which needs Y inverted.", AxisBits),
+            new(23, "Homing direction invert", "mask", SettingKind.Mask, GroupLimits, "Which way each axis travels to find its switch. Most diode lasers home front-left, which needs Y inverted.", AxisBits)
+            {
+                DangerNote = "Get this wrong and the next homing cycle drives the axis away from its switch, at seek speed, into the end of its travel.",
+            },
             new(24, "Homing feed rate", "mm/min", SettingKind.MmPerMin, GroupLimits, "Slow, precise approach speed for the second homing pass."),
-            new(25, "Homing seek rate", "mm/min", SettingKind.MmPerMin, GroupLimits, "Fast speed used to find the switch on the first pass."),
+            new(25, "Homing seek rate", "mm/min", SettingKind.MmPerMin, GroupLimits, "Fast speed used to find the switch on the first pass.")
+            {
+                DangerNote = "This is the speed the machine will hit its end stop at if a limit switch fails to trigger.",
+            },
             new(26, "Homing debounce", "ms", SettingKind.Milliseconds, GroupLimits, "Settling time after the switch triggers. Raise it if homing is erratic."),
             new(27, "Homing pull-off", "mm", SettingKind.Millimetres, GroupLimits, "Distance backed off the switch after homing, so hard limits do not immediately re-trigger."),
-            new(30, "Maximum spindle speed", "S", SettingKind.Int, GroupSpindle, "The S value that means 100 % laser power. OpenBurn scales every power percentage to this ceiling — if it is wrong, every burn is wrong."),
+            new(30, "Maximum spindle speed", "S", SettingKind.Int, GroupSpindle, "The S value that means 100 % laser power. OpenBurn scales every power percentage to this ceiling — if it is wrong, every burn is wrong.")
+            {
+                DangerNote = "Every power percentage in every job is scaled to this number. Lowering it silently under-burns; raising it silently over-burns.",
+            },
             new(31, "Minimum spindle speed", "S", SettingKind.Int, GroupSpindle, "The S value that means minimum output. Leave at 0 for a laser."),
             new(32, "Laser mode", "bool", SettingKind.Bool, GroupSpindle, "Dynamic power (M4): output scales with actual feed rate so corners and accelerations do not over-burn. Essential for photo engraving."),
         };
@@ -80,7 +110,13 @@ public static class GrblSettings
             for (var i = 0; i < AxisBits.Length; i++)
             {
                 var axis = AxisBits[i];
-                list.Add(new GrblSettingDef(baseKey + i, $"{name} ({axis})", unit, kind, $"Axis: {axis}", description));
+                list.Add(new GrblSettingDef(baseKey + i, $"{name} ({axis})", unit, kind, $"Axis: {axis}", description)
+                {
+                    // Steps-per-millimetre decides how far every move actually goes.
+                    DangerNote = baseKey == 100
+                        ? "Every distance the machine travels is scaled by this. A wrong value makes every job the wrong size, and a very wrong one drives the axis past its limits."
+                        : null,
+                });
             }
         }
 

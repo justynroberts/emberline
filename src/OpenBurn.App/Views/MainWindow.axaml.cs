@@ -107,6 +107,28 @@ public partial class MainWindow : Window
         if (dialog.Result is { Count: 4 } corners) model.ApplyCalibration(corners, dialog.LensK1);
     }
 
+    private async void OnShowSettings(object? sender, RoutedEventArgs e)
+    {
+        if (Model is not { } model) return;
+
+        // Read fresh values first if the machine is connected but nothing has been
+        // read yet, so the editor never opens showing an empty table.
+        if (model.IsConnected && model.MachineSettingCount == 0)
+        {
+            await model.ReadSettingsCommand.ExecuteAsync(null);
+        }
+
+        var dialog = new SettingsWindow(model.CreateSettingsEditor());
+        await dialog.ShowDialog(this);
+    }
+
+    private async void OnShowJobLibrary(object? sender, RoutedEventArgs e)
+    {
+        if (Model is not { } model) return;
+        var dialog = new JobLibraryWindow(model.JobLibrary);
+        await dialog.ShowDialog(this);
+    }
+
     private void OnAssistantKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key != Key.Enter || Model is null) return;

@@ -244,6 +244,13 @@ public sealed partial class MainViewModel
         }
     }
 
+    /// <summary>The job library, for the history window.</summary>
+    public Core.Storage.JobLibrary JobLibrary => Library;
+
+    /// <summary>A settings editor bound to the connected machine.</summary>
+    public ControllerSettingsViewModel CreateSettingsEditor() =>
+        new(_device, text => Console.AppendInfo(text));
+
     /// <summary>Recent jobs, newest first.</summary>
     public IReadOnlyList<Core.Jobs.JobRecord> RecentJobs
     {
