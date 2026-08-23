@@ -25,6 +25,9 @@ public sealed record CamOptions
     /// <summary>Report progress while generating — a large raster can take a few seconds.</summary>
     public IProgress<(string Stage, double Fraction)>? Progress { get; init; }
 
+    /// <summary>Rotary attachment, if one is fitted.</summary>
+    public RotarySetup Rotary { get; init; } = RotarySetup.Disabled;
+
     public static readonly CamOptions Default = new();
 }
 
@@ -65,6 +68,12 @@ public static class CamPipeline
         };
 
         if (o.EmitPreamble) lines.AddRange(machine.InitCommands);
+
+        if (o.Rotary.Enabled)
+        {
+            lines.Add($"; {o.Rotary.Describe()}");
+            foreach (var warning in o.Rotary.Check(design.Bounds.Height)) lines.Add($"; WARNING: {warning}");
+        }
 
         var layers = design.OrderedLayers.ToList();
         var layerIndex = 0;
@@ -112,6 +121,12 @@ public static class CamPipeline
         if (o.ReturnToOrigin) lines.Add("G0 X0 Y0");
         lines.Add("; end of job");
 
+        if (o.Rotary.IsUsable)
+        {
+            o.Progress?.Report(("Applying rotary scale", 0.8));
+            lines = ApplyRotary(lines, o.Rotary);
+        }
+
         o.Progress?.Report(("Interpreting toolpath", 0.85));
 
         var toolpath = GcodeInterpreter.Interpret(lines, new InterpreterOptions
@@ -141,6 +156,68 @@ public static class CamPipeline
         };
 
         return new CamResult(job, toolpath, estimate, issues);
+    }
+
+    /// <summary>
+    /// Rescale the rotary axis in an already-generated program.
+    ///
+    /// Done as a text pass over the finished lines rather than inside every
+    /// generator: the scale applies to whatever the axis ends up being commanded,
+    /// including the raster lead-ins and the return-to-origin, and doing it in one
+    /// place means no generator can forget.
+    /// </summary>
+    internal static List<string> ApplyRotary(List<string> lines, RotarySetup rotary)
+    {
+        var scale = rotary.ScaleFactor;
+        var axis = char.ToUpperInvariant(rotary.Axis);
+        var result = new List<string>(lines.Count);
+
+        foreach (var line in lines)
+        {
+            if (line.Length == 0 || line[0] == ';')
+            {
+                result.Add(line);
+                continue;
+            }
+
+            var index = line.IndexOf(axis);
+            if (index < 0)
+            {
+                result.Add(line);
+                continue;
+            }
+
+            var sb = new System.Text.StringBuilder(line.Length + 8);
+            for (var i = 0; i < line.Length; i++)
+            {
+                if (char.ToUpperInvariant(line[i]) != axis)
+                {
+                    sb.Append(line[i]);
+                    continue;
+                }
+
+                // Read the number that follows the axis letter.
+                var start = i + 1;
+                var end = start;
+                if (end < line.Length && (line[end] == '-' || line[end] == '+')) end++;
+                while (end < line.Length && (char.IsDigit(line[end]) || line[end] == '.')) end++;
+
+                if (end == start || !double.TryParse(line.AsSpan(start, end - start),
+                        System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out var value))
+                {
+                    sb.Append(line[i]);
+                    continue;
+                }
+
+                sb.Append(axis).Append((value * scale).ToString("0.####", System.Globalization.CultureInfo.InvariantCulture));
+                i = end - 1;
+            }
+
+            result.Add(sb.ToString());
+        }
+
+        return result;
     }
 
     private static MachineLimits LimitsFromProfile(MachineProfile machine) => new()

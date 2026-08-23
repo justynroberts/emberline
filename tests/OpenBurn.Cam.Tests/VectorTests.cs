@@ -520,3 +520,185 @@ public class CamPipelineTests
                      b.Where(l => !l.StartsWith("; Created", StringComparison.Ordinal)));
     }
 }
+
+public class RotaryTests
+{
+    private static Design RingDesign(double heightMm)
+    {
+        var design = new Design { Name = "rotary" };
+        var layer = Layer.CreateDefault(OperationKind.Engrave, 0);
+        layer.Passes = 1;
+        design.Layers.Add(layer);
+
+        var band = new PathShape([new Polyline(
+        [
+            new Vec2(20, 20), new Vec2(120, 20), new Vec2(120, 20 + heightMm), new Vec2(20, 20 + heightMm),
+        ], closed: true)]);
+
+        design.AddShape(band, layer);
+        return design;
+    }
+
+    [Fact]
+    public void ADisabledRotaryChangesNothing()
+    {
+        var machine = MachineProfile.GenericGrbl();
+        var design = RingDesign(40);
+
+        var flat = CamPipeline.Generate(design, machine);
+        var withRotary = CamPipeline.Generate(design, machine, CamOptions.Default with { Rotary = RotarySetup.Disabled });
+
+        Assert.Equal(flat.Toolpath.CutLengthMm, withRotary.Toolpath.CutLengthMm, 6);
+    }
+
+    [Fact]
+    public void ChuckModeScalesByTheWorkpieceDiameter()
+    {
+        // 6400 steps per rotation, 80 steps/mm on the axis, 60 mm workpiece.
+        // Commanded mm per surface mm = 6400 / (80 × π × 60) = 0.42441.
+        var rotary = new RotarySetup
+        {
+            Enabled = true,
+            Kind = RotaryKind.Chuck,
+            WorkpieceDiameterMm = 60,
+            StepsPerRotation = 6400,
+            AxisStepsPerMm = 80,
+        };
+
+        Assert.Equal(0.42441, rotary.ScaleFactor, 4);
+
+        var result = CamPipeline.Generate(RingDesign(40), MachineProfile.GenericGrbl(),
+            CamOptions.Default with { Rotary = rotary });
+
+        // The Y extent should shrink by the scale factor; X is untouched.
+        Assert.Equal(40 * rotary.ScaleFactor, result.Toolpath.BurnBounds.Height, 1);
+        Assert.Equal(100, result.Toolpath.BurnBounds.Width, 1);
+    }
+
+    [Fact]
+    public void RollerModeUsesTheRollerDiameterNotTheWorkpiece()
+    {
+        // The roller surface and the workpiece surface move together, so the
+        // workpiece diameter cancels out. This is the part people get wrong.
+        var small = new RotarySetup
+        {
+            Enabled = true,
+            Kind = RotaryKind.Roller,
+            RollerDiameterMm = 20,
+            WorkpieceDiameterMm = 60,
+            StepsPerRotation = 6400,
+            AxisStepsPerMm = 80,
+        };
+
+        var large = small with { WorkpieceDiameterMm = 200 };
+
+        Assert.Equal(small.ScaleFactor, large.ScaleFactor, 9);
+        Assert.Equal(20, small.EffectiveDiameterMm, 6);
+    }
+
+    [Fact]
+    public void ChangingTheRollerDiameterChangesTheScale()
+    {
+        var twenty = new RotarySetup
+        {
+            Enabled = true, Kind = RotaryKind.Roller,
+            RollerDiameterMm = 20, StepsPerRotation = 6400, AxisStepsPerMm = 80,
+        };
+        var forty = twenty with { RollerDiameterMm = 40 };
+
+        Assert.Equal(twenty.ScaleFactor / 2, forty.ScaleFactor, 9);
+    }
+
+    [Fact]
+    public void ArtworkTallerThanTheCircumferenceIsFlagged()
+    {
+        var rotary = new RotarySetup
+        {
+            Enabled = true, Kind = RotaryKind.Chuck,
+            WorkpieceDiameterMm = 20, StepsPerRotation = 6400, AxisStepsPerMm = 80,
+        };
+
+        // A 20 mm workpiece is 62.8 mm around; 100 mm of artwork overlaps itself.
+        var warnings = rotary.Check(designHeightMm: 100);
+        Assert.Contains(warnings, w => w.Contains("around", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void ASuspiciouslyNeutralScaleIsFlagged()
+    {
+        // A scale of almost exactly 1 nearly always means a mis-entered value.
+        var rotary = new RotarySetup
+        {
+            Enabled = true, Kind = RotaryKind.Chuck,
+            WorkpieceDiameterMm = 100 / Math.PI,
+            StepsPerRotation = 8000,
+            AxisStepsPerMm = 80,
+        };
+
+        Assert.Equal(1, rotary.ScaleFactor, 3);
+        Assert.Contains(rotary.Check(10), w => w.Contains("almost exactly 1", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void IncompleteSettingsFallBackToNoScaling()
+    {
+        var rotary = new RotarySetup { Enabled = true, WorkpieceDiameterMm = 0, RollerDiameterMm = 0 };
+
+        Assert.False(rotary.IsUsable);
+        Assert.Equal(1, rotary.ScaleFactor, 9);
+        Assert.Contains(rotary.Check(10), w => w.Contains("incomplete", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void OnlyTheRotaryAxisIsRescaled()
+    {
+        var rotary = new RotarySetup
+        {
+            Enabled = true, Kind = RotaryKind.Chuck, Axis = 'Y',
+            WorkpieceDiameterMm = 60, StepsPerRotation = 6400, AxisStepsPerMm = 80,
+        };
+
+        var lines = CamPipeline.ApplyRotary(
+            ["G1 X100 Y50 F1000 S500", "G0 X10 Y10", "; Y is a comment and must not change", "M5"],
+            rotary);
+
+        Assert.Contains("X100", lines[0], StringComparison.Ordinal);
+        Assert.Contains("Y21.2207", lines[0], StringComparison.Ordinal);
+        Assert.Contains("F1000", lines[0], StringComparison.Ordinal);
+        Assert.Contains("S500", lines[0], StringComparison.Ordinal);
+
+        Assert.Equal("; Y is a comment and must not change", lines[2]);
+        Assert.Equal("M5", lines[3]);
+    }
+
+    [Fact]
+    public void NegativeCoordinatesScaleCorrectly()
+    {
+        var rotary = new RotarySetup
+        {
+            Enabled = true, Kind = RotaryKind.Chuck,
+            WorkpieceDiameterMm = 60, StepsPerRotation = 6400, AxisStepsPerMm = 80,
+        };
+
+        var lines = CamPipeline.ApplyRotary(["G1 Y-40"], rotary);
+        Assert.Contains($"Y{-40 * rotary.ScaleFactor:0.####}", lines[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheGeneratedProgramExplainsTheRotarySetup()
+    {
+        var rotary = new RotarySetup
+        {
+            Enabled = true, Kind = RotaryKind.Roller,
+            RollerDiameterMm = 20, WorkpieceDiameterMm = 70,
+            StepsPerRotation = 6400, AxisStepsPerMm = 80,
+        };
+
+        var result = CamPipeline.Generate(RingDesign(30), MachineProfile.GenericGrbl(),
+            CamOptions.Default with { Rotary = rotary });
+
+        var header = string.Join('\n', result.Job.Lines.Take(12));
+        Assert.Contains("Rotary on Y via rollers", header, StringComparison.Ordinal);
+        Assert.Contains("mm around", header, StringComparison.Ordinal);
+    }
+}

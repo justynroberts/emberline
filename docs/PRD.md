@@ -260,7 +260,9 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
   so the engraved letterforms match the ones on screen.
 - Toolpath simulation sharing the estimator's segment timing, and a G-code view.
 - Materials, machine profiles as JSON, job library in SQLite, machine console.
-- 296 tests, none requiring hardware, including headless UI tests that drive the
+- Controller settings editor with confirmation on the dangerous values, job
+  library window, rotary support for rollers and chucks.
+- 317 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons
@@ -284,7 +286,12 @@ block references with scale and rotation. **PDF, AI and EPS** remain post-MVP pe
 §10; all three are PostScript-family formats needing an interpreter rather than a
 parser.
 
-**Rotary, batch jobs, plugin loading.** MVP 0.4 in §35.
+**Rotary** is now implemented for both roller and chuck attachments. The axis is
+rescaled from the controller's own steps-per-millimetre rather than a guess, and
+the panel says where that number came from — a rotary job at the wrong scale looks
+correct on screen and is only discovered on the workpiece. **Batch jobs** are
+covered by the array tool and by camera-driven placement onto detected workpieces.
+**Plugin loading** remains MVP 0.4 in §35.
 
 **Flame and smoke detection.** §24 requires it be described as an additional aid;
 shipping an unvalidated fire detector invites exactly the misplaced trust that

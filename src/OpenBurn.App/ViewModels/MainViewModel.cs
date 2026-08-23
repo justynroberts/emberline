@@ -231,6 +231,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Settings = Settings with { LastMachineId = value.Id };
         OnPropertyChanged(nameof(BedWidthMm));
         OnPropertyChanged(nameof(BedHeightMm));
+        OnPropertyChanged(nameof(MachineHasRotary));
         QueueRegenerate();
     }
 
@@ -282,7 +283,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             var settings = _device?.Settings.Count > 0 ? _device.Settings : null;
-            _cam = CamPipeline.Generate(Design, SelectedMachine, CamOptions.Default, settings, IsHomed);
+            _cam = CamPipeline.Generate(
+                Design,
+                SelectedMachine,
+                CamOptions.Default with { Rotary = Rotary },
+                settings,
+                IsHomed);
             Toolpath = _cam.Toolpath;
 
             Issues.Clear();

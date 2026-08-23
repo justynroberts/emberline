@@ -27,6 +27,7 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Camera** | MJPEG, HTTP snapshot and synthetic sources; lens and perspective correction; bed overlay; workpiece detection |
 | **Materials** | A built-in library keyed by laser wattage, with rescaling and hazard warnings |
 | **Configuration** | A `$` settings editor with every value named, explained and unit-labelled, and confirmation on the ones that can drive a machine into itself |
+| **Rotary** | Roller and chuck attachments, with the axis rescaled from the real steps-per-millimetre rather than a guess |
 | **Assistant** | Optional Claude-powered help with settings, faults and job setup |
 | **Job library** | Every job recorded locally with its settings, so "what worked last time" is answerable |
 
@@ -174,7 +175,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 307 tests, no hardware required
+dotnet test                     # 317 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -184,7 +185,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-307 tests, no hardware required. The ones that matter most run complete jobs
+317 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

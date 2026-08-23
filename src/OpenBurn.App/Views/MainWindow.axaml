@@ -8,6 +8,7 @@
         xmlns:disc="clr-namespace:OpenBurn.Transport.Discovery;assembly=OpenBurn.Transport"
         xmlns:mat="clr-namespace:OpenBurn.Materials;assembly=OpenBurn.Materials"
         xmlns:cam="clr-namespace:OpenBurn.Camera;assembly=OpenBurn.Camera"
+        xmlns:mach2="clr-namespace:OpenBurn.Core.Machines;assembly=OpenBurn.Core"
         x:Class="OpenBurn.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="OpenBurn"
@@ -332,6 +333,45 @@
                                 <Button Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
                                         Command="{Binding ClearBedImageCommand}" />
                             </Grid>
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Rotary -->
+                        <StackPanel Spacing="8" IsVisible="{Binding MachineHasRotary}">
+                            <TextBlock Classes="sectionTitle" Text="ROTARY" />
+                            <CheckBox Content="Rotary mode" IsChecked="{Binding RotaryEnabled}" />
+
+                            <StackPanel Spacing="8" IsVisible="{Binding RotaryEnabled}">
+                                <ComboBox ItemsSource="{Binding RotaryKinds}" SelectedItem="{Binding RotaryKind}"
+                                          HorizontalAlignment="Stretch" />
+
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
+                                      ColumnSpacing="10" RowSpacing="6">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Workpiece ⌀" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding RotaryWorkpieceDiameterMm}" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Roller ⌀" Classes="label" VerticalAlignment="Center"
+                                               IsVisible="{Binding !IsChuck}" />
+                                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding RotaryRollerDiameterMm}"
+                                             IsVisible="{Binding !IsChuck}" />
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Steps/turn" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding RotaryStepsPerRotation}" />
+                                </Grid>
+
+                                <TextBlock Text="{Binding AxisStepsSource}" Classes="label" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding RotarySummary}" Classes="mono" FontSize="10"
+                                           TextWrapping="Wrap" Foreground="{DynamicResource InkMuted}" />
+                                <TextBlock Text="{Binding RotaryWarningText}" TextWrapping="Wrap"
+                                           FontSize="{DynamicResource FontSmall}"
+                                           Foreground="{DynamicResource StateHold}"
+                                           IsVisible="{Binding HasRotaryWarnings}" />
+
+                                <Button Content="Test one rotation" HorizontalAlignment="Stretch"
+                                        Command="{Binding TestRotationCommand}"
+                                        ToolTip.Tip="Turn the workpiece a full turn so you can check it runs true" />
+                            </StackPanel>
                         </StackPanel>
 
                         <Separator />
