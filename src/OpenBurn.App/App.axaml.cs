@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using OpenBurn.App.ViewModels;
 using OpenBurn.App.Views;
@@ -17,6 +18,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         AppPaths.EnsureCreated();
+        RegisterBundledFonts();
         var settings = AppSettings.Load();
         ApplyTheme(settings.Theme);
 
@@ -38,6 +40,27 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Hand the bundled typefaces to the text engine.
+    ///
+    /// They are embedded as application resources so the interface renders
+    /// correctly on a workshop machine with no network, but that also means the
+    /// system font manager cannot see them — without this, asking the text tool
+    /// for Bricolage Grotesque silently engraves Helvetica instead.
+    /// </summary>
+    private static void RegisterBundledFonts()
+    {
+        try
+        {
+            OpenBurn.Cam.Text.TextOutliner.RegisterBundledFonts();
+        }
+        catch (Exception)
+        {
+            // A missing bundled font is a cosmetic loss, not a reason to refuse to
+            // start; the text tool falls back to the system fonts.
+        }
     }
 
     /// <summary>

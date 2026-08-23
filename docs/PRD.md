@@ -253,8 +253,15 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
   after a dropped link, acceleration-aware estimates, pre-flight validation.
 - Camera: MJPEG, snapshot, file and synthetic sources; four-corner calibration with
   a reported residual; lens correction; bed overlay; workpiece detection.
+- Editing: drag, scale and rotate on the canvas with pixel-space handles, marquee
+  selection with the enclosed-versus-touched convention, snapping, align,
+  distribute, group, array, and undo across all of it.
+- Text to cuttable outlines, with counters preserved and bundled fonts registered
+  so the engraved letterforms match the ones on screen.
+- Toolpath simulation sharing the estimator's segment timing, and a G-code view.
 - Materials, machine profiles as JSON, job library in SQLite, machine console.
-- 196 tests, none requiring hardware.
+- 296 tests, none requiring hardware, including headless UI tests that drive the
+  real canvas with synthetic pointer input.
 
 ### Deferred, with reasons
 
@@ -271,7 +278,11 @@ what the ESP32-class controller in these machines almost certainly exposes — p
 read-only queries and writes a Markdown transcript. The driver should be written
 from that transcript against real hardware.
 
-**DXF, PDF, AI, EPS import.** Listed as post-MVP in §10.
+**DXF import** is now implemented — lines, arcs, lightweight and old-style
+polylines including bulge arcs, circles, ellipses, splines from fit points, and
+block references with scale and rotation. **PDF, AI and EPS** remain post-MVP per
+§10; all three are PostScript-family formats needing an interpreter rather than a
+parser.
 
 **Rotary, batch jobs, plugin loading.** MVP 0.4 in §35.
 

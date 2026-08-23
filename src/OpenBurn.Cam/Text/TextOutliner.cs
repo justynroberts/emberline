@@ -54,6 +54,75 @@ public static class TextOutliner
     /// </summary>
     private const float WorkingEm = 512f;
 
+    /// <summary>
+    /// Fonts the application has supplied directly rather than installed.
+    ///
+    /// A bundled face is embedded in the application, not registered with the
+    /// operating system, so the system font manager cannot see it — asking for it
+    /// by name silently substitutes something else, and the engraved letterforms
+    /// are then not the ones on screen.
+    /// </summary>
+    private static readonly Dictionary<string, SKTypeface> Bundled = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Register a font from a stream. The family name comes from the file itself.</summary>
+    public static string? RegisterFont(Stream stream)
+    {
+        try
+        {
+            var typeface = SKTypeface.FromStream(stream);
+            if (typeface is null) return null;
+
+            lock (Bundled) Bundled[typeface.FamilyName] = typeface;
+            return typeface.FamilyName;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public static string? RegisterFontFile(string path)
+    {
+        if (!File.Exists(path)) return null;
+        using var stream = File.OpenRead(path);
+        return RegisterFont(stream);
+    }
+
+    /// <summary>
+    /// Register every font in a `fonts` folder beside the executable, walking up
+    /// from the base directory so it also works when running from the repository.
+    /// </summary>
+    public static IReadOnlyList<string> RegisterBundledFonts()
+    {
+        var registered = new List<string>();
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            var candidate = Path.Combine(directory.FullName, "fonts");
+            if (Directory.Exists(candidate))
+            {
+                foreach (var file in Directory.EnumerateFiles(candidate, "*.ttf"))
+                {
+                    if (RegisterFontFile(file) is { } family) registered.Add(family);
+                }
+                break;
+            }
+            directory = directory.Parent;
+        }
+
+        return registered;
+    }
+
+    /// <summary>Families supplied by the application, listed first in the picker.</summary>
+    public static IReadOnlyList<string> BundledFamilies
+    {
+        get
+        {
+            lock (Bundled) return [.. Bundled.Keys.Order(StringComparer.OrdinalIgnoreCase)];
+        }
+    }
+
     public static TextOutlineResult Create(string text, TextLayoutOptions? options = null)
     {
         var o = options ?? TextLayoutOptions.Default;
@@ -246,6 +315,13 @@ public static class TextOutliner
 
     private static (SKTypeface Typeface, bool Substituted) ResolveTypeface(TextLayoutOptions o)
     {
+        // A bundled face wins over the system, because if the application shipped
+        // it the user asking for it by name means that one.
+        lock (Bundled)
+        {
+            if (Bundled.TryGetValue(o.FontFamily, out var bundled)) return (bundled, false);
+        }
+
         var style = new SKFontStyle(
             o.Bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal,
             SKFontStyleWidth.Normal,
@@ -263,17 +339,24 @@ public static class TextOutliner
         return (SKTypeface.Default, true);
     }
 
-    /// <summary>Every font family installed on this machine, for the font picker.</summary>
+    /// <summary>Bundled families first, then everything installed on this machine.</summary>
     public static IReadOnlyList<string> AvailableFamilies()
     {
+        var result = new List<string>(BundledFamilies);
+
         try
         {
-            return [.. SKFontManager.Default.GetFontFamilies().Distinct().Order(StringComparer.OrdinalIgnoreCase)];
+            foreach (var family in SKFontManager.Default.GetFontFamilies().Distinct().Order(StringComparer.OrdinalIgnoreCase))
+            {
+                if (!result.Contains(family, StringComparer.OrdinalIgnoreCase)) result.Add(family);
+            }
         }
         catch (Exception)
         {
-            return ["Sans Serif"];
+            if (result.Count == 0) result.Add("Sans Serif");
         }
+
+        return result;
     }
 
     /// <summary>Fill a <see cref="TextShape"/> with outlines from its own properties.</summary>

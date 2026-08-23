@@ -18,9 +18,11 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 |---|---|
 | **Connection** | USB serial, TCP (telnet), WebSocket, HTTP command, and a built-in simulator |
 | **Discovery** | USB port enumeration, and an opt-in local network scan that probes for GRBL |
-| **Import** | SVG (paths, primitives, nested transforms, real-world sizing), PNG/JPEG/BMP/GIF/WebP, G-code |
-| **CAM** | Raster engraving with ten dithering kernels, vector cut/score/engrave, hatch and offset fills, bitmap tracing |
+| **Import** | SVG (paths, primitives, nested transforms, real-world sizing), DXF (lines, arcs, polylines with bulges, ellipses, splines, blocks), PNG/JPEG/BMP/GIF/WebP, G-code |
+| **CAM** | Raster engraving with ten dithering kernels, vector cut/score/engrave, hatch and offset fills, bitmap tracing, text to outlines |
 | **Job engine** | Character-counting streaming, pause/resume/stop, resume-from-line after a dropped link, live progress and acceleration-aware time estimates |
+| **Editing** | Drag, scale and rotate on the canvas, marquee selection, snapping, align, distribute, group, array, and undo across all of it |
+| **Preview** | Toolpath simulation with scrubbing, and a G-code view of the exact lines that will be sent |
 | **Safety** | Pre-flight validation, framing at pointer power, emergency stop on Escape, an assistant that cannot move the machine |
 | **Camera** | MJPEG, HTTP snapshot and synthetic sources; lens and perspective correction; bed overlay; workpiece detection |
 | **Materials** | A built-in library keyed by laser wattage, with rescaling and hazard warnings |
@@ -171,7 +173,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 196 tests, no hardware required
+dotnet test                     # 296 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -181,10 +183,15 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-196 tests, no hardware required. The ones that matter most run complete jobs
+296 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.
+
+The UI tests are not screenshot comparisons: they drive the real canvas control
+with synthetic pointer events through Avalonia's headless platform, so hit
+testing, pointer capture and the drag state machine are covered rather than only
+the maths underneath them.
 
 ---
 

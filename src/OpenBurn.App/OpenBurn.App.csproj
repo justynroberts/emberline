@@ -19,6 +19,14 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets/**" />
+
+    <!-- Also copied to disk, not only embedded: the headless self-test and any
+         non-UI path runs before the Avalonia asset loader exists, and the text
+         engine needs the file to register the family. -->
+    <Content Include="Assets/Fonts/*.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>fonts/%(Filename)%(Extension)</Link>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

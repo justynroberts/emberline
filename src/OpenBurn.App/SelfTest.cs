@@ -38,6 +38,10 @@ public static class SelfTest
             if (!ok) failures++;
         }
 
+        // --- Bundled fonts ------------------------------------------------------
+        var fonts = OpenBurn.Cam.Text.TextOutliner.RegisterBundledFonts();
+        Check("bundled fonts register", fonts.Count > 0, string.Join(", ", fonts));
+
         // --- Machine profiles load from beside the executable -----------------
         var machines = MachineLibrary.Load();
         Check("machine profiles load", machines.Profiles.Count > 0, $"{machines.Profiles.Count} found");
@@ -65,6 +69,25 @@ public static class SelfTest
         {
             Console.WriteLine("  [skip] SVG import — no sample file beside the executable");
         }
+
+        // --- DXF import --------------------------------------------------------
+        const string miniDxf = "0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n" +
+                               "0\nSECTION\n2\nENTITIES\n" +
+                               "0\nLINE\n10\n0\n20\n0\n11\n100\n21\n0\n" +
+                               "0\nCIRCLE\n10\n50\n20\n50\n40\n25\n" +
+                               "0\nENDSEC\n0\nEOF\n";
+
+        var dxf = DxfImporter.Parse(miniDxf);
+        Check("DXF import", dxf.Paths.Count == 2, $"{dxf.Paths.Count} entities, {dxf.WidthMm:0} mm wide");
+
+        // --- Text ---------------------------------------------------------------
+        var text = OpenBurn.Cam.Text.TextOutliner.Create("Ob", new OpenBurn.Cam.Text.TextLayoutOptions
+        {
+            FontSizeMm = 20,
+            FontFamily = fonts.FirstOrDefault() ?? "Sans Serif",
+        });
+        Check("text to outlines", text.Outlines.Count > 0 && !text.FontWasSubstituted,
+            $"{text.Outlines.Count} contours in {text.ResolvedFamily}");
 
         // --- CAM ---------------------------------------------------------------
         var design = Design.CreateDefault();

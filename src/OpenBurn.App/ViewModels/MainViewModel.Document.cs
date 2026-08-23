@@ -43,10 +43,10 @@ public sealed partial class MainViewModel
             [
                 new FilePickerFileType("All supported")
                 {
-                    Patterns = ["*.svg", "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp",
+                    Patterns = ["*.svg", "*.dxf", "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp",
                                 "*.nc", "*.gcode", "*.gc", "*.tap", "*.ngc"],
                 },
-                new FilePickerFileType("Vector (SVG)") { Patterns = ["*.svg"] },
+                new FilePickerFileType("Vector") { Patterns = ["*.svg", "*.dxf"] },
                 new FilePickerFileType("Images") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp"] },
                 new FilePickerFileType("G-code") { Patterns = ["*.nc", "*.gcode", "*.gc", "*.tap", "*.ngc"] },
             ],
@@ -74,6 +74,17 @@ public sealed partial class MainViewModel
                 foreach (var warning in result.Warnings) Console.AppendInfo(warning);
                 Console.AppendInfo($"Imported {result.Paths.Count} path(s) from {Path.GetFileName(path)} " +
                                    $"at {result.WidthMm:0.#} × {result.HeightMm:0.#} mm.");
+            }
+            else if (DxfImporter.IsSupported(path))
+            {
+                var result = DxfImporter.Load(path);
+                var shape = new PathShape(result.Paths) { Name = Path.GetFileNameWithoutExtension(path) };
+                PlaceOnBed(shape);
+                Design.AddShape(shape, SelectedLayer?.Layer);
+
+                foreach (var warning in result.Warnings) Console.AppendInfo(warning);
+                Console.AppendInfo($"Imported {result.Paths.Count} entit{(result.Paths.Count == 1 ? "y" : "ies")} " +
+                                   $"from {Path.GetFileName(path)} — {result.WidthMm:0.#} × {result.HeightMm:0.#} mm ({result.Units}).");
             }
             else if (ImageImporter.IsSupported(path))
             {
