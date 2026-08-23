@@ -23,8 +23,8 @@
                 </StackPanel>
                 <TextBox Grid.Column="1" Text="{Binding Filter}" PlaceholderText="Search" MinWidth="180"
                          VerticalAlignment="Center" />
-                <Button Grid.Column="2" Content="Re-read" Command="{Binding ReloadCommand}" />
-                <Button Grid.Column="3" Content="Apply changes" Classes="primary"
+                <Button ToolTip.Tip="Read the current settings from the machine again, discarding anything typed here." Grid.Column="2" Content="Re-read" Command="{Binding ReloadCommand}" />
+                <Button ToolTip.Tip="Write the changed settings to the machine. Values that could drive the machine into itself will ask you to confirm." Grid.Column="3" Content="Apply changes" Classes="primary"
                         Command="{Binding ApplyAllCommand}" IsEnabled="{Binding HasChanges}" />
             </Grid>
         </Border>
@@ -86,7 +86,7 @@
 
         <Border Grid.Row="2" Classes="panel focusInDelay1" Margin="0,12,0,0">
             <DockPanel LastChildFill="True">
-                <Button DockPanel.Dock="Right" Content="Close" Click="OnClose" Margin="10,0,0,0" />
+                <Button ToolTip.Tip="Close without writing anything further." DockPanel.Dock="Right" Content="Close" Click="OnClose" Margin="10,0,0,0" />
                 <ItemsControl ItemsSource="{Binding Warnings}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:SettingWarningViewModel">

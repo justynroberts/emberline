@@ -43,9 +43,9 @@
                     <TextBlock Classes="label" TextWrapping="Wrap"
                                Text="The trace is added as a new shape. The image stays where it is, so you can trace it again with different settings." />
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                        <Button Grid.Column="0" Content="Reset" Command="{Binding ResetCommand}" />
-                        <Button Grid.Column="1" Content="Cancel" HorizontalAlignment="Right" Click="OnCancel" />
-                        <Button Grid.Column="2" Content="Add to design" Classes="primary" Click="OnApply" />
+                        <Button ToolTip.Tip="Put every setting back to where it started." Grid.Column="0" Content="Reset" Command="{Binding ResetCommand}" />
+                        <Button ToolTip.Tip="Close without adding anything to the design." Grid.Column="1" Content="Cancel" HorizontalAlignment="Right" Click="OnCancel" />
+                        <Button ToolTip.Tip="Add the traced paths to your design as a new shape. The image itself is left untouched." Grid.Column="2" Content="Add to design" Classes="primary" Click="OnApply" />
                     </Grid>
                 </StackPanel>
 
@@ -55,7 +55,7 @@
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="WHAT TO FOLLOW" />
 
-                            <CheckBox IsChecked="{Binding Centreline}" Content="Trace centrelines" />
+                            <CheckBox ToolTip.Tip="On: draw one line down the middle of each stroke — right for line art and handwriting. Off: follow the edge of every dark area — right for silhouettes and cut lines." IsChecked="{Binding Centreline}" Content="Trace centrelines" />
                             <TextBlock Classes="label" TextWrapping="Wrap"
                                        Text="Off: follow the edge of every dark region, giving closed outlines. Best for silhouettes and cut lines. On: run a single line down the middle of each stroke. Best for line art, signatures and hand lettering, where following the edges would burn every line twice." />
                         </StackPanel>
@@ -67,13 +67,13 @@
                                 <TextBlock Grid.Column="0" Text="Threshold" Classes="label" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text="{Binding Threshold}" Classes="readout" FontSize="13" />
                             </Grid>
-                            <Slider Minimum="1" Maximum="255" Value="{Binding Threshold}" />
-                            <Button Content="Auto" Command="{Binding AutoThresholdCommand}" HorizontalAlignment="Left" />
+                            <Slider ToolTip.Tip="Anything darker than this counts as ink. Drag it until the preview picks up the detail you want and none of the background." Minimum="1" Maximum="255" Value="{Binding Threshold}" />
+                            <Button ToolTip.Tip="Choose the threshold automatically from the image's own light and dark, which beats guessing on anything scanned or photographed." Content="Auto" Command="{Binding AutoThresholdCommand}" HorizontalAlignment="Left" />
                             <TextBlock Classes="label" TextWrapping="Wrap"
                                        Text="Anything darker than this is treated as ink. Auto picks the split that best separates the image's own light and dark, which beats a fixed value on anything scanned or photographed." />
 
-                            <CheckBox IsChecked="{Binding Invert}" Content="Trace the light parts instead" />
-                            <CheckBox IsChecked="{Binding Despeckle}" Content="Drop isolated pixels" />
+                            <CheckBox ToolTip.Tip="Trace the pale areas instead of the dark ones — for artwork that is light on a dark background." IsChecked="{Binding Invert}" Content="Trace the light parts instead" />
+                            <CheckBox ToolTip.Tip="Ignore single stray dark pixels, which are usually scanning noise rather than artwork." IsChecked="{Binding Despeckle}" Content="Drop isolated pixels" />
                         </StackPanel>
 
                         <StackPanel Spacing="8">
@@ -83,19 +83,19 @@
                                 <TextBlock Grid.Column="0" Text="Simplify" Classes="label" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text="{Binding Simplify, StringFormat={}{0:0.0} px}" Classes="readout" FontSize="13" />
                             </Grid>
-                            <Slider Minimum="0" Maximum="4" Value="{Binding Simplify}" TickFrequency="0.1" IsSnapToTickEnabled="True" />
+                            <Slider ToolTip.Tip="Remove points that sit on a straight run. Higher means fewer points and a faster job, at the cost of fine detail." Minimum="0" Maximum="4" Value="{Binding Simplify}" TickFrequency="0.1" IsSnapToTickEnabled="True" />
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <TextBlock Grid.Column="0" Text="Smooth" Classes="label" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text="{Binding SmoothPasses}" Classes="readout" FontSize="13" />
                             </Grid>
-                            <Slider Minimum="0" Maximum="4" Value="{Binding SmoothPasses}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                            <Slider ToolTip.Tip="Round off the stair-steps that come from tracing square pixels. Two passes suits most artwork." Minimum="0" Maximum="4" Value="{Binding SmoothPasses}" TickFrequency="1" IsSnapToTickEnabled="True" />
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <TextBlock Grid.Column="0" Text="Ignore smaller than" Classes="label" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text="{Binding MinimumArea, StringFormat={}{0} px}" Classes="readout" FontSize="13" />
                             </Grid>
-                            <Slider Minimum="0" Maximum="400" Value="{Binding MinimumArea}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                            <Slider ToolTip.Tip="Throw away shapes smaller than this. Raise it to get rid of specks; lower it to keep small details such as dots on letters." Minimum="0" Maximum="400" Value="{Binding MinimumArea}" TickFrequency="1" IsSnapToTickEnabled="True" />
 
                             <TextBlock Classes="label" TextWrapping="Wrap"
                                        Text="Simplify drops points that sit on a straight run; smooth takes the stair-steps off. Both trade fidelity for a shorter, faster job — push them until the preview starts losing detail you care about." />
@@ -103,7 +103,7 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="PREVIEW" />
-                            <CheckBox IsChecked="{Binding ShowSource}" Content="Show the image behind the paths" />
+                            <CheckBox ToolTip.Tip="Show the original picture faintly behind the traced lines, so you can see what the trace is missing." IsChecked="{Binding ShowSource}" Content="Show the image behind the paths" />
                         </StackPanel>
 
                     </StackPanel>

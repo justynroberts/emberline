@@ -133,11 +133,11 @@
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <Button Content="Frame" Command="{Binding FrameCommand}"
                             ToolTip.Tip="Trace the job outline at pointer power so you can align the work" />
-                    <Button Content="Start" Classes="primary" Command="{Binding StartJobCommand}"
+                    <Button ToolTip.Tip="{Binding StartHint}" Content="Start" Classes="primary" Command="{Binding StartJobCommand}"
                             IsVisible="{Binding !IsJobActive}" />
-                    <Button Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}" />
-                    <Button Content="Resume" Classes="primary" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}" />
-                    <Button Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}" />
+                    <Button ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}" />
+                    <Button ToolTip.Tip="Carry on from exactly where the job paused." Content="Resume" Classes="primary" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}" />
+                    <Button ToolTip.Tip="Stop the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}" />
                 </StackPanel>
 
                 <Border Grid.Column="4" Width="1" Background="{DynamicResource Hairline}" Margin="12,2" />
@@ -187,10 +187,10 @@
                            Foreground="{DynamicResource StateAlarm}" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1" Text="{Binding FaultText}" TextWrapping="Wrap" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Content="Unlock" Command="{Binding UnlockCommand}" />
+                    <Button ToolTip.Tip="Clear the alarm so the machine accepts moves again. Find out why it alarmed before you do this; the position may no longer be trusted." Content="Unlock" Command="{Binding UnlockCommand}" />
                     <Button Content="Diagnose" Command="{Binding DiagnoseFaultCommand}"
                             ToolTip.Tip="Ask the assistant what this means, with the console log attached" />
-                    <Button Content="Dismiss" Classes="ghost" Command="{Binding DismissFaultCommand}" />
+                    <Button ToolTip.Tip="Hide this message. It does not fix the underlying problem." Content="Dismiss" Classes="ghost" Command="{Binding DismissFaultCommand}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -226,7 +226,7 @@
                     <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="14,14,14,0">
                         <TextBlock Classes="sectionTitle" Text="MACHINE" />
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding Machines.Profiles}"
+                        <ComboBox ToolTip.Tip="Which machine you are sending to. This sets the bed size, laser wattage and speed limits used for every calculation." Grid.Column="0" ItemsSource="{Binding Machines.Profiles}"
                                   SelectedItem="{Binding SelectedMachine}"
                                   HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
@@ -240,7 +240,7 @@
                         </Grid>
 
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                            <ComboBox Grid.Column="0" ItemsSource="{Binding SerialPorts}"
+                            <ComboBox ToolTip.Tip="The USB port your machine is plugged into. If you are unsure, unplug it, press the refresh arrow, plug it back in and see which one appears." Grid.Column="0" ItemsSource="{Binding SerialPorts}"
                                       SelectedValue="{Binding SelectedPort}"
                                       SelectedValueBinding="{Binding PortName}"
                                       HorizontalAlignment="Stretch"
@@ -258,15 +258,15 @@
                         <TextBox Text="{Binding NetworkAddress}" PlaceholderText="192.168.1.42:23" />
 
                         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
-                            <Button Grid.Column="0" Content="USB" Command="{Binding ConnectSerialCommand}" />
-                            <Button Grid.Column="1" Content="Wi-Fi" Command="{Binding ConnectNetworkCommand}" />
+                            <Button ToolTip.Tip="Connect over the USB cable using the port selected above." Grid.Column="0" Content="USB" Command="{Binding ConnectSerialCommand}" />
+                            <Button ToolTip.Tip="Connect over the network to the address in the box above." Grid.Column="1" Content="Wi-Fi" Command="{Binding ConnectNetworkCommand}" />
                             <Button Grid.Column="2" Content="Virtual" Command="{Binding ConnectVirtualCommand}"
                                     ToolTip.Tip="Run against the built-in simulator — no hardware needed" />
                         </Grid>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                            <Button Grid.Column="0" Content="Scan network" Command="{Binding ScanNetworkCommand}" />
-                            <Button Grid.Column="1" Content="Disconnect" Command="{Binding DisconnectCommand}" />
+                            <Button ToolTip.Tip="Look for machines on your local network. Nothing is sent to them beyond a request for their name." Grid.Column="0" Content="Scan network" Command="{Binding ScanNetworkCommand}" />
+                            <Button ToolTip.Tip="Close the connection. The machine keeps its position and settings." Grid.Column="1" Content="Disconnect" Command="{Binding DisconnectCommand}" />
                         </Grid>
 
                         <ProgressBar Minimum="0" Maximum="1" Value="{Binding DiscoveryProgress}"
@@ -276,7 +276,7 @@
                         <ItemsControl ItemsSource="{Binding DiscoveredDevices}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="disc:DiscoveredDevice">
-                                    <Button Classes="ghost" HorizontalAlignment="Stretch"
+                                    <Button ToolTip.Tip="Connect to this machine." Classes="ghost" HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).ConnectDiscoveredCommand}"
                                             CommandParameter="{Binding}">
@@ -291,30 +291,30 @@
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="JOG" />
                             <UniformGrid Rows="3" Columns="3" HorizontalAlignment="Center">
-                                <Button Classes="jog" Content="↖" Command="{Binding JogCommand}" CommandParameter="upleft" />
-                                <Button Classes="jog" Content="↑" Command="{Binding JogCommand}" CommandParameter="up" />
-                                <Button Classes="jog" Content="↗" Command="{Binding JogCommand}" CommandParameter="upright" />
-                                <Button Classes="jog" Content="←" Command="{Binding JogCommand}" CommandParameter="left" />
+                                <Button ToolTip.Tip="Move the head up and to the left by one step." Classes="jog" Content="↖" Command="{Binding JogCommand}" CommandParameter="upleft" />
+                                <Button ToolTip.Tip="Move the head away from you by one step." Classes="jog" Content="↑" Command="{Binding JogCommand}" CommandParameter="up" />
+                                <Button ToolTip.Tip="Move the head up and to the right by one step." Classes="jog" Content="↗" Command="{Binding JogCommand}" CommandParameter="upright" />
+                                <Button ToolTip.Tip="Move the head left by one step." Classes="jog" Content="←" Command="{Binding JogCommand}" CommandParameter="left" />
                                 <Button Classes="jog" Content="⌂" Command="{Binding HomeCommand}" ToolTip.Tip="Home ($H)" />
-                                <Button Classes="jog" Content="→" Command="{Binding JogCommand}" CommandParameter="right" />
-                                <Button Classes="jog" Content="↙" Command="{Binding JogCommand}" CommandParameter="downleft" />
-                                <Button Classes="jog" Content="↓" Command="{Binding JogCommand}" CommandParameter="down" />
-                                <Button Classes="jog" Content="↘" Command="{Binding JogCommand}" CommandParameter="downright" />
+                                <Button ToolTip.Tip="Move the head right by one step." Classes="jog" Content="→" Command="{Binding JogCommand}" CommandParameter="right" />
+                                <Button ToolTip.Tip="Move the head down and to the left by one step." Classes="jog" Content="↙" Command="{Binding JogCommand}" CommandParameter="downleft" />
+                                <Button ToolTip.Tip="Move the head towards you by one step." Classes="jog" Content="↓" Command="{Binding JogCommand}" CommandParameter="down" />
+                                <Button ToolTip.Tip="Move the head down and to the right by one step." Classes="jog" Content="↘" Command="{Binding JogCommand}" CommandParameter="downright" />
                             </UniformGrid>
 
                             <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="6">
                                 <TextBlock Grid.Column="0" Text="Step" Classes="label" VerticalAlignment="Center" />
-                                <ComboBox Grid.Column="1" ItemsSource="{Binding JogSteps}"
+                                <ComboBox ToolTip.Tip="How far the head moves each time you press a jog arrow." Grid.Column="1" ItemsSource="{Binding JogSteps}"
                                           SelectedItem="{Binding JogStepMm}" HorizontalAlignment="Stretch" />
                                 <TextBlock Grid.Column="2" Text="Feed" Classes="label" VerticalAlignment="Center" />
-                                <ComboBox Grid.Column="3" ItemsSource="{Binding JogFeeds}"
+                                <ComboBox ToolTip.Tip="How fast the head moves while jogging. This does not affect the job." Grid.Column="3" ItemsSource="{Binding JogFeeds}"
                                           SelectedItem="{Binding JogFeedMmMin}" HorizontalAlignment="Stretch" />
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Zero XY" Command="{Binding ZeroAllCommand}" />
-                                <Button Grid.Column="1" Content="Unlock" Command="{Binding UnlockCommand}" />
-                                <Button Grid.Column="2" Content="Origin" Command="{Binding GoToOriginCommand}" />
+                                <Button ToolTip.Tip="Set this spot as the origin — the corner your artwork is measured from. Jog to the corner of your material first." Grid.Column="0" Content="Zero XY" Command="{Binding ZeroAllCommand}" />
+                                <Button ToolTip.Tip="Clear the alarm so the machine accepts moves again. Find out why it alarmed first." Grid.Column="1" Content="Unlock" Command="{Binding UnlockCommand}" />
+                                <Button ToolTip.Tip="Send the head back to the origin you set with Zero XY. The laser stays off." Grid.Column="2" Content="Origin" Command="{Binding GoToOriginCommand}" />
                             </Grid>
                         </StackPanel>
 
@@ -325,7 +325,7 @@
                             <TextBlock Classes="sectionTitle" Text="CAMERA" />
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                                <ComboBox Grid.Column="0" ItemsSource="{Binding Cameras}"
+                                <ComboBox ToolTip.Tip="Which camera to use for seeing the bed. Pick Synthetic bed camera to practise without any hardware." Grid.Column="0" ItemsSource="{Binding Cameras}"
                                           SelectedItem="{Binding SelectedCamera}"
                                           HorizontalAlignment="Stretch"
                                           PlaceholderText="No camera">
@@ -343,12 +343,12 @@
                                      PlaceholderText="http://192.168.1.50/stream" />
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Connect" Command="{Binding ConnectCameraCommand}" />
-                                <Button Grid.Column="1" Content="Capture bed" Command="{Binding CaptureBedCommand}" />
+                                <Button ToolTip.Tip="Start receiving pictures from the camera." Grid.Column="0" Content="Connect" Command="{Binding ConnectCameraCommand}" />
+                                <Button ToolTip.Tip="Take one picture of the bed and show it behind your artwork, so you can place work over the material you can actually see." Grid.Column="1" Content="Capture bed" Command="{Binding CaptureBedCommand}" />
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Calibrate" Click="OnCalibrateCamera" />
+                                <Button ToolTip.Tip="Teach the camera where the bed is by clicking its four corners. Without this the picture cannot be lined up with real millimetres." Grid.Column="0" Content="Calibrate" Click="OnCalibrateCamera" />
                                 <Button Grid.Column="1" Content="Find objects" Command="{Binding DetectWorkpiecesCommand}"
                                         ToolTip.Tip="Detect workpieces on the bed and move the selection onto the largest" />
                             </Grid>
@@ -371,10 +371,10 @@
                                        IsVisible="{Binding CameraStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                <CheckBox Grid.Column="0" Content="Show" IsChecked="{Binding ShowBedImage}" />
+                                <CheckBox ToolTip.Tip="Show the camera picture behind your artwork on the canvas." Grid.Column="0" Content="Show" IsChecked="{Binding ShowBedImage}" />
                                 <Slider Grid.Column="1" Minimum="0.15" Maximum="1" Value="{Binding BedImageOpacity}"
                                         ToolTip.Tip="How strongly the camera view shows through" />
-                                <Button Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
+                                <Button ToolTip.Tip="Remove the camera picture from the canvas." Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
                                         Command="{Binding ClearBedImageCommand}" />
                             </Grid>
                         </StackPanel>
@@ -384,10 +384,10 @@
                         <!-- Rotary -->
                         <StackPanel Spacing="8" IsVisible="{Binding MachineHasRotary}">
                             <TextBlock Classes="sectionTitle" Text="ROTARY" />
-                            <CheckBox Content="Rotary mode" IsChecked="{Binding RotaryEnabled}" />
+                            <CheckBox ToolTip.Tip="Turn on rotary mode for engraving round objects such as tumblers. The Y axis then rotates the workpiece instead of moving the head." Content="Rotary mode" IsChecked="{Binding RotaryEnabled}" />
 
                             <StackPanel Spacing="8" IsVisible="{Binding RotaryEnabled}">
-                                <ComboBox ItemsSource="{Binding RotaryKinds}" SelectedItem="{Binding RotaryKind}"
+                                <ComboBox ToolTip.Tip="Which kind of rotary attachment you have. Rollers spin the object by friction; a chuck grips its end." ItemsSource="{Binding RotaryKinds}" SelectedItem="{Binding RotaryKind}"
                                           HorizontalAlignment="Stretch" />
 
                                 <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
@@ -426,7 +426,7 @@
                         <!-- Material -->
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="MATERIAL" />
-                            <ComboBox ItemsSource="{Binding AvailableMaterials}"
+                            <ComboBox ToolTip.Tip="Pick a material to get a tested starting point for speed and power. It is a starting point, not an answer — always test on an offcut." ItemsSource="{Binding AvailableMaterials}"
                                       SelectedItem="{Binding SelectedMaterial}"
                                       HorizontalAlignment="Stretch"
                                       PlaceholderText="Choose a material">
@@ -441,7 +441,7 @@
                                        Foreground="{DynamicResource StateAlarm}" FontSize="{DynamicResource FontSmall}"
                                        IsVisible="{Binding HasMaterialHazard}" />
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyMaterialCommand}" />
+                                <Button ToolTip.Tip="Copy this material's speed and power onto your layers, rescaled for your machine's wattage." Grid.Column="0" Content="Apply" Command="{Binding ApplyMaterialCommand}" />
                                 <Button Grid.Column="1" Content="Test grid" Command="{Binding RunTestGridCommand}"
                                         ToolTip.Tip="Burn a power × speed matrix on an offcut" />
                             </Grid>
@@ -453,10 +453,10 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
                                 <TextBlock Grid.Column="0" Classes="sectionTitle" Text="LAYERS" VerticalAlignment="Center" />
-                                <Button Grid.Column="1" Content="↑" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerUpCommand}" />
-                                <Button Grid.Column="2" Content="↓" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerDownCommand}" />
-                                <Button Grid.Column="3" Content="+" Classes="ghost" Padding="6,2" Command="{Binding AddLayerCommand}" />
-                                <Button Grid.Column="4" Content="−" Classes="ghost" Padding="6,2" Command="{Binding RemoveLayerCommand}" />
+                                <Button ToolTip.Tip="Move this layer earlier, so it burns before the ones below it." Grid.Column="1" Content="↑" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerUpCommand}" />
+                                <Button ToolTip.Tip="Move this layer later, so it burns after the ones above it." Grid.Column="2" Content="↓" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerDownCommand}" />
+                                <Button ToolTip.Tip="Add another layer. Layers let one design engrave some parts and cut others." Grid.Column="3" Content="+" Classes="ghost" Padding="6,2" Command="{Binding AddLayerCommand}" />
+                                <Button ToolTip.Tip="Delete the selected layer. Anything on it moves to the layer above." Grid.Column="4" Content="−" Classes="ghost" Padding="6,2" Command="{Binding RemoveLayerCommand}" />
                             </Grid>
 
                             <ListBox ItemsSource="{Binding Layers}" SelectedItem="{Binding SelectedLayer}"
@@ -464,7 +464,7 @@
                                 <ListBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:LayerViewModel">
                                         <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8" Margin="0,3">
-                                            <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" />
+                                            <CheckBox ToolTip.Tip="Include this layer in the job. Unticked layers are still shown on the canvas but are not burned." Grid.Column="0" IsChecked="{Binding Enabled}" />
                                             <Border Grid.Column="1" Width="4" CornerRadius="2"
                                                     Background="{Binding ColorHex, Converter={StaticResource ThemeBrush}}" />
                                             <StackPanel Grid.Column="2">
@@ -485,7 +485,7 @@
                         <StackPanel Spacing="8">
                             <Separator />
                             <TextBlock Classes="sectionTitle" Text="OPERATION" />
-                            <ComboBox ItemsSource="{x:Static vm:LayerViewModel.Operations}"
+                            <ComboBox ToolTip.Tip="What this layer does. Engrave marks the surface, Score draws a light line, Cut goes through, Fill darkens a whole area." ItemsSource="{x:Static vm:LayerViewModel.Operations}"
                                       SelectedItem="{Binding Operation}" HorizontalAlignment="Stretch" />
 
                             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto"
@@ -506,11 +506,11 @@
                                 </Grid>
                             </Grid>
 
-                            <CheckBox Content="Air assist" IsChecked="{Binding AirAssist}" />
+                            <CheckBox ToolTip.Tip="Switch the air assist on for this layer. Air blows smoke away from the cut, which gives a cleaner edge and less scorching." Content="Air assist" IsChecked="{Binding AirAssist}" />
 
                             <StackPanel Spacing="7" IsVisible="{Binding IsFill}">
                                 <TextBlock Classes="sectionTitle" Text="FILL" Margin="0,4,0,0" />
-                                <ComboBox ItemsSource="{x:Static vm:LayerViewModel.FillStrategies}"
+                                <ComboBox ToolTip.Tip="How a filled area is burned in: side to side like a printer, or as a pattern of lines." ItemsSource="{x:Static vm:LayerViewModel.FillStrategies}"
                                           SelectedItem="{Binding FillStrategy}" HorizontalAlignment="Stretch" />
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                     <TextBlock Grid.Column="0" Text="Angle" Classes="label" VerticalAlignment="Center" />
@@ -547,9 +547,9 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Centre" Command="{Binding CentreSelectedCommand}" />
-                                <Button Grid.Column="1" Content="Rotate" Command="{Binding RotateSelectedCommand}" CommandParameter="90" />
-                                <Button Grid.Column="2" Content="Mirror" Command="{Binding MirrorSelectedCommand}" CommandParameter="horizontal" />
+                                <Button ToolTip.Tip="Move the selection to the middle of the bed." Grid.Column="0" Content="Centre" Command="{Binding CentreSelectedCommand}" />
+                                <Button ToolTip.Tip="Turn the selection ninety degrees." Grid.Column="1" Content="Rotate" Command="{Binding RotateSelectedCommand}" CommandParameter="90" />
+                                <Button ToolTip.Tip="Flip the selection over, like a mirror image." Grid.Column="2" Content="Mirror" Command="{Binding MirrorSelectedCommand}" CommandParameter="horizontal" />
                             </Grid>
 
                             <TextBlock Classes="sectionTitle" Text="ALIGN" Margin="0,4,0,0" />
@@ -572,16 +572,16 @@
                                 <Button Grid.Column="0" Content="Spread ↔"
                                         ToolTip.Tip="Even the horizontal gaps (needs three or more)"
                                         Command="{Binding DistributeSelectionCommand}" CommandParameter="Horizontal" />
-                                <Button Grid.Column="1" Content="Spread ↕"
+                                <Button ToolTip.Tip="Space the selected shapes evenly from top to bottom." Grid.Column="1" Content="Spread ↕"
                                         Command="{Binding DistributeSelectionCommand}" CommandParameter="Vertical" />
                             </Grid>
 
                             <!-- Two rows: four across a 300 px panel clips "Ungroup". -->
                             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
-                                <Button Grid.Row="0" Grid.Column="0" Content="Group" Command="{Binding GroupSelectionCommand}" />
-                                <Button Grid.Row="0" Grid.Column="1" Content="Ungroup" Command="{Binding UngroupSelectionCommand}" />
-                                <Button Grid.Row="1" Grid.Column="0" Content="Lock" Command="{Binding ToggleLockSelectionCommand}" />
-                                <Button Grid.Row="1" Grid.Column="1" Content="Hide" Command="{Binding ToggleVisibilitySelectionCommand}" />
+                                <Button ToolTip.Tip="Join the selected shapes so they move and scale as one." Grid.Row="0" Grid.Column="0" Content="Group" Command="{Binding GroupSelectionCommand}" />
+                                <Button ToolTip.Tip="Split a group back into the shapes it was made from." Grid.Row="0" Grid.Column="1" Content="Ungroup" Command="{Binding UngroupSelectionCommand}" />
+                                <Button ToolTip.Tip="Stop the selection being moved or changed by accident." Grid.Row="1" Grid.Column="0" Content="Lock" Command="{Binding ToggleLockSelectionCommand}" />
+                                <Button ToolTip.Tip="Hide the selection on the canvas. Hidden shapes are not burned." Grid.Row="1" Grid.Column="1" Content="Hide" Command="{Binding ToggleVisibilitySelectionCommand}" />
                             </Grid>
 
                             <CheckBox Content="Snap to grid" IsChecked="{Binding SnapEnabled}"
@@ -596,7 +596,7 @@
                                 <TextBlock Grid.Column="4" Text="Gap" Classes="label" VerticalAlignment="Center" />
                                 <TextBox Grid.Column="5" Text="{Binding ArraySpacingMm}" />
                             </Grid>
-                            <Button Content="Create array" HorizontalAlignment="Stretch"
+                            <Button ToolTip.Tip="Repeat the selection in a grid — useful for filling a sheet with copies of the same piece." Content="Create array" HorizontalAlignment="Stretch"
                                     Command="{Binding CreateArrayCommand}" />
                         </StackPanel>
 
@@ -608,14 +608,14 @@
                             <TextBox Text="{Binding TextInput}" AcceptsReturn="True" MinHeight="52"
                                      PlaceholderText="Type here, then press Add" />
                             <Grid ColumnDefinitions="*,Auto,70" ColumnSpacing="6">
-                                <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableFonts}"
+                                <ComboBox ToolTip.Tip="Which typeface to use. Only fonts listed here can be turned into cuttable outlines." Grid.Column="0" ItemsSource="{Binding AvailableFonts}"
                                           SelectedItem="{Binding TextFont}" HorizontalAlignment="Stretch" />
                                 <TextBlock Grid.Column="1" Text="mm" Classes="label" VerticalAlignment="Center" />
                                 <TextBox Grid.Column="2" Text="{Binding TextSizeMm}" />
                             </Grid>
                             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Add" Command="{Binding AddTextCommand}" />
-                                <Button Grid.Column="1" Content="Update" Command="{Binding RefreshTextCommand}"
+                                <Button ToolTip.Tip="Add this text to the design as cuttable outlines." Grid.Column="0" Content="Add" Command="{Binding AddTextCommand}" />
+                                <Button ToolTip.Tip="Rebuild the selected text after changing its wording or font." Grid.Column="1" Content="Update" Command="{Binding RefreshTextCommand}"
                                         IsEnabled="{Binding IsTextSelected}" />
                                 <Button Grid.Column="2" Content="To paths" Command="{Binding ConvertTextToPathsCommand}"
                                         IsEnabled="{Binding IsTextSelected}"
@@ -645,7 +645,7 @@
                                            FontSize="{DynamicResource FontSmall}" />
                             </Border>
 
-                            <Button Content="Export G-code" HorizontalAlignment="Stretch"
+                            <Button ToolTip.Tip="Save the job as a .nc file you can run from an SD card or another sender." Content="Export G-code" HorizontalAlignment="Stretch"
                                     Command="{Binding ExportGcodeCommand}" />
                         </StackPanel>
                     </StackPanel>
@@ -670,10 +670,10 @@
                     <TextBlock Grid.Column="0" Classes="sectionTitle" Text="ASSISTANT" Margin="0" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="thinking…" Classes="label" Margin="10,0,0,0"
                                VerticalAlignment="Center" IsVisible="{Binding Assistant.IsThinking}" />
-                    <Button Grid.Column="2" Content="Stop" Classes="ghost" Padding="8,2"
+                    <Button ToolTip.Tip="Stop the assistant answering." Grid.Column="2" Content="Stop" Classes="ghost" Padding="8,2"
                             IsVisible="{Binding Assistant.IsThinking}"
                             Command="{Binding Assistant.CancelCommand}" />
-                    <Button Grid.Column="3" Content="Clear" Classes="ghost" Padding="8,2"
+                    <Button ToolTip.Tip="Clear the conversation." Grid.Column="3" Content="Clear" Classes="ghost" Padding="8,2"
                             Command="{Binding Assistant.ClearCommand}" />
                 </Grid>
 
@@ -686,7 +686,7 @@
                         <TextBox Grid.Column="0" Text="{Binding Assistant.Input}"
                                  PlaceholderText="Ask about settings, a fault, or this job"
                                  KeyDown="OnAssistantKeyDown" />
-                        <Button Grid.Column="1" Content="Ask" Classes="primary"
+                        <Button ToolTip.Tip="Ask the assistant. It can read your settings and suggest changes, but it can never move the machine itself." Grid.Column="1" Content="Ask" Classes="primary"
                                 Command="{Binding Assistant.SendCommand}" />
                     </Grid>
                 </StackPanel>
@@ -705,10 +705,10 @@
                                                 <TextBlock Text="The assistant is asking permission" Classes="label" />
                                                 <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
                                             </StackPanel>
-                                            <Button Grid.Column="1" Content="Do it" Classes="primary"
+                                            <Button ToolTip.Tip="Apply the change the assistant is suggesting. Nothing has been sent to the machine until you press this." Grid.Column="1" Content="Do it" Classes="primary"
                                                     Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).Assistant.ConfirmActionCommand}"
                                                     CommandParameter="{Binding}" />
-                                            <Button Grid.Column="2" Content="No" Classes="ghost"
+                                            <Button ToolTip.Tip="Dismiss the suggestion and change nothing." Grid.Column="2" Content="No" Classes="ghost"
                                                     Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).Assistant.DismissActionCommand}"
                                                     CommandParameter="{Binding}" />
                                         </Grid>
@@ -722,7 +722,7 @@
                                       IsVisible="{Binding !Assistant.Messages.Count}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
-                                    <Button Classes="ghost" HorizontalAlignment="Stretch"
+                                    <Button ToolTip.Tip="Ask this question." Classes="ghost" HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left" Margin="0,0,0,4"
                                             Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).Assistant.UseSuggestionCommand}"
                                             CommandParameter="{Binding}">
@@ -753,7 +753,7 @@
         <Border Classes="panel slideUp" Padding="14,10"
                 IsVisible="{Binding SimulationVisible}">
             <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="12">
-                <Button Grid.Column="0" Classes="primary" Width="40" Padding="0"
+                <Button ToolTip.Tip="Play or pause the preview. This draws the toolpath on screen and moves nothing." Grid.Column="0" Classes="primary" Width="40" Padding="0"
                         Content="{Binding PlayPauseGlyph}"
                         Command="{Binding PlaySimulationCommand}" />
                 <Button Grid.Column="1" Width="40" Padding="0" Content="■"
@@ -762,16 +762,16 @@
 
                 <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Text="{Binding SimulationStatus}" Classes="mono" FontSize="11" />
-                    <Slider Minimum="0" Maximum="1" Value="{Binding SimulationFraction}" />
+                    <Slider ToolTip.Tip="Scrub through the job to see the order things are burned in." Minimum="0" Maximum="1" Value="{Binding SimulationFraction}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <TextBlock Text="Speed" Classes="label" VerticalAlignment="Center" />
-                    <ComboBox ItemsSource="{Binding SimulationSpeeds}" SelectedItem="{Binding SimulationSpeed}"
+                    <ComboBox ToolTip.Tip="How fast the preview plays. It does not change the real job." ItemsSource="{Binding SimulationSpeeds}" SelectedItem="{Binding SimulationSpeed}"
                               MinWidth="76" />
                 </StackPanel>
 
-                <Button Grid.Column="4" Content="Close" Classes="ghost"
+                <Button ToolTip.Tip="Close the preview." Grid.Column="4" Content="Close" Classes="ghost"
                         Command="{Binding StopSimulationCommand}" />
             </Grid>
         </Border>
@@ -785,7 +785,7 @@
                     <Button Grid.Column="1" Content="Settings" Classes="ghost" Padding="8,2"
                             ToolTip.Tip="Open the controller settings editor"
                             Click="OnShowSettings" />
-                    <Button Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
+                    <Button ToolTip.Tip="Clear the console messages." Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
                             Command="{Binding Console.ClearCommand}" />
                 </Grid>
 
@@ -794,7 +794,7 @@
                              Text="{Binding Console.Input}"
                              PlaceholderText="Type a G-code or $ command and press Enter"
                              KeyDown="OnConsoleKeyDown" />
-                    <Button Grid.Column="1" Content="Send" Command="{Binding Console.SendCommand}" />
+                    <Button ToolTip.Tip="Send this command to the machine exactly as typed. Only do this if you know what the command does." Grid.Column="1" Content="Send" Command="{Binding Console.SendCommand}" />
                 </Grid>
 
                 <ScrollViewer x:Name="ConsoleScroll" VerticalScrollBarVisibility="Auto">
@@ -828,9 +828,9 @@
             <DockPanel LastChildFill="True">
                 <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
                     <TextBlock Grid.Column="0" Classes="sectionTitle" Text="G-CODE" Margin="0" VerticalAlignment="Center" />
-                    <Button Grid.Column="1" Content="Copy" Classes="ghost" Padding="8,2"
+                    <Button ToolTip.Tip="Copy the whole program to the clipboard." Grid.Column="1" Content="Copy" Classes="ghost" Padding="8,2"
                             Command="{Binding CopyGcodeCommand}" />
-                    <Button Grid.Column="2" Content="Close" Classes="ghost" Padding="8,2"
+                    <Button ToolTip.Tip="Close the G-code view." Grid.Column="2" Content="Close" Classes="ghost" Padding="8,2"
                             Command="{Binding ToggleGcodeCommand}" />
                 </Grid>
 

@@ -151,6 +151,31 @@
         <Setter Property="BorderBrush" Value="{DynamicResource EmberEdge}" />
     </Style>
 
+    <!-- Tooltips carry real sentences, so they have to wrap and be bounded. An
+         unbounded tooltip renders one line the width of the sentence and runs off
+         the screen. Shown on disabled controls too — a greyed-out Start button is
+         exactly when somebody needs to be told why. -->
+    <Style Selector="Button, ComboBox, CheckBox, ToggleButton, Slider, TextBox">
+        <Setter Property="ToolTip.ShowOnDisabled" Value="True" />
+    </Style>
+
+    <Style Selector="ToolTip">
+        <Setter Property="MaxWidth" Value="300" />
+        <Setter Property="Background" Value="{DynamicResource PanelSolid}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource HairlineStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusControl}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSmall}" />
+        <Setter Property="Padding" Value="11,9" />
+    </Style>
+
+    <Style Selector="ToolTip /template/ ContentPresenter">
+        <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+        <Setter Property="TextBlock.LineHeight" Value="17" />
+    </Style>
+
     <!-- Selection in a list is a tint, not a slab. The accent override makes Fluent's
          default selection ember rather than blue, but a solid fill still shouts in a
          panel built out of translucency. -->

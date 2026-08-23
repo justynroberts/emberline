@@ -17,7 +17,7 @@
                 </StackPanel>
                 <TextBox Grid.Column="1" x:Name="SearchBox" PlaceholderText="Search by name, material or machine"
                          MinWidth="260" VerticalAlignment="Center" />
-                <Button Grid.Column="2" Content="Refresh" x:Name="RefreshButton" />
+                <Button ToolTip.Tip="Reload the list of past jobs." Grid.Column="2" Content="Refresh" x:Name="RefreshButton" />
             </Grid>
         </Border>
 
@@ -63,7 +63,7 @@
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap" Classes="label"
                            Text="Everything is stored locally in openburn.db. Settings that finished successfully are the ones worth reusing — they are what actually worked on this machine." />
-                <Button Grid.Column="1" Content="Close" x:Name="CloseButton" />
+                <Button ToolTip.Tip="Close the job history." Grid.Column="1" Content="Close" x:Name="CloseButton" />
             </Grid>
         </Border>
     </Grid>

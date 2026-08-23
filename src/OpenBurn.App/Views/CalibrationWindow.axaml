@@ -31,9 +31,9 @@
 
                 <TextBlock Grid.Column="3" x:Name="ResidualText" Classes="label" VerticalAlignment="Center" />
 
-                <Button Grid.Column="4" Content="Start again" Click="OnReset" />
-                <Button Grid.Column="5" Content="Cancel" Click="OnCancel" />
-                <Button Grid.Column="6" x:Name="ApplyButton" Content="Apply" Classes="primary" Click="OnApply" IsEnabled="False" />
+                <Button ToolTip.Tip="Discard the corners marked so far and start clicking again." Grid.Column="4" Content="Start again" Click="OnReset" />
+                <Button ToolTip.Tip="Close without changing the calibration." Grid.Column="5" Content="Cancel" Click="OnCancel" />
+                <Button ToolTip.Tip="Save these four corners as the calibration, so the camera picture lines up with real millimetres." Grid.Column="6" x:Name="ApplyButton" Content="Apply" Classes="primary" Click="OnApply" IsEnabled="False" />
             </Grid>
         </Border>
     </Grid>

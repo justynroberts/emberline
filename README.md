@@ -108,6 +108,19 @@ Escape is the emergency stop from anywhere in the window.
 
 ---
 
+## If you have never used a laser
+
+Hover over anything. Every button, dropdown, slider and tick box says what it
+does in plain words — including the ones that are greyed out, which is exactly
+when you need to know why. The Start button explains what is stopping it: not
+connected, nothing drawn yet, or a specific problem with the job.
+
+Press **Virtual** in the machine panel to run the whole thing against a built-in
+simulator. Jobs stream, progress moves, the preview plays, and nothing burns. It
+is the same code path the real machine uses, so anything you learn there is true.
+
+---
+
 ## Getting settings right
 
 The built-in material library is a starting point, not an answer. Every machine,
@@ -218,7 +231,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 400 tests, no hardware required
+dotnet test                     # 406 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -228,7 +241,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-400 tests, no hardware required. The ones that matter most run complete jobs
+406 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

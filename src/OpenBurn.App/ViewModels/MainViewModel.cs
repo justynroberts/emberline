@@ -165,6 +165,46 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public bool IsJobActive => JobState.IsActive();
     public bool CanStartJob => IsConnected && !IsJobActive && _cam is { CanRun: true };
 
+    /// <summary>
+    /// Why Start is greyed out, in words, shown as its tooltip.
+    ///
+    /// A disabled button with no explanation is the single most confusing thing
+    /// in a machine controller for somebody who has not used one: nothing on
+    /// screen says whether the problem is the machine, the artwork or the
+    /// settings. The button knows; it should say.
+    /// </summary>
+    public string StartHint
+    {
+        get
+        {
+            if (IsJobRunning) return "A job is already running. Pause or stop it first.";
+            if (IsJobPaused) return "The job is paused. Use Resume to carry on from where it stopped.";
+
+            if (!IsConnected)
+            {
+                return "Not connected to a machine yet. Press USB or Wi-Fi in the machine panel — " +
+                       "or Virtual, which runs the whole job against a built-in simulator so you can " +
+                       "try everything without hardware.";
+            }
+
+            if (Design.Shapes.Count == 0)
+            {
+                return "There is nothing to burn yet. Open a file, or draw a shape or add text " +
+                       "with the tools down the left-hand side.";
+            }
+
+            if (_cam is { CanRun: false })
+            {
+                return IssueSummary is { Length: > 0 } why
+                    ? "This job cannot run yet: " + why
+                    : "This job cannot run yet — see the Job panel for what is blocking it.";
+            }
+
+            return "Send the job to the machine and start burning. Press Frame first if you have not " +
+                   "checked where it will land on the material.";
+        }
+    }
+
     public string MachineStateName => IsConnected ? MachineStatus.State.ToString() : "Disconnected";
 
     public string StateColourKey => !IsConnected ? "StateOff" : MachineStatus.State switch
@@ -320,6 +360,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(JobSizeText));
         OnPropertyChanged(nameof(LineCountText));
         OnPropertyChanged(nameof(CanStartJob));
+        OnPropertyChanged(nameof(StartHint));
         OnPropertyChanged(nameof(HasBlockingIssue));
         OnPropertyChanged(nameof(IssueSummary));
         StartJobCommand.NotifyCanExecuteChanged();
