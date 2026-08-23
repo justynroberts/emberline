@@ -21,7 +21,14 @@ public partial class MainWindow : Window
         if (_workspace is not null)
         {
             _workspace.CursorMoved += mm => Model?.SetCursor(mm);
-            _workspace.ShapePicked += shape => Model?.PickShape(shape);
+            _workspace.SelectionRequested += (shapes, additive) => Model?.SetSelection(shapes, additive);
+
+            // The canvas mutates shapes directly during a drag; these three hooks
+            // are how the view model learns to snapshot for undo and to regenerate
+            // the toolpath afterwards.
+            _workspace.EditBegan += name => Model?.BeginCanvasEdit(name);
+            _workspace.EditChanged += () => Model?.CanvasEditChanged();
+            _workspace.EditEnded += () => Model?.EndCanvasEdit();
             _workspace.BedDoubleClicked += mm =>
             {
                 // Double-clicking the bed sends the head there. It moves the machine,
@@ -132,6 +139,70 @@ public partial class MainWindow : Window
         if (typing)
         {
             base.OnKeyDown(e);
+            return;
+        }
+
+        // Command on macOS, Control elsewhere. Avalonia reports the platform's own
+        // modifier, so checking both keeps one code path.
+        var accel = e.KeyModifiers.HasFlag(KeyModifiers.Meta) || e.KeyModifiers.HasFlag(KeyModifiers.Control);
+
+        if (accel)
+        {
+            switch (e.Key)
+            {
+                case Key.Z when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                    Model.RedoEditCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.Z:
+                    Model.UndoEditCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.Y:
+                    Model.RedoEditCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.A:
+                    Model.SelectAllCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.D:
+                    Model.DuplicateSelectedCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.G when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                    Model.UngroupSelectionCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.G:
+                    Model.GroupSelectionCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.O:
+                    Model.OpenCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.N:
+                    Model.NewDocumentCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+            }
+        }
+
+        // Arrow keys nudge the selection when something is selected, and jog the
+        // machine when nothing is. Shift makes both coarse.
+        if (e.Key is Key.Left or Key.Right or Key.Up or Key.Down && Model.HasSelection)
+        {
+            var step = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 10.0 : 1.0;
+            var (dx, dy) = e.Key switch
+            {
+                Key.Left => (-step, 0.0),
+                Key.Right => (step, 0.0),
+                Key.Up => (0.0, step),
+                _ => (0.0, -step),
+            };
+            Model.NudgeSelection(dx, dy);
+            e.Handled = true;
             return;
         }
 

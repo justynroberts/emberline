@@ -30,18 +30,38 @@
                             HeadPosition="{Binding HeadPosition}"
                             ShowGrid="{Binding ShowGrid}"
                             ShowTravel="{Binding ShowTravel}"
-                            SelectedShape="{Binding SelectedShape}"
+                            Selection="{Binding Selection}"
+                            SnapEnabled="{Binding SnapEnabled}"
+                            SnapMm="{Binding SnapMm}"
                             BedImage="{Binding BedImage}"
                             BedImageOpacity="{Binding BedImageOpacity}" />
 
         <!-- ============================== Left tool rail ============================== -->
         <Border Classes="panel focusIn" Width="60" Margin="12,12,0,12"
                 HorizontalAlignment="Left" VerticalAlignment="Stretch" Padding="8,12">
-            <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Top" Spacing="6">
+            <DockPanel LastChildFill="True">
+                <!-- The bottom group is pinned first so it always has room; the tools
+                     above scroll if the window is short. The info button must stay
+                     reachable on every screen, and a rail that outgrows the window
+                     silently clips it. -->
+                <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,8,0,0">
+                    <Button Classes="tool" Content="◐" ToolTip.Tip="Switch theme" Command="{Binding CycleThemeCommand}" />
+                    <Button Classes="round" Content="i"
+                            HorizontalAlignment="Center"
+                            AutomationProperties.Name="About this app"
+                            ToolTip.Tip="About OpenBurn"
+                            Click="OnShowAbout" />
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="6">
                     <Button Classes="tool" Content="▭" ToolTip.Tip="Add rectangle" Command="{Binding AddRectangleCommand}" />
                     <Button Classes="tool" Content="◯" ToolTip.Tip="Add circle" Command="{Binding AddCircleCommand}" />
                     <Button Classes="tool" Content="⬡" ToolTip.Tip="Add polygon" Command="{Binding AddPolygonCommand}" />
+                    <Button Classes="tool" Content="T" ToolTip.Tip="Add text" Command="{Binding AddTextCommand}" />
+                    <Separator />
+                    <Button Classes="tool" Content="↺" ToolTip.Tip="Undo" Command="{Binding UndoEditCommand}" />
+                    <Button Classes="tool" Content="↻" ToolTip.Tip="Redo" Command="{Binding RedoEditCommand}" />
                     <Separator />
                     <Button Classes="tool" Content="⤓" ToolTip.Tip="Import artwork (SVG, image or G-code)" Command="{Binding OpenCommand}" />
                     <Button Classes="tool" Content="◈" ToolTip.Tip="Trace the selected image to vectors" Command="{Binding TraceSelectedCommand}" />
@@ -58,15 +78,7 @@
                     <Button Classes="tool" Content="≣" ToolTip.Tip="Machine console" Command="{Binding ToggleConsoleCommand}" />
                     <Button Classes="tool" Content="✦" ToolTip.Tip="Assistant" Command="{Binding ToggleAssistantCommand}" />
                 </StackPanel>
-
-                <StackPanel DockPanel.Dock="Bottom" Spacing="6">
-                    <Button Classes="tool" Content="◐" ToolTip.Tip="Switch theme" Command="{Binding CycleThemeCommand}" />
-                    <Button Classes="round" Content="i"
-                            HorizontalAlignment="Center"
-                            AutomationProperties.Name="About this app"
-                            ToolTip.Tip="About OpenBurn"
-                            Click="OnShowAbout" />
-                </StackPanel>
+                </ScrollViewer>
             </DockPanel>
         </Border>
 
@@ -422,11 +434,95 @@
                         <!-- Selection -->
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="SELECTION" />
-                            <TextBlock Text="{Binding SelectedShapeSummary}" Classes="mono" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SelectionSummary}" Classes="mono" TextWrapping="Wrap" />
+
+                            <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto"
+                                  ColumnSpacing="8" RowSpacing="6"
+                                  IsVisible="{Binding HasSelection}">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="X" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedXMm, StringFormat={}{0:0.##}}" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Y" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding SelectedYMm, StringFormat={}{0:0.##}}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="W" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedWidthMm, StringFormat={}{0:0.##}}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="H" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding SelectedHeightMm, StringFormat={}{0:0.##}}" />
+                            </Grid>
+
                             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
                                 <Button Grid.Column="0" Content="Centre" Command="{Binding CentreSelectedCommand}" />
                                 <Button Grid.Column="1" Content="Rotate" Command="{Binding RotateSelectedCommand}" CommandParameter="90" />
                                 <Button Grid.Column="2" Content="Mirror" Command="{Binding MirrorSelectedCommand}" CommandParameter="horizontal" />
+                            </Grid>
+
+                            <TextBlock Classes="sectionTitle" Text="ALIGN" Margin="0,4,0,0" />
+                            <UniformGrid Rows="1" Columns="6">
+                                <Button Content="⇤" ToolTip.Tip="Align left" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Left" />
+                                <Button Content="↔" ToolTip.Tip="Centre horizontally" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="HorizontalCentre" />
+                                <Button Content="⇥" ToolTip.Tip="Align right" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Right" />
+                                <Button Content="⤒" ToolTip.Tip="Align top" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Top" />
+                                <Button Content="↕" ToolTip.Tip="Centre vertically" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="VerticalCentre" />
+                                <Button Content="⤓" ToolTip.Tip="Align bottom" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Bottom" />
+                            </UniformGrid>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Spread ↔"
+                                        ToolTip.Tip="Even the horizontal gaps (needs three or more)"
+                                        Command="{Binding DistributeSelectionCommand}" CommandParameter="Horizontal" />
+                                <Button Grid.Column="1" Content="Spread ↕"
+                                        Command="{Binding DistributeSelectionCommand}" CommandParameter="Vertical" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Group" Command="{Binding GroupSelectionCommand}" />
+                                <Button Grid.Column="1" Content="Ungroup" Command="{Binding UngroupSelectionCommand}" />
+                                <Button Grid.Column="2" Content="Lock" Command="{Binding ToggleLockSelectionCommand}" />
+                                <Button Grid.Column="3" Content="Hide" Command="{Binding ToggleVisibilitySelectionCommand}" />
+                            </Grid>
+
+                            <CheckBox Content="Snap to grid" IsChecked="{Binding SnapEnabled}"
+                                      ToolTip.Tip="Hold Ctrl while dragging to bypass" />
+
+                            <TextBlock Classes="sectionTitle" Text="ARRAY" Margin="0,4,0,0" />
+                            <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" ColumnSpacing="6">
+                                <TextBlock Grid.Column="0" Text="Cols" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Text="{Binding ArrayColumns}" />
+                                <TextBlock Grid.Column="2" Text="Rows" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="3" Text="{Binding ArrayRows}" />
+                                <TextBlock Grid.Column="4" Text="Gap" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="5" Text="{Binding ArraySpacingMm}" />
+                            </Grid>
+                            <Button Content="Create array" HorizontalAlignment="Stretch"
+                                    Command="{Binding CreateArrayCommand}" />
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Text -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="sectionTitle" Text="TEXT" />
+                            <TextBox Text="{Binding TextInput}" AcceptsReturn="True" MinHeight="52"
+                                     PlaceholderText="Type here, then press Add" />
+                            <Grid ColumnDefinitions="*,Auto,70" ColumnSpacing="6">
+                                <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableFonts}"
+                                          SelectedItem="{Binding TextFont}" HorizontalAlignment="Stretch" />
+                                <TextBlock Grid.Column="1" Text="mm" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="2" Text="{Binding TextSizeMm}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Add" Command="{Binding AddTextCommand}" />
+                                <Button Grid.Column="1" Content="Update" Command="{Binding RefreshTextCommand}"
+                                        IsEnabled="{Binding IsTextSelected}" />
+                                <Button Grid.Column="2" Content="To paths" Command="{Binding ConvertTextToPathsCommand}"
+                                        IsEnabled="{Binding IsTextSelected}"
+                                        ToolTip.Tip="Convert live text to outlines — no longer editable as text" />
                             </Grid>
                         </StackPanel>
 

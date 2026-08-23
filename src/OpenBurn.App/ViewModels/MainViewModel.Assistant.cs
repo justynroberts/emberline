@@ -248,5 +248,5 @@ public sealed partial class MainViewModel : IAssistantHost
             : 0;
 
     public byte[]? GetSelectedImagePng() =>
-        SelectedShape is ImageShape image ? ImageImporter.ToPng(image.Source) : null;
+        PrimarySelection is ImageShape image ? ImageImporter.ToPng(image.Source) : null;
 }

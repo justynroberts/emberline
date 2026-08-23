@@ -45,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _ = MaterialLibrary.LoadAsync(AppPaths.MaterialsFile);
 
         Design = Core.Documents.Design.CreateDefault();
+        Undo.Changed += RaiseUndoState;
         SelectedMachine = Machines.Find(settings.LastMachineId ?? string.Empty) ?? Machines.Default;
 
         DisplayUnit = settings.DisplayUnit;
@@ -92,9 +93,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private LayerViewModel? _selectedLayer;
-
-    [ObservableProperty]
-    private Shape? _selectedShape;
 
     [ObservableProperty]
     private Toolpath? _toolpath;
@@ -324,23 +322,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public void SetCursor(Vec2 mm) =>
         CursorText = $"{UnitConvert.FromMm(mm.X, DisplayUnit):0.0}, {UnitConvert.FromMm(mm.Y, DisplayUnit):0.0} {DisplayUnit.Suffix()}";
-
-    public void PickShape(Shape? shape)
-    {
-        SelectedShape = shape;
-        OnPropertyChanged(nameof(SelectedShapeSummary));
-    }
-
-    public string SelectedShapeSummary
-    {
-        get
-        {
-            if (SelectedShape is null) return "Nothing selected";
-            var b = SelectedShape.Bounds;
-            return $"{SelectedShape.Name} · {UnitConvert.FromMm(b.Width, DisplayUnit):0.#} × " +
-                   $"{UnitConvert.FromMm(b.Height, DisplayUnit):0.#} {DisplayUnit.Suffix()}";
-        }
-    }
 
     public void Dispose()
     {

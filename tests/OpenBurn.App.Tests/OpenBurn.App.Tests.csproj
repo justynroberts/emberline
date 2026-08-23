@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Avalonia.Headless.XUnit targets xunit v3, whose runner executes the test
+         assembly as a process. That needs an executable output and an app host,
+         unlike the v2 projects elsewhere in this solution. -->
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="12.1.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OpenBurn.App\OpenBurn.App.csproj" />
+    <ProjectReference Include="..\..\src\OpenBurn.Core\OpenBurn.Core.csproj" />
+  </ItemGroup>
+
+</Project>

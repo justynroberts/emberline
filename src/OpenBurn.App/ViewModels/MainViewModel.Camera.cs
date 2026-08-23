@@ -277,16 +277,41 @@ public sealed partial class MainViewModel
         foreach (var workpiece in found) Console.AppendInfo($"Workpiece: {workpiece.Describe()}");
 
         // Centre the selection on the largest one, which is the common case.
-        if (SelectedShape is { } shape)
+        if (PrimarySelection is not { } shape) return;
+
+        // One workpiece: centre the selection on it. Several: offer to copy onto
+        // each, which is the batch case the PRD describes.
+        if (found.Count == 1)
         {
             var target = found[0];
             var bounds = shape.Bounds;
-            shape.MoveTo(new Core.Geometry.Vec2(
+            EditSelection("Place on workpiece", () => shape.MoveTo(new Core.Geometry.Vec2(
                 target.CentreXMm - bounds.Width / 2,
-                target.CentreYMm - bounds.Height / 2));
+                target.CentreYMm - bounds.Height / 2)));
 
-            QueueRegenerate();
-            Console.AppendInfo($"Moved '{shape.Name}' onto the largest workpiece.");
+            Console.AppendInfo($"Moved '{shape.Name}' onto the workpiece.");
+            return;
         }
+
+        var centres = found
+            .Select(w => new Core.Geometry.Vec2(w.CentreXMm, w.CentreYMm))
+            .ToList();
+
+        var copies = Core.Documents.Arrange.PlaceOnEach(shape, centres);
+        if (copies.Count == 0) return;
+
+        EditDocument($"Place on {copies.Count} workpieces", () =>
+        {
+            Design.RemoveShape(shape);
+            Selection.Clear();
+            foreach (var copy in copies)
+            {
+                copy.LayerId = shape.LayerId;
+                Design.Shapes.Add(copy);
+                Selection.Add(copy);
+            }
+        });
+
+        Console.AppendInfo($"Copied '{shape.Name}' onto {copies.Count} detected workpieces.");
     }
 }

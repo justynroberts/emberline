@@ -23,7 +23,8 @@ public sealed partial class MainViewModel
     private void NewDocument()
     {
         Design = Core.Documents.Design.CreateDefault();
-        SelectedShape = null;
+        Selection.Clear();
+        Undo.Clear();
         RebuildLayers();
         QueueRegenerate();
         Console.AppendInfo("New document.");
@@ -99,7 +100,9 @@ public sealed partial class MainViewModel
             }
 
             Settings = Settings.WithRecentFile(path);
-            SelectedShape = Design.Shapes.LastOrDefault();
+            Selection.Clear();
+            if (Design.Shapes.LastOrDefault() is { } added) Selection.Add(added);
+            RaiseSelectionChanged();
             QueueRegenerate();
         }
         catch (Exception ex)
@@ -153,9 +156,13 @@ public sealed partial class MainViewModel
     {
         var shape = PathShape.Rectangle(60, 40);
         PlaceOnBed(shape);
-        Design.AddShape(shape, SelectedLayer?.Layer);
-        SelectedShape = shape;
-        QueueRegenerate();
+
+        EditDocument("Add rectangle", () =>
+        {
+            Design.AddShape(shape, SelectedLayer?.Layer);
+            Selection.Clear();
+            Selection.Add(shape);
+        });
     }
 
     [RelayCommand]
@@ -163,9 +170,13 @@ public sealed partial class MainViewModel
     {
         var shape = PathShape.Ellipse(25, 25);
         PlaceOnBed(shape);
-        Design.AddShape(shape, SelectedLayer?.Layer);
-        SelectedShape = shape;
-        QueueRegenerate();
+
+        EditDocument("Add circle", () =>
+        {
+            Design.AddShape(shape, SelectedLayer?.Layer);
+            Selection.Clear();
+            Selection.Add(shape);
+        });
     }
 
     [RelayCommand]
@@ -173,65 +184,108 @@ public sealed partial class MainViewModel
     {
         var shape = PathShape.Polygon(6, 25, 90);
         PlaceOnBed(shape);
-        Design.AddShape(shape, SelectedLayer?.Layer);
-        SelectedShape = shape;
-        QueueRegenerate();
+
+        EditDocument("Add polygon", () =>
+        {
+            Design.AddShape(shape, SelectedLayer?.Layer);
+            Selection.Clear();
+            Selection.Add(shape);
+        });
     }
 
     [RelayCommand]
     private void DeleteSelected()
     {
-        if (SelectedShape is null) return;
-        Design.RemoveShape(SelectedShape);
-        SelectedShape = null;
-        QueueRegenerate();
+        if (Selection.Count == 0) return;
+
+        var doomed = Selection.Where(s => !s.Locked).ToList();
+        if (doomed.Count == 0)
+        {
+            Console.AppendInfo("Everything selected is locked. Unlock it first.");
+            return;
+        }
+
+        EditDocument($"Delete {doomed.Count} shape(s)", () =>
+        {
+            foreach (var shape in doomed) Design.RemoveShape(shape);
+            Selection.Clear();
+        });
     }
 
     [RelayCommand]
     private void DuplicateSelected()
     {
-        if (SelectedShape is null) return;
-        var copy = SelectedShape.Clone();
-        copy.Translate(new Vec2(5, -5));
-        Design.Shapes.Add(copy);
-        SelectedShape = copy;
-        QueueRegenerate();
+        if (Selection.Count == 0) return;
+
+        var copies = Selection.Select(s =>
+        {
+            var copy = s.Clone();
+            copy.Translate(new Vec2(5, -5));
+            return copy;
+        }).ToList();
+
+        EditDocument($"Duplicate {copies.Count} shape(s)", () =>
+        {
+            foreach (var copy in copies) Design.Shapes.Add(copy);
+            Selection.Clear();
+            foreach (var copy in copies) Selection.Add(copy);
+        });
     }
 
     [RelayCommand]
     private void CentreSelected()
     {
-        if (SelectedShape is null) return;
-        var b = SelectedShape.Bounds;
-        SelectedShape.MoveTo(new Vec2((SelectedMachine.BedWidthMm - b.Width) / 2,
-                                      (SelectedMachine.BedHeightMm - b.Height) / 2));
-        QueueRegenerate();
-        OnPropertyChanged(nameof(SelectedShapeSummary));
+        if (Selection.Count == 0) return;
+
+        EditSelection("Centre", () =>
+        {
+            var bounds = Core.Documents.Arrange.Bounds(Selection);
+            if (bounds.IsEmpty) return;
+
+            var delta = new Vec2(
+                (SelectedMachine.BedWidthMm - bounds.Width) / 2 - bounds.MinX,
+                (SelectedMachine.BedHeightMm - bounds.Height) / 2 - bounds.MinY);
+
+            foreach (var shape in Selection)
+            {
+                if (!shape.Locked) shape.Translate(delta);
+            }
+        });
     }
 
     [RelayCommand]
     private void RotateSelected(string? degrees)
     {
-        if (SelectedShape is null) return;
+        if (Selection.Count == 0) return;
         var angle = double.TryParse(degrees, out var d) ? d : 90;
-        SelectedShape.RotateAbout(angle, SelectedShape.Bounds.Center);
-        QueueRegenerate();
-        OnPropertyChanged(nameof(SelectedShapeSummary));
+
+        EditSelection($"Rotate {angle:0.#} degrees", () =>
+            Core.Documents.Arrange.RotateSelection(Selection, angle, Core.Documents.Arrange.Bounds(Selection).Center));
     }
 
     [RelayCommand]
     private void MirrorSelected(string? axis)
     {
-        if (SelectedShape is null) return;
-        SelectedShape.Mirror(axis != "vertical", SelectedShape.Bounds.Center);
-        QueueRegenerate();
+        if (Selection.Count == 0) return;
+
+        var horizontal = axis != "vertical";
+        EditSelection(horizontal ? "Mirror horizontally" : "Mirror vertically", () =>
+        {
+            // Mirror about the whole selection rather than each shape individually,
+            // or a row of shapes flips in place and keeps the same arrangement.
+            var pivot = Core.Documents.Arrange.Bounds(Selection).Center;
+            foreach (var shape in Selection)
+            {
+                if (!shape.Locked) shape.Mirror(horizontal, pivot);
+            }
+        });
     }
 
     /// <summary>Trace the selected bitmap to vectors and add the result as a path shape.</summary>
     [RelayCommand]
     private void TraceSelected()
     {
-        if (SelectedShape is not ImageShape image)
+        if (PrimarySelection is not ImageShape image)
         {
             Console.AppendError("Select an imported image first.");
             return;
@@ -242,12 +296,16 @@ public sealed partial class MainViewModel
             var traced = BitmapTracer.TraceToShape(image.Source, image.WidthMm, image.HeightMm);
             traced.Transform = image.Transform;
             traced.Name = image.Name + " (traced)";
-            Design.AddShape(traced, SelectedLayer?.Layer);
-            SelectedShape = traced;
+
+            EditDocument("Trace image", () =>
+            {
+                Design.AddShape(traced, SelectedLayer?.Layer);
+                Selection.Clear();
+                Selection.Add(traced);
+            });
 
             Console.AppendInfo($"Traced {traced.Paths.Count} contour(s). " +
                                "Adjust the threshold and re-trace if the result is too noisy or too sparse.");
-            QueueRegenerate();
         }
         catch (Exception ex)
         {

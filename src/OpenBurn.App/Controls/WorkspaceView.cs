@@ -12,22 +12,27 @@ using OpenBurn.GCode;
 // naturally without fully-qualifying every use.
 using Design = OpenBurn.Core.Documents.Design;
 using Shape = OpenBurn.Core.Documents.Shape;
+// Control.Arrange(Rect) is a layout method; alias ours so the two never collide.
+using ArrangeOps = OpenBurn.Core.Documents.Arrange;
 
 namespace OpenBurn.App.Controls;
 
 /// <summary>
-/// The bed, the artwork and the toolpath, on one pan-and-zoom canvas.
+/// The bed, the artwork and the toolpath, on one pan-and-zoom canvas, with direct
+/// manipulation of the selection.
 ///
-/// Two rendering decisions carry the whole thing:
+/// Three things carry the whole control:
 ///
 ///  * **Batched geometry.** A raster preview is hundreds of thousands of segments.
-///    Drawing each one individually drops the canvas to single-figure frame rates,
-///    so segments are bucketed into eight power bands and each band becomes one
-///    <see cref="StreamGeometry"/>. Rebuilt only when the toolpath changes, never
-///    on pan or zoom.
+///    Drawing each one individually drops the canvas to single figures, so segments
+///    are bucketed into eight power bands and each band becomes one
+///    <see cref="StreamGeometry"/>, rebuilt only when the toolpath changes.
 ///  * **Millimetres throughout.** The view transform converts to pixels at the last
-///    possible moment. Everything above this control thinks in millimetres, so
-///    what the canvas shows and what the machine does are the same numbers.
+///    possible moment, so what the canvas shows and what the machine does are the
+///    same numbers.
+///  * **Handles in pixels, transforms in millimetres.** A grab handle that shrinks
+///    with zoom is unusable, so hit testing is in screen space; everything it
+///    produces is in bed space.
 /// </summary>
 public sealed class WorkspaceView : Control
 {
@@ -52,21 +57,26 @@ public sealed class WorkspaceView : Control
     public static readonly StyledProperty<bool> ShowTravelProperty =
         AvaloniaProperty.Register<WorkspaceView, bool>(nameof(ShowTravel));
 
-    public static readonly StyledProperty<Shape?> SelectedShapeProperty =
-        AvaloniaProperty.Register<WorkspaceView, Shape?>(nameof(SelectedShape));
+    /// <summary>Everything currently selected. Owned by the view model; the view only reads it.</summary>
+    public static readonly StyledProperty<IReadOnlyList<Shape>?> SelectionProperty =
+        AvaloniaProperty.Register<WorkspaceView, IReadOnlyList<Shape>?>(nameof(Selection));
 
     /// <summary>
     /// A rectified top-down photograph of the bed, drawn behind everything else.
-    ///
-    /// This is what turns positioning from a numeric exercise into a visual one:
-    /// the operator sees their actual workpiece under their artwork and drags one
-    /// onto the other.
+    /// This is what turns positioning from a numeric exercise into a visual one.
     /// </summary>
     public static readonly StyledProperty<Bitmap?> BedImageProperty =
         AvaloniaProperty.Register<WorkspaceView, Bitmap?>(nameof(BedImage));
 
     public static readonly StyledProperty<double> BedImageOpacityProperty =
         AvaloniaProperty.Register<WorkspaceView, double>(nameof(BedImageOpacity), 0.85);
+
+    /// <summary>Snap increment in millimetres while dragging. Zero disables snapping.</summary>
+    public static readonly StyledProperty<double> SnapMmProperty =
+        AvaloniaProperty.Register<WorkspaceView, double>(nameof(SnapMm), 1.0);
+
+    public static readonly StyledProperty<bool> SnapEnabledProperty =
+        AvaloniaProperty.Register<WorkspaceView, bool>(nameof(SnapEnabled), true);
 
     public MachineProfile? Machine { get => GetValue(MachineProperty); set => SetValue(MachineProperty, value); }
     public Design? Design { get => GetValue(DesignProperty); set => SetValue(DesignProperty, value); }
@@ -75,9 +85,11 @@ public sealed class WorkspaceView : Control
     public double JobFraction { get => GetValue(JobFractionProperty); set => SetValue(JobFractionProperty, value); }
     public bool ShowGrid { get => GetValue(ShowGridProperty); set => SetValue(ShowGridProperty, value); }
     public bool ShowTravel { get => GetValue(ShowTravelProperty); set => SetValue(ShowTravelProperty, value); }
-    public Shape? SelectedShape { get => GetValue(SelectedShapeProperty); set => SetValue(SelectedShapeProperty, value); }
+    public IReadOnlyList<Shape>? Selection { get => GetValue(SelectionProperty); set => SetValue(SelectionProperty, value); }
     public Bitmap? BedImage { get => GetValue(BedImageProperty); set => SetValue(BedImageProperty, value); }
     public double BedImageOpacity { get => GetValue(BedImageOpacityProperty); set => SetValue(BedImageOpacityProperty, value); }
+    public double SnapMm { get => GetValue(SnapMmProperty); set => SetValue(SnapMmProperty, value); }
+    public bool SnapEnabled { get => GetValue(SnapEnabledProperty); set => SetValue(SnapEnabledProperty, value); }
 
     /// <summary>Pixels per millimetre.</summary>
     public double Zoom { get; private set; } = 2.0;
@@ -88,10 +100,19 @@ public sealed class WorkspaceView : Control
     /// <summary>Cursor position in bed millimetres, for the coordinate readout.</summary>
     public event Action<Vec2>? CursorMoved;
 
-    /// <summary>A shape was clicked, or the background was (null).</summary>
-    public event Action<Shape?>? ShapePicked;
+    /// <summary>The user picked shapes. An empty list means they clicked empty space.</summary>
+    public event Action<IReadOnlyList<Shape>, bool>? SelectionRequested;
 
-    /// <summary>Double-click on the bed, in millimetres — used for "move head here".</summary>
+    /// <summary>A drag is about to modify the selection — the view model should snapshot for undo.</summary>
+    public event Action<string>? EditBegan;
+
+    /// <summary>The drag finished. Fires once, after the last change.</summary>
+    public event Action? EditEnded;
+
+    /// <summary>Fired continuously during a drag so the preview can regenerate.</summary>
+    public event Action? EditChanged;
+
+    /// <summary>Double-click on the bed, in millimetres — used for "move the head here".</summary>
     public event Action<Vec2>? BedDoubleClicked;
 
     private const int PowerBuckets = 8;
@@ -102,15 +123,28 @@ public sealed class WorkspaceView : Control
     private bool _panning;
     private Point _panStart;
     private Vector _panOrigin;
+    private bool _hasFitted;
+
+    // Drag state
+    private HandleKind _activeHandle = HandleKind.None;
+    private Vec2 _dragStartMm;
+    private Vec2 _dragAnchor;
+    private Rect2 _dragStartBounds;
+    private Vec2 _lastAppliedMm;
+    private double _accumulatedRotation;
+    private bool _editing;
+
+    // Marquee
+    private bool _marquee;
+    private Point _marqueeStart;
+    private Point _marqueeCurrent;
 
     static WorkspaceView()
     {
         AffectsRender<WorkspaceView>(MachineProperty, DesignProperty, ToolpathProperty, HeadPositionProperty,
-                                     JobFractionProperty, ShowGridProperty, ShowTravelProperty, SelectedShapeProperty,
+                                     JobFractionProperty, ShowGridProperty, ShowTravelProperty, SelectionProperty,
                                      BedImageProperty, BedImageOpacityProperty);
     }
-
-    private bool _hasFitted;
 
     public WorkspaceView()
     {
@@ -133,9 +167,11 @@ public sealed class WorkspaceView : Control
 
     // ------------------------------------------------------------- transform
 
-    /// <summary>Bed millimetres to control pixels. Y is flipped: the bed's Y grows up, the screen's grows down.</summary>
+    /// <summary>Bed millimetres to control pixels. Y is flipped: the bed grows up, the screen grows down.</summary>
     public Point ToPixels(double xMm, double yMm) =>
         new(xMm * Zoom + Pan.X, Bounds.Height - (yMm * Zoom + Pan.Y));
+
+    public Point ToPixels(Vec2 mm) => ToPixels(mm.X, mm.Y);
 
     public Vec2 ToMillimetres(Point pixel) =>
         new((pixel.X - Pan.X) / Zoom, (Bounds.Height - pixel.Y - Pan.Y) / Zoom);
@@ -147,12 +183,22 @@ public sealed class WorkspaceView : Control
     /// </summary>
     public Thickness ChromeInset { get; set; } = new(90, 100, 356, 56);
 
-    /// <summary>Fit the bed in the visible area with a comfortable margin.</summary>
     public void ZoomToFitBed()
     {
         var machine = Machine;
         if (machine is null) return;
         FitTo(0, 0, machine.BedWidthMm, machine.BedHeightMm);
+    }
+
+    public void ZoomToFitContent()
+    {
+        var bounds = Design?.Bounds ?? Rect2.Empty;
+        if (bounds.IsEmpty || bounds.Width < 0.01 || bounds.Height < 0.01)
+        {
+            ZoomToFitBed();
+            return;
+        }
+        FitTo(bounds.MinX, bounds.MinY, bounds.Width, bounds.Height);
     }
 
     private void FitTo(double minX, double minY, double width, double height)
@@ -166,7 +212,6 @@ public sealed class WorkspaceView : Control
 
         Zoom = Math.Clamp(Math.Min(usableWidth / width, usableHeight / height), 0.05, 80);
 
-        // Centre of the visible region, in control pixels.
         var centreX = ChromeInset.Left + margin + usableWidth / 2;
         var centreY = ChromeInset.Top + margin + usableHeight / 2;
 
@@ -177,18 +222,6 @@ public sealed class WorkspaceView : Control
         InvalidateVisual();
     }
 
-    /// <summary>Fit the artwork rather than the whole bed.</summary>
-    public void ZoomToFitContent()
-    {
-        var bounds = Design?.Bounds ?? Rect2.Empty;
-        if (bounds.IsEmpty || bounds.Width < 0.01 || bounds.Height < 0.01)
-        {
-            ZoomToFitBed();
-            return;
-        }
-        FitTo(bounds.MinX, bounds.MinY, bounds.Width, bounds.Height);
-    }
-
     /// <summary>Zoom about a pivot, keeping whatever is under it stationary.</summary>
     public void ZoomBy(double factor, Point? centre = null)
     {
@@ -197,7 +230,6 @@ public sealed class WorkspaceView : Control
 
         Zoom = Math.Clamp(Zoom * factor, 0.05, 80);
 
-        // Solve the pan that puts `before` back under the pivot at the new zoom.
         Pan = new Vector(pivot.X - before.X * Zoom, Bounds.Height - pivot.Y - before.Y * Zoom);
         InvalidateVisual();
     }
@@ -216,10 +248,9 @@ public sealed class WorkspaceView : Control
         var point = e.GetCurrentPoint(this);
         var position = point.Position;
 
-        // Middle button, or space held, pans. Left picks.
         var wantsPan = point.Properties.IsMiddleButtonPressed ||
-                       e.KeyModifiers.HasFlag(KeyModifiers.Alt) ||
-                       point.Properties.IsRightButtonPressed;
+                       point.Properties.IsRightButtonPressed ||
+                       e.KeyModifiers.HasFlag(KeyModifiers.Alt);
 
         if (wantsPan)
         {
@@ -231,36 +262,230 @@ public sealed class WorkspaceView : Control
             return;
         }
 
-        if (point.Properties.IsLeftButtonPressed)
+        if (!point.Properties.IsLeftButtonPressed) return;
+
+        if (e.ClickCount == 2)
         {
-            if (e.ClickCount == 2)
+            BedDoubleClicked?.Invoke(ToMillimetres(position));
+            e.Handled = true;
+            return;
+        }
+
+        // A handle on the current selection takes priority over picking something new.
+        var selectionBounds = SelectionBounds();
+        if (!selectionBounds.IsEmpty)
+        {
+            var handle = SelectionInteraction.HitTest(ToPixelRect(selectionBounds), position);
+            if (handle is not HandleKind.None and not HandleKind.Move)
             {
-                BedDoubleClicked?.Invoke(ToMillimetres(position));
+                BeginDrag(handle, position, selectionBounds);
+                e.Pointer.Capture(this);
                 e.Handled = true;
                 return;
             }
-
-            ShapePicked?.Invoke(HitTest(ToMillimetres(position)));
-            e.Handled = true;
         }
+
+        var additive = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var hit = HitTest(ToMillimetres(position));
+
+        if (hit is null)
+        {
+            // Empty space: start a marquee rather than clearing immediately, so a
+            // drag-select does not flash the selection off first.
+            _marquee = true;
+            _marqueeStart = position;
+            _marqueeCurrent = position;
+            if (!additive) SelectionRequested?.Invoke([], false);
+            e.Pointer.Capture(this);
+            e.Handled = true;
+            return;
+        }
+
+        var alreadySelected = Selection?.Contains(hit) == true;
+        if (!alreadySelected || additive) SelectionRequested?.Invoke([hit], additive);
+
+        // Dragging the body moves whatever is selected after the click resolves.
+        if (!hit.Locked)
+        {
+            BeginDrag(HandleKind.Move, position, SelectionBounds(hit));
+            e.Pointer.Capture(this);
+        }
+
+        e.Handled = true;
+    }
+
+    private void BeginDrag(HandleKind handle, Point position, Rect2 bounds)
+    {
+        _activeHandle = handle;
+        _dragStartMm = ToMillimetres(position);
+        _lastAppliedMm = _dragStartMm;
+        _dragStartBounds = bounds;
+        _dragAnchor = SelectionInteraction.AnchorFor(handle, bounds);
+        _accumulatedRotation = 0;
+        _editing = false;
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         var position = e.GetPosition(this);
-        CursorMoved?.Invoke(ToMillimetres(position));
+        var mm = ToMillimetres(position);
+        CursorMoved?.Invoke(mm);
 
-        if (!_panning) return;
-        var delta = position - _panStart;
-        Pan = new Vector(_panOrigin.X + delta.X, _panOrigin.Y - delta.Y);
+        if (_panning)
+        {
+            var delta = position - _panStart;
+            Pan = new Vector(_panOrigin.X + delta.X, _panOrigin.Y - delta.Y);
+            InvalidateVisual();
+            return;
+        }
+
+        if (_marquee)
+        {
+            _marqueeCurrent = position;
+            InvalidateVisual();
+            return;
+        }
+
+        if (_activeHandle != HandleKind.None)
+        {
+            ApplyDrag(mm, e.KeyModifiers);
+            return;
+        }
+
+        // Cursor feedback so the handles are discoverable without a tooltip.
+        var bounds = SelectionBounds();
+        Cursor = bounds.IsEmpty
+            ? Cursor.Default
+            : new Cursor(SelectionInteraction.CursorFor(SelectionInteraction.HitTest(ToPixelRect(bounds), position)));
+    }
+
+    private void ApplyDrag(Vec2 mm, KeyModifiers modifiers)
+    {
+        var targets = SelectionOrEmpty().Where(s => !s.Locked).ToList();
+        if (targets.Count == 0) return;
+
+        if (!_editing)
+        {
+            _editing = true;
+            EditBegan?.Invoke(_activeHandle switch
+            {
+                HandleKind.Move => "Move",
+                HandleKind.Rotate => "Rotate",
+                _ => "Resize",
+            });
+        }
+
+        switch (_activeHandle)
+        {
+            case HandleKind.Move:
+            {
+                var target = mm;
+                if (SnapEnabled && !modifiers.HasFlag(KeyModifiers.Control))
+                {
+                    // Snap the *bounding box corner* rather than the cursor, so a
+                    // shape lands on the grid rather than the pointer doing so.
+                    var offset = new Vec2(_dragStartBounds.MinX - _dragStartMm.X, _dragStartBounds.MinY - _dragStartMm.Y);
+                    var corner = SelectionInteraction.SnapToGrid(new Vec2(mm.X + offset.X, mm.Y + offset.Y), SnapMm);
+                    target = new Vec2(corner.X - offset.X, corner.Y - offset.Y);
+                }
+
+                var delta = new Vec2(target.X - _lastAppliedMm.X, target.Y - _lastAppliedMm.Y);
+                if (delta.LengthSquared < 1e-12) return;
+
+                foreach (var shape in targets) shape.Translate(delta);
+                _lastAppliedMm = target;
+                break;
+            }
+
+            case HandleKind.Rotate:
+            {
+                var pivot = _dragStartBounds.Center;
+                var angle = SelectionInteraction.AngleBetween(pivot, _dragStartMm, mm);
+                if (modifiers.HasFlag(KeyModifiers.Shift)) angle = SelectionInteraction.SnapAngle(angle);
+
+                var delta = angle - _accumulatedRotation;
+                if (Math.Abs(delta) < 1e-6) return;
+
+                ArrangeOps.RotateSelection(targets, delta, pivot);
+                _accumulatedRotation = angle;
+                break;
+            }
+
+            default:
+            {
+                // Scaling is computed against the *original* bounds each time, so
+                // the shape follows the pointer exactly instead of drifting as
+                // rounding accumulates over hundreds of incremental factors.
+                var current = SelectionBounds();
+                if (current.IsEmpty || _dragStartBounds.IsEmpty) return;
+
+                var uniform = modifiers.HasFlag(KeyModifiers.Shift) ||
+                              _activeHandle is HandleKind.ScaleTopLeft or HandleKind.ScaleTopRight
+                                  or HandleKind.ScaleBottomLeft or HandleKind.ScaleBottomRight &&
+                              modifiers.HasFlag(KeyModifiers.Shift);
+
+                var (targetX, targetY) = SelectionInteraction.ScaleFactors(_activeHandle, _dragStartBounds, _dragAnchor, mm, uniform);
+
+                var appliedX = _dragStartBounds.Width > 1e-9 ? current.Width / _dragStartBounds.Width : 1;
+                var appliedY = _dragStartBounds.Height > 1e-9 ? current.Height / _dragStartBounds.Height : 1;
+
+                var stepX = appliedX > 1e-9 ? targetX / appliedX : 1;
+                var stepY = appliedY > 1e-9 ? targetY / appliedY : 1;
+
+                if (Math.Abs(stepX - 1) < 1e-9 && Math.Abs(stepY - 1) < 1e-9) return;
+
+                ArrangeOps.ScaleSelection(targets, stepX, stepY, _dragAnchor);
+                break;
+            }
+        }
+
+        EditChanged?.Invoke();
         InvalidateVisual();
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
-        if (!_panning) return;
-        _panning = false;
-        e.Pointer.Capture(null);
+        if (_panning)
+        {
+            _panning = false;
+            e.Pointer.Capture(null);
+            return;
+        }
+
+        if (_marquee)
+        {
+            _marquee = false;
+            e.Pointer.Capture(null);
+
+            var a = ToMillimetres(_marqueeStart);
+            var b = ToMillimetres(_marqueeCurrent);
+            var rect = Rect2.FromPoints([a, b]);
+
+            // A tiny marquee is a click on empty space, not a selection attempt.
+            if (rect.Width > 0.5 || rect.Height > 0.5)
+            {
+                // Dragging right-to-left selects anything touched, left-to-right only
+                // what is fully enclosed — the convention every CAD package uses.
+                var requireInside = _marqueeCurrent.X >= _marqueeStart.X;
+                var found = SelectionInteraction.InMarquee(Design?.Shapes ?? [], rect, requireInside);
+                SelectionRequested?.Invoke(found, e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+            }
+
+            InvalidateVisual();
+            return;
+        }
+
+        if (_activeHandle != HandleKind.None)
+        {
+            _activeHandle = HandleKind.None;
+            e.Pointer.Capture(null);
+
+            if (_editing)
+            {
+                _editing = false;
+                EditEnded?.Invoke();
+            }
+        }
     }
 
     private Shape? HitTest(Vec2 mm)
@@ -268,16 +493,33 @@ public sealed class WorkspaceView : Control
         var design = Design;
         if (design is null) return null;
 
-        // Topmost first, with a tolerance that scales with zoom so small shapes stay
-        // clickable when zoomed out.
+        // Topmost first, with a tolerance that scales with zoom so small shapes
+        // stay clickable when zoomed out.
         var tolerance = 4 / Math.Max(Zoom, 0.01);
         for (var i = design.Shapes.Count - 1; i >= 0; i--)
         {
             var shape = design.Shapes[i];
             if (!shape.Visible) continue;
-            if (shape.Bounds.Inflate(tolerance).Contains(new Vec2(mm.X, mm.Y))) return shape;
+            if (shape.Bounds.Inflate(tolerance).Contains(mm)) return shape;
         }
         return null;
+    }
+
+    private IReadOnlyList<Shape> SelectionOrEmpty() => Selection ?? [];
+
+    private Rect2 SelectionBounds(Shape? include = null)
+    {
+        var r = Rect2.Empty;
+        foreach (var s in SelectionOrEmpty()) r = r.Union(s.Bounds);
+        if (include is not null) r = r.Union(include.Bounds);
+        return r;
+    }
+
+    private Rect ToPixelRect(Rect2 bounds)
+    {
+        var topLeft = ToPixels(bounds.MinX, bounds.MaxY);
+        var bottomRight = ToPixels(bounds.MaxX, bounds.MinY);
+        return new Rect(topLeft, bottomRight);
     }
 
     // --------------------------------------------------------------- render
@@ -285,8 +527,7 @@ public sealed class WorkspaceView : Control
     public override void Render(DrawingContext context)
     {
         var machine = Machine;
-        var bg = Brush(Application.Current, "BgSunken", Colors.Black);
-        context.FillRectangle(bg, new Rect(Bounds.Size));
+        context.FillRectangle(Brush("BgSunken", Colors.Black), new Rect(Bounds.Size));
 
         if (machine is null) return;
 
@@ -296,21 +537,15 @@ public sealed class WorkspaceView : Control
         DrawShapes(context);
         DrawToolpath(context);
         DrawSelection(context);
+        DrawMarquee(context);
         DrawOrigin(context);
         DrawHead(context);
     }
 
     private void DrawBed(DrawingContext context, MachineProfile machine)
     {
-        var topLeft = ToPixels(0, machine.BedHeightMm);
-        var bottomRight = ToPixels(machine.BedWidthMm, 0);
-        var rect = new Rect(topLeft, bottomRight);
-
-        context.DrawRectangle(
-            Brush(Application.Current, "BedFill", Colors.White),
-            new Pen(Brush(Application.Current, "BedEdge", Colors.Gray), 1.25),
-            rect,
-            8, 8);
+        var rect = ToPixelRect(new Rect2(0, 0, machine.BedWidthMm, machine.BedHeightMm));
+        context.DrawRectangle(Brush("BedFill", Colors.White), new Pen(Brush("BedEdge", Colors.Gray), 1.25), rect, 8, 8);
     }
 
     /// <summary>
@@ -322,10 +557,7 @@ public sealed class WorkspaceView : Control
     {
         if (BedImage is not { } bitmap) return;
 
-        var topLeft = ToPixels(0, machine.BedHeightMm);
-        var bottomRight = ToPixels(machine.BedWidthMm, 0);
-        var target = new Rect(topLeft, bottomRight);
-
+        var target = ToPixelRect(new Rect2(0, 0, machine.BedWidthMm, machine.BedHeightMm));
         using (context.PushOpacity(Math.Clamp(BedImageOpacity, 0, 1)))
         {
             context.DrawImage(bitmap, new Rect(bitmap.Size), target);
@@ -334,37 +566,30 @@ public sealed class WorkspaceView : Control
 
     private void DrawGrid(DrawingContext context, MachineProfile machine)
     {
-        // Two densities: 10 mm minor, 50 mm major. The minor grid disappears when
-        // zoomed out far enough that it would just be noise.
-        var minorPen = new Pen(Brush(Application.Current, "GridMinor", Colors.Gray), 1);
-        var majorPen = new Pen(Brush(Application.Current, "GridMajor", Colors.Gray), 1);
-
+        var minorPen = new Pen(Brush("GridMinor", Colors.Gray), 1);
+        var majorPen = new Pen(Brush("GridMajor", Colors.Gray), 1);
         var showMinor = Zoom > 1.4;
 
         for (double x = 0; x <= machine.BedWidthMm + 0.01; x += 10)
         {
             var major = Math.Abs(x % 50) < 0.01;
             if (!major && !showMinor) continue;
-            var p0 = ToPixels(x, 0);
-            var p1 = ToPixels(x, machine.BedHeightMm);
-            context.DrawLine(major ? majorPen : minorPen, p0, p1);
+            context.DrawLine(major ? majorPen : minorPen, ToPixels(x, 0), ToPixels(x, machine.BedHeightMm));
         }
 
         for (double y = 0; y <= machine.BedHeightMm + 0.01; y += 10)
         {
             var major = Math.Abs(y % 50) < 0.01;
             if (!major && !showMinor) continue;
-            var p0 = ToPixels(0, y);
-            var p1 = ToPixels(machine.BedWidthMm, y);
-            context.DrawLine(major ? majorPen : minorPen, p0, p1);
+            context.DrawLine(major ? majorPen : minorPen, ToPixels(0, y), ToPixels(machine.BedWidthMm, y));
         }
     }
 
     private void DrawOrigin(DrawingContext context)
     {
         var origin = ToPixels(0, 0);
-        var ember = Brush(Application.Current, "Ember", Colors.OrangeRed);
-        var cyan = Brush(Application.Current, "Cyan", Colors.Cyan);
+        var ember = Brush("Ember", Colors.OrangeRed);
+        var cyan = Brush("Cyan", Colors.Cyan);
 
         context.DrawLine(new Pen(ember, 2), origin, origin + new Vector(18, 0));
         context.DrawLine(new Pen(cyan, 2), origin, origin - new Vector(0, 18));
@@ -378,19 +603,15 @@ public sealed class WorkspaceView : Control
 
         if (!ReferenceEquals(_cachedToolpath, toolpath)) RebuildToolpathGeometry(toolpath);
 
+        var transform = BuildRenderTransform();
+
         if (ShowTravel && _travelGeometry is not null)
         {
-            var pen = new Pen(Brush(Application.Current, "Travel", Colors.Teal), 0.75)
-            {
-                DashStyle = new DashStyle([3, 3], 0),
-            };
-            using (context.PushTransform(BuildRenderTransform()))
-            {
-                context.DrawGeometry(null, pen, _travelGeometry);
-            }
+            var pen = new Pen(Brush("Travel", Colors.Teal), 0.75) { DashStyle = new DashStyle([3, 3], 0) };
+            using (context.PushTransform(transform)) context.DrawGeometry(null, pen, _travelGeometry);
         }
 
-        using (context.PushTransform(BuildRenderTransform()))
+        using (context.PushTransform(transform))
         {
             for (var bucket = 0; bucket < PowerBuckets; bucket++)
             {
@@ -400,19 +621,16 @@ public sealed class WorkspaceView : Control
                 // Duotone ramp: cyan at low power through to ember at full, so power
                 // distribution reads at a glance with no legend.
                 var t = (bucket + 0.5) / PowerBuckets;
-                var pen = new Pen(new SolidColorBrush(RampColour(t)), 1.1 / Zoom);
-                context.DrawGeometry(null, pen, geometry);
+                context.DrawGeometry(null, new Pen(new SolidColorBrush(RampColour(t)), 1.1 / Zoom), geometry);
             }
         }
     }
 
-    private Matrix BuildRenderTransform() =>
-        // Geometry is built in bed millimetres; this puts it on screen.
-        new(Zoom, 0, 0, -Zoom, Pan.X, Bounds.Height - Pan.Y);
+    /// <summary>Geometry is built in bed millimetres; this puts it on screen.</summary>
+    private Matrix BuildRenderTransform() => new(Zoom, 0, 0, -Zoom, Pan.X, Bounds.Height - Pan.Y);
 
     private static Color RampColour(double t)
     {
-        // Cyan (#3FD0E3) → warm neutral → ember (#FF7A3D).
         var (r0, g0, b0) = (0x3F, 0xD0, 0xE3);
         var (r1, g1, b1) = (0xFF, 0x7A, 0x3D);
         byte Mix(int a, int b) => (byte)Math.Clamp(a + (b - a) * t, 0, 255);
@@ -425,7 +643,7 @@ public sealed class WorkspaceView : Control
         _travelGeometry = null;
         Array.Clear(_burnGeometry);
 
-        var burnContexts = new StreamGeometryContext?[PowerBuckets];
+        var contexts = new StreamGeometryContext?[PowerBuckets];
         var geometries = new StreamGeometry[PowerBuckets];
         for (var i = 0; i < PowerBuckets; i++) geometries[i] = new StreamGeometry();
 
@@ -454,9 +672,9 @@ public sealed class WorkspaceView : Control
                 }
 
                 var bucket = Math.Clamp((int)(power[i] * PowerBuckets), 0, PowerBuckets - 1);
-                burnContexts[bucket] ??= geometries[bucket].Open();
+                contexts[bucket] ??= geometries[bucket].Open();
 
-                var ctx = burnContexts[bucket]!;
+                var ctx = contexts[bucket]!;
                 ctx.BeginFigure(new Point(x0[i], y0[i]), false);
                 ctx.LineTo(new Point(x1[i], y1[i]));
                 ctx.EndFigure(false);
@@ -466,8 +684,8 @@ public sealed class WorkspaceView : Control
         {
             for (var i = 0; i < PowerBuckets; i++)
             {
-                if (burnContexts[i] is null) continue;
-                burnContexts[i]!.Dispose();
+                if (contexts[i] is null) continue;
+                contexts[i]!.Dispose();
                 _burnGeometry[i] = geometries[i];
             }
             travelContext.Dispose();
@@ -481,9 +699,8 @@ public sealed class WorkspaceView : Control
         var design = Design;
         if (design is null || design.Shapes.Count == 0) return;
 
-        // The document is small compared with a toolpath, so rebuilding on every
-        // frame is cheap and avoids an invalidation-tracking bug where an edit does
-        // not show up.
+        // The document is small compared with a toolpath, so rebuilding each frame
+        // is cheap and avoids an invalidation bug where an edit fails to show up.
         var geometry = new StreamGeometry();
         using (var ctx = geometry.Open())
         {
@@ -504,30 +721,74 @@ public sealed class WorkspaceView : Control
         using (context.PushTransform(BuildRenderTransform()))
         {
             var hasToolpath = Toolpath is { Count: > 0 };
-            var outlineBrush = Brush(Application.Current, hasToolpath ? "InkFaint" : "Ink", Colors.Gray);
+            var outlineBrush = Brush(hasToolpath ? "InkFaint" : "Ink", Colors.Gray);
             context.DrawGeometry(null, new Pen(outlineBrush, (hasToolpath ? 0.8 : 1.4) / Zoom), geometry);
         }
     }
 
     private void DrawSelection(DrawingContext context)
     {
-        var shape = SelectedShape;
-        if (shape is null) return;
+        var selection = SelectionOrEmpty();
+        if (selection.Count == 0) return;
 
-        var b = shape.Bounds;
-        if (b.IsEmpty) return;
+        var accent = Brush("Selection", Colors.DeepSkyBlue);
 
-        var topLeft = ToPixels(b.MinX, b.MaxY);
-        var bottomRight = ToPixels(b.MaxX, b.MinY);
-        var rect = new Rect(topLeft, bottomRight).Inflate(3);
+        // Each shape gets a light outline; the group gets the handles.
+        if (selection.Count > 1)
+        {
+            foreach (var shape in selection)
+            {
+                var b = shape.Bounds;
+                if (b.IsEmpty) continue;
+                using (context.PushOpacity(0.5))
+                {
+                    context.DrawRectangle(null, new Pen(accent, 1) { DashStyle = new DashStyle([3, 3], 0) },
+                                          ToPixelRect(b), 2, 2);
+                }
+            }
+        }
 
-        var accent = Brush(Application.Current, "Selection", Colors.DeepSkyBlue);
+        var bounds = SelectionBounds();
+        if (bounds.IsEmpty) return;
+
+        var rect = ToPixelRect(bounds).Inflate(3);
         context.DrawRectangle(null, new Pen(accent, 1.25) { DashStyle = new DashStyle([4, 3], 0) }, rect, 4, 4);
 
-        foreach (var corner in new[] { rect.TopLeft, rect.TopRight, rect.BottomLeft, rect.BottomRight })
+        var locked = selection.All(s => s.Locked);
+        if (locked) return;
+
+        // Rotate handle, joined to the box so it reads as belonging to it.
+        var rotateAt = new Point(rect.Center.X, rect.Top - SelectionInteraction.RotateHandleOffset);
+        context.DrawLine(new Pen(accent, 1) { DashStyle = new DashStyle([2, 2], 0) },
+                         new Point(rect.Center.X, rect.Top), rotateAt);
+        context.DrawEllipse(Brush("PanelSolid", Colors.White), new Pen(accent, 1.5), rotateAt, 5, 5);
+
+        var half = SelectionInteraction.HandleSize / 2;
+        foreach (var handle in new[]
+                 {
+                     rect.TopLeft, rect.TopRight, rect.BottomLeft, rect.BottomRight,
+                     new Point(rect.Center.X, rect.Top), new Point(rect.Center.X, rect.Bottom),
+                     new Point(rect.Left, rect.Center.Y), new Point(rect.Right, rect.Center.Y),
+                 })
         {
-            context.DrawRectangle(accent, null, new Rect(corner.X - 3.5, corner.Y - 3.5, 7, 7), 2, 2);
+            context.DrawRectangle(
+                Brush("PanelSolid", Colors.White),
+                new Pen(accent, 1.5),
+                new Rect(handle.X - half, handle.Y - half, SelectionInteraction.HandleSize, SelectionInteraction.HandleSize),
+                2, 2);
         }
+    }
+
+    private void DrawMarquee(DrawingContext context)
+    {
+        if (!_marquee) return;
+
+        var rect = new Rect(_marqueeStart, _marqueeCurrent);
+        if (rect.Width < 1 && rect.Height < 1) return;
+
+        var accent = Brush("Selection", Colors.DeepSkyBlue);
+        using (context.PushOpacity(0.14)) context.FillRectangle(accent, rect);
+        context.DrawRectangle(null, new Pen(accent, 1) { DashStyle = new DashStyle([4, 3], 0) }, rect, 2, 2);
     }
 
     private void DrawHead(DrawingContext context)
@@ -535,9 +796,8 @@ public sealed class WorkspaceView : Control
         if (HeadPosition is not { } head) return;
 
         var p = ToPixels(head.X, head.Y);
-        var ember = Brush(Application.Current, "Ember", Colors.OrangeRed);
+        var ember = Brush("Ember", Colors.OrangeRed);
 
-        // Crosshair plus a ring: readable against both the bed and dark artwork.
         context.DrawEllipse(null, new Pen(ember, 1.5), p, 9, 9);
         context.DrawLine(new Pen(ember, 1.5), p - new Vector(14, 0), p - new Vector(4, 0));
         context.DrawLine(new Pen(ember, 1.5), p + new Vector(4, 0), p + new Vector(14, 0));
@@ -546,12 +806,10 @@ public sealed class WorkspaceView : Control
         context.DrawEllipse(ember, null, p, 2, 2);
     }
 
-    private static IBrush Brush(Application? app, string key, Color fallback)
+    private static IBrush Brush(string key, Color fallback)
     {
-        if (app?.TryGetResource(key, app.ActualThemeVariant, out var value) == true && value is IBrush brush)
-        {
-            return brush;
-        }
+        var app = Application.Current;
+        if (app?.TryGetResource(key, app.ActualThemeVariant, out var value) == true && value is IBrush brush) return brush;
         return new SolidColorBrush(fallback);
     }
 }
