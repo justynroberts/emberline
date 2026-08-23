@@ -71,6 +71,13 @@ public sealed class WorkspaceView : Control
     public static readonly StyledProperty<double> BedImageOpacityProperty =
         AvaloniaProperty.Register<WorkspaceView, double>(nameof(BedImageOpacity), 0.85);
 
+    /// <summary>
+    /// How far through the toolpath the head has got, as a segment index. Segments
+    /// before it are drawn bright; the rest are dimmed. Negative disables the split.
+    /// </summary>
+    public static readonly StyledProperty<int> ProgressSegmentProperty =
+        AvaloniaProperty.Register<WorkspaceView, int>(nameof(ProgressSegment), -1);
+
     /// <summary>Snap increment in millimetres while dragging. Zero disables snapping.</summary>
     public static readonly StyledProperty<double> SnapMmProperty =
         AvaloniaProperty.Register<WorkspaceView, double>(nameof(SnapMm), 1.0);
@@ -89,6 +96,7 @@ public sealed class WorkspaceView : Control
     public Bitmap? BedImage { get => GetValue(BedImageProperty); set => SetValue(BedImageProperty, value); }
     public double BedImageOpacity { get => GetValue(BedImageOpacityProperty); set => SetValue(BedImageOpacityProperty, value); }
     public double SnapMm { get => GetValue(SnapMmProperty); set => SetValue(SnapMmProperty, value); }
+    public int ProgressSegment { get => GetValue(ProgressSegmentProperty); set => SetValue(ProgressSegmentProperty, value); }
     public bool SnapEnabled { get => GetValue(SnapEnabledProperty); set => SetValue(SnapEnabledProperty, value); }
 
     /// <summary>Pixels per millimetre.</summary>
@@ -120,6 +128,18 @@ public sealed class WorkspaceView : Control
     private StreamGeometry? _travelGeometry;
     private Toolpath? _cachedToolpath;
 
+    // The "already cut" overlay, rebuilt as playback advances.
+    private StreamGeometry? _completedGeometry;
+    private int _completedUpTo = -1;
+
+    /// <summary>
+    /// Above this many segments the progress overlay is skipped and only the head
+    /// marker moves. Rebuilding a geometry of half a million segments every frame
+    /// would cost more than the information is worth, and the head is the part
+    /// people actually watch.
+    /// </summary>
+    private const int MaxSegmentsForProgressOverlay = 60_000;
+
     private bool _panning;
     private Point _panStart;
     private Vector _panOrigin;
@@ -143,7 +163,7 @@ public sealed class WorkspaceView : Control
     {
         AffectsRender<WorkspaceView>(MachineProperty, DesignProperty, ToolpathProperty, HeadPositionProperty,
                                      JobFractionProperty, ShowGridProperty, ShowTravelProperty, SelectionProperty,
-                                     BedImageProperty, BedImageOpacityProperty);
+                                     BedImageProperty, BedImageOpacityProperty, ProgressSegmentProperty);
     }
 
     public WorkspaceView()
@@ -611,7 +631,11 @@ public sealed class WorkspaceView : Control
             using (context.PushTransform(transform)) context.DrawGeometry(null, pen, _travelGeometry);
         }
 
+        var progress = ProgressSegment;
+        var showingProgress = progress >= 0 && toolpath.Count <= MaxSegmentsForProgressOverlay;
+
         using (context.PushTransform(transform))
+        using (context.PushOpacity(showingProgress ? 0.3 : 1.0))
         {
             for (var bucket = 0; bucket < PowerBuckets; bucket++)
             {
@@ -624,6 +648,48 @@ public sealed class WorkspaceView : Control
                 context.DrawGeometry(null, new Pen(new SolidColorBrush(RampColour(t)), 1.1 / Zoom), geometry);
             }
         }
+
+        if (!showingProgress) return;
+
+        if (_completedUpTo != progress) RebuildCompletedGeometry(toolpath, progress);
+
+        if (_completedGeometry is not null)
+        {
+            using (context.PushTransform(transform))
+            {
+                context.DrawGeometry(null, new Pen(Brush("Ember", Colors.OrangeRed), 1.6 / Zoom), _completedGeometry);
+            }
+        }
+    }
+
+    /// <summary>Geometry for everything burned so far, so the operator can see how far in they are.</summary>
+    private void RebuildCompletedGeometry(Toolpath toolpath, int upTo)
+    {
+        _completedUpTo = upTo;
+
+        var limit = Math.Clamp(upTo, 0, toolpath.Count);
+        if (limit == 0)
+        {
+            _completedGeometry = null;
+            return;
+        }
+
+        var geometry = new StreamGeometry();
+        var used = false;
+
+        using (var ctx = geometry.Open())
+        {
+            for (var i = 0; i < limit; i++)
+            {
+                if (toolpath.Rapid[i] || toolpath.Power[i] <= 0) continue;
+                ctx.BeginFigure(new Point(toolpath.X0[i], toolpath.Y0[i]), false);
+                ctx.LineTo(new Point(toolpath.X1[i], toolpath.Y1[i]));
+                ctx.EndFigure(false);
+                used = true;
+            }
+        }
+
+        _completedGeometry = used ? geometry : null;
     }
 
     /// <summary>Geometry is built in bed millimetres; this puts it on screen.</summary>
@@ -641,6 +707,8 @@ public sealed class WorkspaceView : Control
     {
         _cachedToolpath = toolpath;
         _travelGeometry = null;
+        _completedGeometry = null;
+        _completedUpTo = -1;
         Array.Clear(_burnGeometry);
 
         var contexts = new StreamGeometryContext?[PowerBuckets];

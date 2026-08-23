@@ -174,3 +174,128 @@ public class TimeEstimatorTests
     public void FormatsDurationsReadably(int seconds, string expected) =>
         Assert.Equal(expected, TimeEstimator.Format(TimeSpan.FromSeconds(seconds)));
 }
+
+public class ToolpathSimulatorTests
+{
+    private static Toolpath Square() => GcodeInterpreter.Interpret("""
+        G21 G90
+        M4 S500
+        G0 X10 Y10
+        G1 X50 Y10 F1200
+        G1 X50 Y50
+        G1 X10 Y50
+        G1 X10 Y10
+        M5
+        """);
+
+    [Fact]
+    public void TotalTimeMatchesTheEstimate()
+    {
+        // A preview that plays at a different speed from the prediction teaches the
+        // operator to distrust both, so the two must come from the same numbers.
+        var toolpath = Square();
+        var estimate = TimeEstimator.Estimate(toolpath);
+        var simulator = new ToolpathSimulator(toolpath);
+
+        Assert.Equal(estimate.Total.TotalSeconds, simulator.Total.TotalSeconds, 6);
+    }
+
+    [Fact]
+    public void StartsAtTheFirstPointAndEndsAtTheLast()
+    {
+        var toolpath = Square();
+        var simulator = new ToolpathSimulator(toolpath);
+
+        var start = simulator.At(TimeSpan.Zero);
+        Assert.Equal(toolpath.X0[0], start.Position.X, 6);
+        Assert.Equal(toolpath.Y0[0], start.Position.Y, 6);
+
+        var end = simulator.At(simulator.Total);
+        Assert.Equal(toolpath.X1[^1], end.Position.X, 6);
+        Assert.Equal(toolpath.Y1[^1], end.Position.Y, 6);
+    }
+
+    [Fact]
+    public void PositionAdvancesMonotonically()
+    {
+        var toolpath = Square();
+        var simulator = new ToolpathSimulator(toolpath);
+
+        var previousSegment = -1;
+        for (var i = 0; i <= 100; i++)
+        {
+            var state = simulator.AtFraction(i / 100.0);
+            Assert.True(state.SegmentIndex >= previousSegment,
+                $"segment went backwards at {i}%: {state.SegmentIndex} after {previousSegment}");
+            previousSegment = state.SegmentIndex;
+        }
+    }
+
+    [Fact]
+    public void ClampsOutsideTheJob()
+    {
+        var simulator = new ToolpathSimulator(Square());
+
+        var before = simulator.At(TimeSpan.FromSeconds(-100));
+        var after = simulator.At(TimeSpan.FromHours(10));
+
+        Assert.Equal(TimeSpan.Zero, before.Elapsed);
+        Assert.Equal(simulator.Total.TotalSeconds, after.Elapsed.TotalSeconds, 6);
+    }
+
+    [Fact]
+    public void ReportsPowerAndRapidStateAlongTheWay()
+    {
+        var simulator = new ToolpathSimulator(Square());
+
+        var states = Enumerable.Range(0, 200).Select(i => simulator.AtFraction(i / 199.0)).ToList();
+
+        Assert.Contains(states, s => s.IsRapid);
+        Assert.Contains(states, s => !s.IsRapid && s.PowerFraction > 0);
+    }
+
+    [Fact]
+    public void FractionAtSegmentSpansZeroToOne()
+    {
+        var toolpath = Square();
+        var simulator = new ToolpathSimulator(toolpath);
+
+        Assert.Equal(0, simulator.FractionAtSegment(0), 9);
+        Assert.Equal(1, simulator.FractionAtSegment(toolpath.Count), 9);
+        Assert.InRange(simulator.FractionAtSegment(toolpath.Count / 2), 0, 1);
+    }
+
+    [Fact]
+    public void AnEmptyToolpathIsHarmless()
+    {
+        var simulator = new ToolpathSimulator(GcodeInterpreter.Interpret(""));
+
+        Assert.Equal(TimeSpan.Zero, simulator.Total);
+        Assert.Equal(SimulationState.Start, simulator.At(TimeSpan.FromSeconds(5)));
+    }
+
+    [Fact]
+    public void DescribesWhatTheHeadIsDoing()
+    {
+        Assert.Equal("Rapid", ToolpathSimulator.Describe(new SimulationState(default, 0, 0, 0, true, default)));
+        Assert.StartsWith("Engrave", ToolpathSimulator.Describe(new SimulationState(default, 0, 0.25, 0, false, default)));
+        Assert.StartsWith("Cut", ToolpathSimulator.Describe(new SimulationState(default, 0, 0.9, 0, false, default)));
+    }
+
+    [Fact]
+    public void ScrubbingALargeJobIsCheap()
+    {
+        // Binary search, not a linear walk: scrubbing must not get slower with job size.
+        var lines = new List<string> { "G21", "G90", "M4 S500", "F3000" };
+        for (var i = 0; i < 40_000; i++) lines.Add($"G1 X{i % 200} Y{i / 200}");
+
+        var simulator = new ToolpathSimulator(GcodeInterpreter.Interpret(lines));
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        for (var i = 0; i < 2000; i++) simulator.AtFraction(i / 2000.0);
+        stopwatch.Stop();
+
+        Assert.True(stopwatch.ElapsedMilliseconds < 250,
+            $"2000 scrub queries took {stopwatch.ElapsedMilliseconds} ms");
+    }
+}

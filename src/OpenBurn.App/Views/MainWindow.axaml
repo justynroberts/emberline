@@ -27,7 +27,8 @@
                             Machine="{Binding SelectedMachine}"
                             Design="{Binding Design}"
                             Toolpath="{Binding Toolpath}"
-                            HeadPosition="{Binding HeadPosition}"
+                            HeadPosition="{Binding DisplayHeadPosition}"
+                            ProgressSegment="{Binding ProgressSegment}"
                             ShowGrid="{Binding ShowGrid}"
                             ShowTravel="{Binding ShowTravel}"
                             Selection="{Binding Selection}"
@@ -74,6 +75,9 @@
                             Command="{Binding ToggleGridCommand}" />
                     <Button Classes="tool" Content="⇢" ToolTip.Tip="Show travel moves"
                             Command="{Binding ToggleTravelCommand}" />
+                    <Separator />
+                    <Button Classes="tool" Content="▶" ToolTip.Tip="Simulate the job" Command="{Binding PlaySimulationCommand}" />
+                    <Button Classes="tool" Content="⌗" ToolTip.Tip="Inspect the G-code" Command="{Binding ToggleGcodeCommand}" />
                     <Separator />
                     <Button Classes="tool" Content="≣" ToolTip.Tip="Machine console" Command="{Binding ToggleConsoleCommand}" />
                     <Button Classes="tool" Content="✦" ToolTip.Tip="Assistant" Command="{Binding ToggleAssistantCommand}" />
@@ -647,6 +651,33 @@
             </DockPanel>
         </Border>
 
+        <!-- ============================== Simulation bar =============================== -->
+        <Border Classes="panel slideUp" Padding="14,10"
+                IsVisible="{Binding SimulationVisible}">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="12">
+                <Button Grid.Column="0" Classes="primary" Width="40" Padding="0"
+                        Content="{Binding PlayPauseGlyph}"
+                        Command="{Binding PlaySimulationCommand}" />
+                <Button Grid.Column="1" Width="40" Padding="0" Content="■"
+                        ToolTip.Tip="Stop and rewind"
+                        Command="{Binding StopSimulationCommand}" />
+
+                <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SimulationStatus}" Classes="mono" FontSize="11" />
+                    <Slider Minimum="0" Maximum="1" Value="{Binding SimulationFraction}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Speed" Classes="label" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding SimulationSpeeds}" SelectedItem="{Binding SimulationSpeed}"
+                              MinWidth="76" />
+                </StackPanel>
+
+                <Button Grid.Column="4" Content="Close" Classes="ghost"
+                        Command="{Binding StopSimulationCommand}" />
+            </Grid>
+        </Border>
+
         <!-- ============================== Console drawer =============================== -->
         <Border Classes="panel slideUp" Height="240"
                 IsVisible="{Binding ShowConsole}" Padding="12">
@@ -689,6 +720,29 @@
         </Border>
 
         </StackPanel>
+
+        <!-- ============================== G-code panel ================================= -->
+        <Border Classes="panel focusIn" Width="520" Margin="84,84,0,0"
+                HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                MaxHeight="620"
+                IsVisible="{Binding ShowGcode}" Padding="14">
+            <DockPanel LastChildFill="True">
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+                    <TextBlock Grid.Column="0" Classes="sectionTitle" Text="G-CODE" Margin="0" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Content="Copy" Classes="ghost" Padding="8,2"
+                            Command="{Binding CopyGcodeCommand}" />
+                    <Button Grid.Column="2" Content="Close" Classes="ghost" Padding="8,2"
+                            Command="{Binding ToggleGcodeCommand}" />
+                </Grid>
+
+                <TextBlock DockPanel.Dock="Bottom" Text="{Binding GcodeSummary}" Classes="label"
+                           TextWrapping="Wrap" Margin="0,8,0,0" />
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <SelectableTextBlock Text="{Binding GcodeText}" Classes="mono" FontSize="11" />
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
 
         <!-- ============================ Cursor readout ================================= -->
         <Border Classes="chip" HorizontalAlignment="Left" VerticalAlignment="Bottom"

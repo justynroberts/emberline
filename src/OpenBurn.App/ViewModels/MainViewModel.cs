@@ -264,9 +264,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _regenerateTimer.Start();
     }
 
-    private void RegenerateNow()
+    /// <summary>
+    /// Regenerate immediately, bypassing the debounce.
+    ///
+    /// Anything that is about to act on the job — starting it, framing it, saving
+    /// it — must call this first. Otherwise a change made in the last fifth of a
+    /// second is still sitting in the timer and the machine runs the previous
+    /// toolpath, which is a very expensive way to find out about a race.
+    /// </summary>
+    public void RegenerateNow()
     {
         _regeneratePending = false;
+        _regenerateTimer?.Stop();
         try
         {
             var settings = _device?.Settings.Count > 0 ? _device.Settings : null;
@@ -283,6 +292,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             Toolpath = null;
         }
 
+        RebuildSimulator();
         RaiseJobReadouts();
     }
 

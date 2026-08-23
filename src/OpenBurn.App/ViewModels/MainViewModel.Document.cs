@@ -125,6 +125,7 @@ public sealed partial class MainViewModel
     [RelayCommand]
     private async Task ExportGcodeAsync()
     {
+        RegenerateNow();
         if (TopLevel?.StorageProvider is not { } storage || _cam is null) return;
 
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions

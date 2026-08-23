@@ -59,8 +59,39 @@ public static class TimeEstimator
     public static TimeEstimate Estimate(Toolpath tp, MachineLimits? limits = null)
     {
         var l = limits ?? MachineLimits.Default;
+        if (tp.Count == 0) return TimeEstimate.Zero;
+
+        var durations = SegmentDurations(tp, l);
+
+        var cutting = 0.0;
+        var travelling = 0.0;
+        for (var i = 0; i < tp.Count; i++)
+        {
+            if (tp.Rapid[i]) travelling += durations[i];
+            else cutting += durations[i];
+        }
+
+        return new TimeEstimate(
+            TimeSpan.FromSeconds(cutting + travelling),
+            TimeSpan.FromSeconds(cutting),
+            TimeSpan.FromSeconds(travelling),
+            tp.CutLengthMm,
+            tp.TravelLengthMm,
+            tp.Count);
+    }
+
+    /// <summary>
+    /// Time for each individual segment, in seconds.
+    ///
+    /// Shared with the simulator so a replay and an estimate can never disagree —
+    /// a preview that plays at a different speed from the prediction is worse than
+    /// no preview, because it teaches the operator to distrust both.
+    /// </summary>
+    public static double[] SegmentDurations(Toolpath tp, MachineLimits? limits = null)
+    {
+        var l = limits ?? MachineLimits.Default;
         var n = tp.Count;
-        if (n == 0) return TimeEstimate.Zero;
+        if (n == 0) return [];
 
         var length = new double[n];
         var unitX = new double[n];
@@ -144,23 +175,13 @@ public static class TimeEstimator
             if (entry[i + 1] > reachable) entry[i + 1] = reachable;
         }
 
-        var cutting = 0.0;
-        var travelling = 0.0;
-
+        var durations = new double[n];
         for (var i = 0; i < n; i++)
         {
-            var t = SegmentTime(length[i], entry[i], entry[i + 1], vMax[i], accel[i]) + l.PerLineOverheadSeconds;
-            if (rapid[i]) travelling += t;
-            else cutting += t;
+            durations[i] = SegmentTime(length[i], entry[i], entry[i + 1], vMax[i], accel[i]) + l.PerLineOverheadSeconds;
         }
 
-        return new TimeEstimate(
-            TimeSpan.FromSeconds(cutting + travelling),
-            TimeSpan.FromSeconds(cutting),
-            TimeSpan.FromSeconds(travelling),
-            tp.CutLengthMm,
-            tp.TravelLengthMm,
-            n);
+        return durations;
     }
 
     /// <summary>

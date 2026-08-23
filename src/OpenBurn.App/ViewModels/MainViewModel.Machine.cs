@@ -418,6 +418,11 @@ public sealed partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanRunJob))]
     private async Task StartJobAsync()
     {
+        // Flush any pending regeneration first: an edit made a moment ago may still
+        // be sitting in the debounce timer, and running the previous toolpath is an
+        // expensive way to discover that.
+        RegenerateNow();
+
         if (_device is null || _cam is null) return;
 
         if (HasBlockingIssue)
@@ -454,6 +459,7 @@ public sealed partial class MainViewModel
     [RelayCommand(CanExecute = nameof(CanFrame))]
     private async Task FrameAsync()
     {
+        RegenerateNow();
         if (_cam is null) return;
 
         var outlines = Design.AllOutlines();
