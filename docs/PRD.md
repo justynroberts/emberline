@@ -262,7 +262,9 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
 - Materials, machine profiles as JSON, job library in SQLite, machine console.
 - Controller settings editor with confirmation on the dangerous values, job
   library window, rotary support for rollers and chucks.
-- 317 tests, none requiring hardware, including headless UI tests that drive the
+- Fiducial re-registration: mark where a workpiece was, take it off, put it back,
+  and the artwork follows it.
+- 329 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons

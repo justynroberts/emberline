@@ -1,4 +1,5 @@
 using OpenBurn.Camera;
+using OpenBurn.Core.Geometry;
 using OpenBurn.Vision;
 using Xunit;
 
@@ -393,5 +394,184 @@ public class DetectorTests
             Assert.True(w.LooksCircular, $"expected a round workpiece, got {w.Describe()}");
             Assert.InRange(w.WidthMm, 90, 110);
         });
+    }
+}
+
+public class SimilarityTransformTests
+{
+    private static readonly Vec2[] Marks =
+    [
+        new(40, 40), new(360, 40), new(360, 360), new(40, 360),
+    ];
+
+    private static Vec2[] Apply(IEnumerable<Vec2> points, double scale, double degrees, Vec2 offset)
+    {
+        var (sin, cos) = Math.SinCos(degrees * Math.PI / 180);
+        return [.. points.Select(p => new Vec2(
+            scale * (cos * p.X - sin * p.Y) + offset.X,
+            scale * (sin * p.X + cos * p.Y) + offset.Y))];
+    }
+
+    [Fact]
+    public void IdenticalPointsGiveTheIdentity()
+    {
+        Assert.True(SimilarityTransform.TrySolve(Marks, Marks, out var fit));
+
+        Assert.Equal(1, fit.ScaleFactor, 9);
+        Assert.Equal(0, fit.RotationDegrees, 9);
+        Assert.Equal(0, fit.Translation.Length, 9);
+        Assert.Equal(0, fit.ResidualMm, 9);
+    }
+
+    [Fact]
+    public void RecoversAPureTranslation()
+    {
+        var moved = Apply(Marks, 1, 0, new Vec2(25, -12));
+        Assert.True(SimilarityTransform.TrySolve(Marks, moved, out var fit));
+
+        Assert.Equal(25, fit.Translation.X, 6);
+        Assert.Equal(-12, fit.Translation.Y, 6);
+        Assert.Equal(0, fit.RotationDegrees, 6);
+        Assert.Equal(1, fit.ScaleFactor, 6);
+    }
+
+    [Fact]
+    public void RecoversARotation()
+    {
+        var turned = Apply(Marks, 1, 17.5, Vec2.Zero);
+        Assert.True(SimilarityTransform.TrySolve(Marks, turned, out var fit));
+
+        Assert.Equal(17.5, fit.RotationDegrees, 5);
+        Assert.Equal(1, fit.ScaleFactor, 6);
+        Assert.Equal(0, fit.ResidualMm, 5);
+    }
+
+    [Fact]
+    public void RecoversACombinedMoveTurnAndScale()
+    {
+        var moved = Apply(Marks, 1.05, -33, new Vec2(80, 15));
+        Assert.True(SimilarityTransform.TrySolve(Marks, moved, out var fit));
+
+        Assert.Equal(1.05, fit.ScaleFactor, 6);
+        Assert.Equal(-33, fit.RotationDegrees, 5);
+        Assert.Equal(80, fit.Translation.X, 4);
+        Assert.Equal(15, fit.Translation.Y, 4);
+    }
+
+    [Fact]
+    public void TheMatrixReproducesTheFit()
+    {
+        var moved = Apply(Marks, 1.02, 12, new Vec2(-30, 44));
+        var fit = SimilarityTransform.SolveOrIdentity(Marks, moved);
+        var matrix = fit.ToMatrix();
+
+        for (var i = 0; i < Marks.Length; i++)
+        {
+            var mapped = matrix.Apply(Marks[i]);
+            Assert.Equal(moved[i].X, mapped.X, 4);
+            Assert.Equal(moved[i].Y, mapped.Y, 4);
+        }
+    }
+
+    [Fact]
+    public void NoiseIsAbsorbedRatherThanFittedExactly()
+    {
+        // Four marker centres from a real camera are never exact. A least-squares
+        // fit should average the error out, not chase it.
+        var moved = Apply(Marks, 1, 5, new Vec2(10, 10));
+        moved[0] = moved[0] + new Vec2(0.3, -0.2);
+        moved[2] = moved[2] + new Vec2(-0.25, 0.15);
+
+        Assert.True(SimilarityTransform.TrySolve(Marks, moved, out var fit));
+
+        Assert.InRange(fit.RotationDegrees, 4.8, 5.2);
+        Assert.InRange(fit.ResidualMm, 0.05, 0.4);
+    }
+
+    [Fact]
+    public void TwoPointsAreEnoughAndOneIsNot()
+    {
+        Assert.True(SimilarityTransform.TrySolve(
+            [new Vec2(0, 0), new Vec2(10, 0)],
+            [new Vec2(5, 5), new Vec2(15, 5)],
+            out var fit));
+        Assert.Equal(5, fit.Translation.X, 6);
+
+        Assert.False(SimilarityTransform.TrySolve([new Vec2(0, 0)], [new Vec2(5, 5)], out _));
+    }
+
+    [Fact]
+    public void CoincidentPointsAreRejected()
+    {
+        var same = new[] { new Vec2(10, 10), new Vec2(10, 10), new Vec2(10, 10) };
+        Assert.False(SimilarityTransform.TrySolve(same, Marks.Take(3).ToArray(), out _));
+    }
+
+    [Fact]
+    public void APoorFitIsFlagged()
+    {
+        // Markers matched in the wrong order produce a fit that "works" numerically
+        // and is nonsense physically.
+        var scrambled = new[] { Marks[0], Marks[2], Marks[1], Marks[3] };
+        var fit = SimilarityTransform.SolveOrIdentity(Marks, scrambled);
+
+        Assert.NotEmpty(SimilarityTransform.Check(fit));
+    }
+
+    [Fact]
+    public void AnUnwantedResizeIsFlagged()
+    {
+        var resized = Apply(Marks, 1.15, 0, Vec2.Zero);
+        var fit = SimilarityTransform.SolveOrIdentity(Marks, resized);
+
+        Assert.Contains(SimilarityTransform.Check(fit), p => p.Contains("resize", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void AGoodFitPassesItsChecks()
+    {
+        var moved = Apply(Marks, 1, 8, new Vec2(12, -6));
+        var fit = SimilarityTransform.SolveOrIdentity(Marks, moved);
+
+        Assert.Empty(SimilarityTransform.Check(fit));
+    }
+
+    [Fact]
+    public void FiducialsFromASyntheticSceneAlignAfterTheBedIsNudged()
+    {
+        // End to end: detect marks, move the scene, detect again, and check the fit
+        // describes the move that was actually made.
+        var camera = new SyntheticCameraSource(800, 600, SyntheticSceneOptions.Default with { BarrelDistortion = 0 });
+        var corners = camera.BedCornersInImage.Select(c => new Point2(c.X, c.Y)).ToList();
+        var rectifier = new BedRectifier(BedRectifier.Calibrate("m", "c", corners, 400, 400));
+
+        List<Vec2> DetectInBed(SyntheticCameraSource source)
+        {
+            var found = FiducialDetector.FindFour(source.Render());
+            Assert.True(found.Found);
+            return [.. found.Markers.Select(m =>
+            {
+                var (x, y) = rectifier.ImageToBed(m.X, m.Y);
+                return new Vec2(x, y);
+            })];
+        }
+
+        var reference = DetectInBed(camera);
+
+        // Shift the marks within the scene, which is what moving the workpiece does.
+        camera.Options = camera.Options with
+        {
+            FiducialPositions = [.. camera.Options.FiducialPositions.Select(p => (p.U + 0.05, p.V))],
+        };
+
+        var moved = DetectInBed(camera);
+
+        Assert.True(SimilarityTransform.TrySolve(reference, moved, out var fit));
+
+        // 0.05 of a 400 mm bed is 20 mm along X, and nothing else.
+        Assert.Equal(20, fit.Translation.X, 0);
+        Assert.Equal(0, fit.Translation.Y, 0);
+        Assert.Equal(0, fit.RotationDegrees, 0);
+        Assert.Equal(1, fit.ScaleFactor, 2);
     }
 }

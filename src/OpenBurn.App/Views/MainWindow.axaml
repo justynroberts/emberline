@@ -320,6 +320,17 @@
                                         ToolTip.Tip="Detect workpieces on the bed and move the selection onto the largest" />
                             </Grid>
 
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Set marks" Command="{Binding SetFiducialReferenceCommand}"
+                                        ToolTip.Tip="Remember where the registration marks are, with the artwork aligned to the workpiece" />
+                                <Button Grid.Column="1" Content="Align to marks" Command="{Binding AlignToFiducialsCommand}"
+                                        IsEnabled="{Binding HasFiducialReference}"
+                                        ToolTip.Tip="Move the artwork to follow the marks after the workpiece has been replaced" />
+                            </Grid>
+
+                            <TextBlock Text="{Binding FiducialStatus}" TextWrapping="Wrap" Classes="label"
+                                       IsVisible="{Binding FiducialStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
                             <TextBlock Text="{Binding CalibrationSummary}" Classes="label" TextWrapping="Wrap" />
                             <TextBlock Text="{Binding CameraStatus}" TextWrapping="Wrap"
                                        FontSize="{DynamicResource FontSmall}"

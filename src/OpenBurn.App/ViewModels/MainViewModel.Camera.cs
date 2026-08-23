@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenBurn.App.Services;
 using OpenBurn.Camera;
+using OpenBurn.Core.Geometry;
 using OpenBurn.Vision;
 
 namespace OpenBurn.App.ViewModels;
@@ -230,6 +231,147 @@ public sealed partial class MainViewModel
         {
             CameraStatus = "This camera has no calibration for this machine yet. Use Calibrate to set one up.";
         }
+    }
+
+    // ------------------------------------------------------- fiducial marks
+
+    private List<Vec2>? _referenceMarks;
+
+    [ObservableProperty]
+    private string? _fiducialStatus;
+
+    public bool HasFiducialReference => _referenceMarks is { Count: >= 2 };
+
+    /// <summary>
+    /// Detect the registration marks on the bed and remember where they are.
+    ///
+    /// This is the half of fiducial alignment that people forget to design for:
+    /// there has to be a "here is where it was" before "put it back there" means
+    /// anything. Capture the reference with the workpiece in the position the
+    /// artwork was aligned to, and OpenBurn can restore that alignment afterwards.
+    /// </summary>
+    [RelayCommand]
+    private void SetFiducialReference()
+    {
+        var marks = DetectMarksInBedSpace();
+        if (marks is null) return;
+
+        _referenceMarks = marks;
+        OnPropertyChanged(nameof(HasFiducialReference));
+
+        FiducialStatus = $"Reference set from {marks.Count} marks. " +
+                         "Align the artwork to the workpiece now; you can restore this position later.";
+        Console.AppendInfo(FiducialStatus);
+    }
+
+    /// <summary>
+    /// Detect the marks again and move the artwork to follow them.
+    ///
+    /// A workpiece taken off the bed and put back has moved and turned; it has not
+    /// changed size. The fit is therefore a similarity rather than a homography,
+    /// and a fit that wants to resize the artwork is reported rather than applied.
+    /// </summary>
+    [RelayCommand]
+    private void AlignToFiducials()
+    {
+        if (_referenceMarks is not { Count: >= 2 } reference)
+        {
+            FiducialStatus = "Set a reference first, with the workpiece where the artwork is aligned to it.";
+            return;
+        }
+
+        var current = DetectMarksInBedSpace();
+        if (current is null) return;
+
+        if (current.Count != reference.Count)
+        {
+            FiducialStatus = $"Found {current.Count} marks but the reference has {reference.Count}. " +
+                             "Check the lighting and that every mark is visible.";
+            return;
+        }
+
+        if (!SimilarityTransform.TrySolve(reference, current, out var fit))
+        {
+            FiducialStatus = "The marks could not be fitted. They may be too close together, or one may be a false positive.";
+            return;
+        }
+
+        var problems = SimilarityTransform.Check(fit);
+        if (problems.Count > 0)
+        {
+            FiducialStatus = string.Join(" ", problems);
+            foreach (var problem in problems) Console.AppendError(problem);
+            return;
+        }
+
+        var matrix = fit.ToMatrix();
+        var targets = Selection.Count > 0 ? Selection.ToList() : Design.Shapes.ToList();
+
+        EditSelectionOrDocument("Align to marks", targets, () =>
+        {
+            foreach (var shape in targets)
+            {
+                if (!shape.Locked) shape.Transform = matrix * shape.Transform;
+            }
+        });
+
+        FiducialStatus = $"Aligned {targets.Count} shape(s): {fit.Describe()}";
+        Console.AppendInfo(FiducialStatus);
+    }
+
+    /// <summary>Record a transform edit against an explicit set of shapes.</summary>
+    private void EditSelectionOrDocument(string name, IReadOnlyList<Core.Documents.Shape> targets, Action change)
+    {
+        if (targets.Count == 0) return;
+
+        var before = Core.Documents.UndoStack.CaptureTransforms(targets);
+        change();
+        var after = Core.Documents.UndoStack.CaptureTransforms(targets);
+
+        Undo.Push(name, () => { before(); AfterUndo(); }, () => { after(); AfterUndo(); });
+        QueueRegenerate();
+        RaiseSelectionChanged();
+    }
+
+    /// <summary>Find the registration marks and convert them to bed millimetres.</summary>
+    private List<Vec2>? DetectMarksInBedSpace()
+    {
+        if (_rectifier is null)
+        {
+            FiducialStatus = "Calibrate the camera first — marks can only be located once the bed is rectified.";
+            return null;
+        }
+
+        if (_lastRawFrame is not { } frame)
+        {
+            FiducialStatus = "Capture the bed first.";
+            return null;
+        }
+
+        var found = FiducialDetector.FindFour(frame);
+        if (!found.Found)
+        {
+            FiducialStatus = "No registration marks were found. They should be dark, round, well separated, " +
+                             "and all four visible in the camera view.";
+            return null;
+        }
+
+        return
+        [
+            .. found.Markers.Select(m =>
+            {
+                var (x, y) = _rectifier.ImageToBed(m.X, m.Y);
+                return new Vec2(x, y);
+            }),
+        ];
+    }
+
+    [RelayCommand]
+    private void ClearFiducialReference()
+    {
+        _referenceMarks = null;
+        FiducialStatus = null;
+        OnPropertyChanged(nameof(HasFiducialReference));
     }
 
     [RelayCommand]
