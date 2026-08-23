@@ -70,6 +70,13 @@ that clashes with a built-in importer or driver and reports it. Do not "helpfull
 relax that — silently shadowing the tested G-code path with third-party code is
 not a trade anybody agreed to.
 
+**Discovery probes must never send 0x18.** It is GRBL's soft reset, and it is the
+most reliable way to make a quiet controller announce itself — which is exactly
+why it was there. A scan sweeps the whole subnet before it knows what anything
+is, so that byte reaches a laser part-way through a job and ends the job. `$I`
+only, plus a listen for controllers that greet on connect. `DiscoveryTests` pins
+this; do not "improve" detection rates by putting the reset back.
+
 **`TraceOptions` collides with `System.Diagnostics.TraceOptions`.** Any file that
 wants both needs a using alias — `SelfTest.cs` has one.
 

@@ -39,6 +39,14 @@ public sealed class DeviceDiscovery
     /// <summary>
     /// Probe one endpoint by opening a socket and asking for build info. A GRBL
     /// controller answers with a welcome banner or a bracketed VER line.
+    ///
+    /// The probe asks and never resets. Sending 0x18 makes a quiet controller
+    /// re-announce itself, which is genuinely the most reliable way to identify
+    /// one — and it is a soft reset. A scan sweeps every address on the subnet
+    /// before it knows what any of them are, so that byte would land on whatever
+    /// else answers on these ports, and on a laser part-way through a job it ends
+    /// the job. Discovery must not be able to stop a machine. Missing a
+    /// controller that only speaks when reset is the better failure.
     /// </summary>
     public static async Task<DiscoveredDevice?> ProbeTcpAsync(
         string host, int port, TimeSpan timeout, CancellationToken cancellationToken = default)
@@ -52,8 +60,8 @@ public sealed class DeviceDiscovery
             await client.ConnectAsync(host, port, cts.Token).ConfigureAwait(false);
             var stream = client.GetStream();
 
-            // Nudge it: a soft reset makes GRBL re-announce, and $I asks for build info.
-            await stream.WriteAsync(new byte[] { 0x18 }, cts.Token).ConfigureAwait(false);
+            // Many bridges announce on connect, so listen briefly before saying
+            // anything, then ask for build info. $I is a read-only query.
             await Task.Delay(150, cts.Token).ConfigureAwait(false);
             await stream.WriteAsync("\n$I\n"u8.ToArray(), cts.Token).ConfigureAwait(false);
 
