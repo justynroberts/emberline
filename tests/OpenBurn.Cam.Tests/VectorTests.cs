@@ -386,6 +386,308 @@ public class BitmapTracerTests
     }
 }
 
+public class CentrelineTraceTests
+{
+    /// <summary>A horizontal bar `thickness` px tall, drawn dark on white.</summary>
+    private static RasterImage Bar(int w, int h, int x0, int x1, int y0, int thickness)
+    {
+        var px = new byte[w * h];
+        Array.Fill(px, (byte)255);
+        for (var y = y0; y < y0 + thickness; y++)
+        {
+            for (var x = x0; x < x1; x++) px[y * w + x] = 0;
+        }
+        return new RasterImage(w, h, px);
+    }
+
+    private static readonly TraceOptions Centreline =
+        TraceOptions.Default with { Mode = TraceMode.Centreline, SmoothPasses = 0, SimplifyTolerancePx = 0 };
+
+    [Fact]
+    public void AThickStrokeBecomesOneOpenPathDownItsMiddle()
+    {
+        var image = Bar(80, 40, 10, 70, 15, 9);
+
+        var result = BitmapTracer.Trace(image, Centreline);
+
+        Assert.Equal(TraceMode.Centreline, result.Mode);
+        var path = Assert.Single(result.Contours);
+        Assert.False(path.IsClosed);
+
+        // It should run the length of the bar, not around it. Thinning pulls the
+        // tips in by about half the stroke width at each end, so 60 px of bar
+        // becomes roughly 50 px of spine.
+        var bounds = path.Bounds;
+        Assert.InRange(bounds.Width, 46, 62);
+        Assert.InRange(bounds.Height, 0, 2);
+
+        // And sit on the bar's centre row, not on either edge.
+        Assert.InRange(bounds.Center.Y, 18.0, 21.0);
+    }
+
+    [Fact]
+    public void OutlineModeDrawsTheSameStrokeTwiceAndCentrelineModeOnce()
+    {
+        var image = Bar(80, 40, 10, 70, 15, 9);
+
+        var outline = BitmapTracer.Trace(image, TraceOptions.Default with { SmoothPasses = 0, SimplifyTolerancePx = 0 });
+        var centreline = BitmapTracer.Trace(image, Centreline);
+
+        // This is the whole reason centreline mode exists: the closed outline burns
+        // both sides of the stroke, so it travels roughly twice as far.
+        Assert.True(outline.TotalLengthPx > centreline.TotalLengthPx * 1.8,
+            $"outline {outline.TotalLengthPx:0} px vs centreline {centreline.TotalLengthPx:0} px");
+    }
+
+    [Fact]
+    public void AJunctionIsSplitIntoSeparateStrokes()
+    {
+        // A plus sign: thinning leaves a four-armed skeleton meeting in the middle.
+        var px = new byte[60 * 60];
+        Array.Fill(px, (byte)255);
+        for (var y = 26; y < 34; y++)
+        {
+            for (var x = 8; x < 52; x++) px[y * 60 + x] = 0;
+        }
+        for (var y = 8; y < 52; y++)
+        {
+            for (var x = 26; x < 34; x++) px[y * 60 + x] = 0;
+        }
+
+        var result = BitmapTracer.Trace(new RasterImage(60, 60, px), Centreline);
+
+        // Four arms, so at least four strokes — never one path doubling back.
+        Assert.InRange(result.Contours.Count, 4, 8);
+        Assert.All(result.Contours, c => Assert.True(c.Count >= 2));
+    }
+
+    [Fact]
+    public void ARingComesBackAsAClosedLoop()
+    {
+        var px = new byte[70 * 70];
+        Array.Fill(px, (byte)255);
+        for (var y = 0; y < 70; y++)
+        {
+            for (var x = 0; x < 70; x++)
+            {
+                var d = Math.Sqrt((x - 35.0) * (x - 35.0) + (y - 35.0) * (y - 35.0));
+                if (d is > 20 and < 27) px[y * 70 + x] = 0;
+            }
+        }
+
+        var result = BitmapTracer.Trace(new RasterImage(70, 70, px), Centreline);
+
+        var loop = Assert.Single(result.Contours);
+        Assert.True(loop.IsClosed);
+        // Radius roughly midway through the annulus.
+        Assert.InRange(loop.Bounds.Width, 42, 52);
+    }
+
+    [Fact]
+    public void ThinningDoesNotBreakAStrokeIntoPieces()
+    {
+        // A diagonal stroke is the case where a naive thinning falls apart.
+        var px = new byte[80 * 80];
+        Array.Fill(px, (byte)255);
+        for (var i = 0; i < 70; i++)
+        {
+            for (var t = 0; t < 6; t++)
+            {
+                var x = i + t;
+                var y = i;
+                if (x < 80 && y < 80) px[y * 80 + x] = 0;
+            }
+        }
+
+        var result = BitmapTracer.Trace(new RasterImage(80, 80, px), Centreline);
+
+        Assert.Single(result.Contours);
+        Assert.InRange(result.Contours[0].Length, 85, 105);
+    }
+
+    [Fact]
+    public void StubsShorterThanTheMinimumAreDropped()
+    {
+        var image = Bar(80, 40, 10, 70, 15, 9);
+
+        var kept = BitmapTracer.Trace(image, Centreline with { MinimumLengthPx = 4 });
+        var dropped = BitmapTracer.Trace(image, Centreline with { MinimumLengthPx = 500 });
+
+        Assert.Single(kept.Contours);
+        Assert.Empty(dropped.Contours);
+    }
+}
+
+public class TracedJobTests
+{
+    /// <summary>
+    /// The whole point of tracing: a bitmap has to come out the far end as G-code
+    /// the machine will actually run. Everything else in the tracer is detail.
+    /// </summary>
+    [Fact]
+    public void ATracedBitmapGeneratesARunnableJob()
+    {
+        var px = new byte[120 * 120];
+        Array.Fill(px, (byte)255);
+        for (var y = 20; y < 100; y++)
+        {
+            for (var x = 20; x < 100; x++) px[y * 120 + x] = 0;
+        }
+
+        var shape = BitmapTracer.TraceToShape(new RasterImage(120, 120, px), 60, 60);
+        shape.Translate(new Vec2(40, 40));
+
+        var design = new Design { Name = "traced" };
+        var layer = Layer.CreateDefault(OperationKind.Cut, 0);
+        layer.PowerPercent = 70;
+        layer.SpeedMmMin = 400;
+        layer.Passes = 1;
+        design.Layers.Add(layer);
+        design.AddShape(shape, layer);
+
+        var machine = MachineLibrary.Load().Profiles.First(p => p.Id == "generic-grbl");
+        var result = CamPipeline.Generate(design, machine, new CamOptions());
+
+        Assert.True(result.CanRun, string.Join("; ", result.Issues.Select(i => i.Title)));
+        Assert.True(result.Job.LineCount > 20, $"only {result.Job.LineCount} lines");
+
+        // The burn must land where the shape was put, not at the origin.
+        var text = string.Join("\n", result.Job.Lines);
+        Assert.Contains("M4", text);
+        Assert.True(result.Estimate.Total > TimeSpan.Zero);
+    }
+}
+
+public class TraceLimitTests
+{
+    /// <summary>Salt and pepper — the shape a grainy photograph takes once thresholded.</summary>
+    private static RasterImage Noise(int w, int h)
+    {
+        var rng = new Random(7);
+        var px = new byte[w * h];
+        for (var i = 0; i < px.Length; i++) px[i] = (byte)(rng.Next(2) == 0 ? 20 : 230);
+        return new RasterImage(w, h, px);
+    }
+
+    [Fact]
+    public void ATooDetailedImageStopsAndSaysSoRatherThanReturningMillionsOfPoints()
+    {
+        var result = BitmapTracer.Trace(Noise(700, 700), TraceOptions.Default with { MaxPoints = 20_000 });
+
+        Assert.NotEmpty(result.Notes);
+        Assert.Contains(result.Notes, n => n.Contains("points", StringComparison.OrdinalIgnoreCase));
+
+        // The budget is checked between contours, so one contour may overshoot it.
+        // What matters is that it stops, rather than running to millions.
+        Assert.True(result.PointCount < 20_000 * 2, $"point count was {result.PointCount:N0}");
+    }
+
+    [Fact]
+    public void AnOrdinaryImageIsTracedWholeWithNothingToReport()
+    {
+        var px = new byte[60 * 60];
+        Array.Fill(px, (byte)255);
+        for (var y = 10; y < 50; y++)
+        {
+            for (var x = 10; x < 50; x++) px[y * 60 + x] = 0;
+        }
+
+        var result = BitmapTracer.Trace(new RasterImage(60, 60, px));
+
+        Assert.Empty(result.Notes);
+        Assert.Single(result.Contours);
+    }
+
+    [Fact]
+    public void AnOversizedImageIsResampledButStillLandsInSourceCoordinates()
+    {
+        // A plain square, big enough to trip the working-resolution cap.
+        var w = 1200;
+        var h = 1000;
+        var px = new byte[w * h];
+        Array.Fill(px, (byte)255);
+        for (var y = 250; y < 750; y++)
+        {
+            for (var x = 300; x < 900; x++) px[y * w + x] = 0;
+        }
+
+        var result = BitmapTracer.Trace(new RasterImage(w, h, px),
+            TraceOptions.Default with { MaxWorkingPixels = 100_000 });
+
+        Assert.Contains(result.Notes, n => n.Contains("Traced at", StringComparison.Ordinal));
+
+        // Scaled back up: the contour must describe the square in the original
+        // pixel grid, not in the reduced one.
+        var bounds = Assert.Single(result.Contours).Bounds;
+        Assert.InRange(bounds.MinX, 280, 320);
+        Assert.InRange(bounds.MinY, 230, 270);
+        Assert.InRange(bounds.Width, 570, 630);
+        Assert.InRange(bounds.Height, 470, 530);
+    }
+
+    [Fact]
+    public void TheResolutionCapCanBeTurnedOff()
+    {
+        var w = 700;
+        var h = 700;
+        var px = new byte[w * h];
+        Array.Fill(px, (byte)255);
+        for (var y = 100; y < 600; y++)
+        {
+            for (var x = 100; x < 600; x++) px[y * w + x] = 0;
+        }
+
+        var result = BitmapTracer.Trace(new RasterImage(w, h, px),
+            TraceOptions.Default with { MaxWorkingPixels = 0 });
+
+        Assert.Empty(result.Notes);
+    }
+}
+
+public class AutoThresholdTests
+{
+    [Fact]
+    public void SplitsABimodalImageBetweenItsTwoPeaks()
+    {
+        var px = new byte[100 * 100];
+        for (var i = 0; i < px.Length; i++) px[i] = i % 2 == 0 ? (byte)40 : (byte)210;
+
+        var threshold = BitmapTracer.AutoThreshold(new RasterImage(100, 100, px));
+
+        Assert.InRange(threshold, 41, 210);
+    }
+
+    [Fact]
+    public void FindsInkThatAFixed128WouldMiss()
+    {
+        // Warm-lit scan: "white" paper at 200, "black" ink at 150. Nothing is
+        // below 128, so the default threshold traces precisely nothing.
+        var px = new byte[60 * 60];
+        Array.Fill(px, (byte)200);
+        for (var y = 20; y < 40; y++)
+        {
+            for (var x = 20; x < 40; x++) px[y * 60 + x] = 150;
+        }
+        var image = new RasterImage(60, 60, px);
+
+        Assert.Empty(BitmapTracer.Trace(image, TraceOptions.Default).Contours);
+
+        var auto = BitmapTracer.AutoThreshold(image);
+        Assert.InRange(auto, 151, 200);
+        Assert.Single(BitmapTracer.Trace(image, TraceOptions.Default with { Threshold = auto }).Contours);
+    }
+
+    [Fact]
+    public void AFlatImageStillReturnsAUsableThreshold()
+    {
+        var px = new byte[400];
+        Array.Fill(px, (byte)128);
+
+        var threshold = BitmapTracer.AutoThreshold(new RasterImage(20, 20, px));
+        Assert.InRange(threshold, 1, 255);
+    }
+}
+
 public class CamPipelineTests
 {
     private static Design SquareDesign(OperationKind kind, double power = 80, double speed = 600)

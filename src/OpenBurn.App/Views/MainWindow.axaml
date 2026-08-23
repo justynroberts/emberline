@@ -66,7 +66,8 @@
                     <Button Classes="tool" Content="↻" ToolTip.Tip="Redo" Command="{Binding RedoEditCommand}" />
                     <Separator />
                     <Button Classes="tool" Content="⤓" ToolTip.Tip="Import artwork (SVG, image or G-code)" Command="{Binding OpenCommand}" />
-                    <Button Classes="tool" Content="◈" ToolTip.Tip="Trace the selected image to vectors" Command="{Binding TraceSelectedCommand}" />
+                    <Button Classes="tool" Content="◈" Click="OnTraceImage"
+                            ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file" />
                     <Button Classes="tool" Content="⧉" ToolTip.Tip="Duplicate selection" Command="{Binding DuplicateSelectedCommand}" />
                     <Button Classes="tool" Content="␡" ToolTip.Tip="Delete selection" Command="{Binding DeleteSelectedCommand}" />
                     <Separator />

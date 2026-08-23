@@ -293,36 +293,67 @@ public sealed partial class MainViewModel
         });
     }
 
-    /// <summary>Trace the selected bitmap to vectors and add the result as a path shape.</summary>
-    [RelayCommand]
-    private void TraceSelected()
-    {
-        if (PrimarySelection is not ImageShape image)
-        {
-            Console.AppendError("Select an imported image first.");
-            return;
-        }
+    // ----------------------------------------------------------------- trace
 
+    /// <summary>
+    /// A trace editor for the selected image, or null if nothing traceable is
+    /// selected. The window drives it; the view model only supplies and applies.
+    /// </summary>
+    public TraceViewModel? CreateTraceEditor()
+    {
+        if (PrimarySelection is not ImageShape image) return null;
+
+        return new TraceViewModel(image.Source, image.Name, image.WidthMm, image.HeightMm)
+        {
+            SourceTransform = image.Transform,
+        };
+    }
+
+    /// <summary>A trace editor for an image file that has not been imported.</summary>
+    public TraceViewModel? CreateTraceEditor(string path)
+    {
         try
         {
-            var traced = BitmapTracer.TraceToShape(image.Source, image.WidthMm, image.HeightMm);
-            traced.Transform = image.Transform;
-            traced.Name = image.Name + " (traced)";
+            var loaded = ImageImporter.Load(path);
+            foreach (var warning in loaded.Warnings) Console.AppendInfo(warning);
 
-            EditDocument("Trace image", () =>
-            {
-                Design.AddShape(traced, SelectedLayer?.Layer);
-                Selection.Clear();
-                Selection.Add(traced);
-            });
-
-            Console.AppendInfo($"Traced {traced.Paths.Count} contour(s). " +
-                               "Adjust the threshold and re-trace if the result is too noisy or too sparse.");
+            var (widthMm, heightMm) = FitToBed(loaded.SuggestedWidthMm, loaded.SuggestedHeightMm);
+            return new TraceViewModel(loaded.Image, Path.GetFileNameWithoutExtension(path), widthMm, heightMm);
         }
         catch (Exception ex)
         {
-            Console.AppendError($"Trace failed: {ex.Message}");
+            Console.AppendError($"Could not open {Path.GetFileName(path)}: {ex.Message}");
+            return null;
         }
+    }
+
+    /// <summary>Shrink to fit the bed, keeping the aspect ratio. Growing is the operator's call.</summary>
+    private (double Width, double Height) FitToBed(double widthMm, double heightMm)
+    {
+        var margin = 0.9;
+        var scale = Math.Min(
+            SelectedMachine.BedWidthMm * margin / Math.Max(0.1, widthMm),
+            SelectedMachine.BedHeightMm * margin / Math.Max(0.1, heightMm));
+
+        return scale >= 1 ? (widthMm, heightMm) : (widthMm * scale, heightMm * scale);
+    }
+
+    /// <summary>Add a traced shape to the design, as one undoable step.</summary>
+    public void ApplyTrace(TraceViewModel editor, PathShape traced)
+    {
+        traced.Transform = editor.SourceTransform ?? Matrix2D.Identity;
+        if (editor.SourceTransform is null) PlaceOnBed(traced);
+
+        EditDocument("Trace image", () =>
+        {
+            Design.AddShape(traced, SelectedLayer?.Layer);
+            Selection.Clear();
+            Selection.Add(traced);
+        });
+
+        var kind = editor.Mode == Cam.Trace.TraceMode.Centreline ? "centreline" : "outline";
+        Console.AppendInfo($"Traced {traced.Paths.Count:N0} {kind} path(s) from {editor.SourceName}. " +
+                           "The image is untouched, so you can trace it again with different settings.");
     }
 
     // ----------------------------------------------------------------- layers

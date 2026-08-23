@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using OpenBurn.Cam;
 using OpenBurn.Cam.Import;
+using OpenBurn.Cam.Trace;
+// System.Diagnostics has a TraceOptions of its own, and this file needs Stopwatch.
+using TraceOptions = OpenBurn.Cam.Trace.TraceOptions;
 using OpenBurn.Core.Documents;
 using OpenBurn.Core.Jobs;
 using OpenBurn.Core.Machines;
@@ -89,6 +92,23 @@ public static class SelfTest
         Check("text to outlines", text.Outlines.Count > 0 && !text.FontWasSubstituted,
             $"{text.Outlines.Count} contours in {text.ResolvedFamily}");
 
+        // --- bitmap tracing ----------------------------------------------------
+        var ring = new RasterImage(90, 90, BuildRing(90));
+
+        var outlined = BitmapTracer.Trace(ring);
+        Check("bitmap trace, outlines", outlined.ContourCount == 2 && outlined.Notes.Count == 0,
+            $"{outlined.ContourCount} contours, {outlined.PointCount} points");
+
+        var centred = BitmapTracer.Trace(ring, TraceOptions.Default with { Mode = TraceMode.Centreline });
+        Check("bitmap trace, centrelines", centred.ContourCount == 1 && centred.Contours[0].IsClosed,
+            $"{centred.ContourCount} stroke, closed={(centred.ContourCount > 0 && centred.Contours[0].IsClosed)}");
+
+        var auto = BitmapTracer.AutoThreshold(ring);
+        Check("trace auto threshold", auto is > 32 and < 224, auto.ToString());
+
+        Check("trace preview renders", TracePreview.Render(ring, outlined.Contours, 240).Length > 100,
+            $"{TracePreview.Render(ring, outlined.Contours, 240).Length} bytes of PNG");
+
         // --- CAM ---------------------------------------------------------------
         var design = Design.CreateDefault();
         design.Name = "self-test";
@@ -171,5 +191,21 @@ public static class SelfTest
             directory = directory.Parent;
         }
         return null;
+    }
+
+    /// <summary>A dark annulus on white: two contours as outlines, one as a centreline.</summary>
+    private static byte[] BuildRing(int size)
+    {
+        var px = new byte[size * size];
+        Array.Fill(px, (byte)255);
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                var d = Math.Sqrt((x - size / 2.0) * (x - size / 2.0) + (y - size / 2.0) * (y - size / 2.0));
+                if (d > size * 0.28 && d < size * 0.36) px[y * size + x] = 0;
+            }
+        }
+        return px;
     }
 }

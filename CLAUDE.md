@@ -70,6 +70,15 @@ that clashes with a built-in importer or driver and reports it. Do not "helpfull
 relax that — silently shadowing the tested G-code path with third-party code is
 not a trade anybody agreed to.
 
+**`TraceOptions` collides with `System.Diagnostics.TraceOptions`.** Any file that
+wants both needs a using alias — `SelfTest.cs` has one.
+
+**The tracer's edge bookkeeping is deliberately not a hash set.** Skeleton walking
+addresses each pixel-to-pixel edge by index, four slots per pixel. Hashing the pair
+of endpoints looks tidier and is a trap: adjacent pixel indices differ by one or by
+a row, so the default `long` hash folds every key into a few thousand codes and the
+walk goes quadratic — ninety seconds on a three-megapixel image, against under two.
+
 **Millimetres everywhere, Y up.** Inches exist only in the view layer. The SVG
 importer performs the single Y flip at the boundary; nothing downstream flips again.
 

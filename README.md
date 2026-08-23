@@ -19,7 +19,8 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Connection** | USB serial, TCP (telnet), WebSocket, HTTP command, and a built-in simulator |
 | **Discovery** | USB port enumeration, and an opt-in local network scan that probes for GRBL |
 | **Import** | SVG (paths, primitives, nested transforms, real-world sizing), DXF (lines, arcs, polylines with bulges, ellipses, splines, blocks), PNG/JPEG/BMP/GIF/WebP, G-code |
-| **CAM** | Raster engraving with ten dithering kernels, vector cut/score/engrave, hatch and offset fills, bitmap tracing, text to outlines |
+| **CAM** | Raster engraving with ten dithering kernels, vector cut/score/engrave, hatch and offset fills, text to outlines |
+| **Tracing** | Bitmap to paths with a live preview — outlines or centrelines, threshold seeded from the image itself, simplify and smooth |
 | **Job engine** | Character-counting streaming, pause/resume/stop, resume-from-line after a dropped link, live progress and acceleration-aware time estimates |
 | **Editing** | Drag, scale and rotate on the canvas, marquee selection, snapping, align, distribute, group, array, and undo across all of it |
 | **Preview** | Toolpath simulation with scrubbing, and a G-code view of the exact lines that will be sent |
@@ -119,6 +120,32 @@ the material system exists to stop you starting from nothing.
 
 ---
 
+## Tracing an image
+
+Press **◈** in the tool rail. With a bitmap selected it traces that; with nothing
+selected it asks for a file, because wanting to trace a photograph is not the same
+as wanting it on the bed as a raster first.
+
+Everything re-traces live, because the only way to know whether a threshold is
+right is to look at what it produces. The one choice that matters:
+
+**Outlines** follow the edge of every dark region and come back closed. This is
+what you want for silhouettes, stencils and cut lines.
+
+**Centrelines** run a single line down the middle of each stroke. This is what you
+want for line art, signatures and hand lettering — trace those as outlines and you
+get both sides of every pen stroke, so the laser burns each line twice and the
+result comes out looking hollow.
+
+The threshold starts from the image's own histogram rather than a fixed 128, which
+matters for anything scanned or photographed: warm lighting can leave "black" ink
+sitting at 150, where a fixed threshold finds precisely nothing.
+
+Tracing never touches the image. It adds a separate shape, so you can trace the
+same source again with different settings and keep whichever you prefer.
+
+---
+
 ## The assistant
 
 Optional and off until you give it a key. Set `ANTHROPIC_API_KEY` in your
@@ -191,7 +218,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 355 tests, no hardware required
+dotnet test                     # 382 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -201,7 +228,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-355 tests, no hardware required. The ones that matter most run complete jobs
+382 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

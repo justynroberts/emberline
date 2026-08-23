@@ -134,6 +134,57 @@ public partial class MainWindow : Window
         model.ReloadMachines(dialog.Result?.Id);
     }
 
+    /// <summary>
+    /// Trace the selected image, or — if nothing traceable is selected — ask for a
+    /// file and trace that. Wanting to trace something is not the same as wanting
+    /// it on the bed as a raster first, and making people import before they can
+    /// trace is a step with no purpose.
+    /// </summary>
+    private async void OnTraceImage(object? sender, RoutedEventArgs e)
+    {
+        if (Model is not { } model) return;
+
+        var editor = model.CreateTraceEditor();
+
+        if (editor is null)
+        {
+            var path = await PickImageAsync();
+            if (path is null)
+            {
+                model.Console.AppendInfo("Nothing to trace. Select an imported image, or pick an image file.");
+                return;
+            }
+
+            editor = model.CreateTraceEditor(path);
+            if (editor is null) return;
+        }
+
+        var dialog = new TraceWindow(editor);
+        await dialog.ShowDialog(this);
+
+        if (dialog.Result is { } traced) model.ApplyTrace(editor, traced);
+    }
+
+    private async Task<string?> PickImageAsync()
+    {
+        if (StorageProvider is not { } storage) return null;
+
+        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Trace an image",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Images")
+                {
+                    Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp"],
+                },
+            ],
+        });
+
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
     private async void OnShowJobLibrary(object? sender, RoutedEventArgs e)
     {
         if (Model is not { } model) return;

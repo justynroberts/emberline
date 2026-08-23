@@ -265,7 +265,9 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
 - Fiducial re-registration: mark where a workpiece was, take it off, put it back,
   and the artwork follows it.
 - Job monitoring: the camera stays live beside the progress bar while a job runs.
-- 355 tests, none requiring hardware, including headless UI tests that drive the
+- Bitmap tracing with a live preview: outlines or centrelines, Otsu-seeded
+  threshold, simplify and smooth, all judged against the image they came from.
+- 382 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons
