@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OpenBurn.AI/OpenBurn.AI.csproj" />
+    <Project Path="src/OpenBurn.App/OpenBurn.App.csproj" />
+    <Project Path="src/OpenBurn.Cam/OpenBurn.Cam.csproj" />
+    <Project Path="src/OpenBurn.Camera/OpenBurn.Camera.csproj" />
+    <Project Path="src/OpenBurn.Core/OpenBurn.Core.csproj" />
+    <Project Path="src/OpenBurn.Devices/OpenBurn.Devices.csproj" />
+    <Project Path="src/OpenBurn.GCode/OpenBurn.GCode.csproj" />
+    <Project Path="src/OpenBurn.Materials/OpenBurn.Materials.csproj" />
+    <Project Path="src/OpenBurn.Transport/OpenBurn.Transport.csproj" />
+    <Project Path="src/OpenBurn.VirtualLaser/OpenBurn.VirtualLaser.csproj" />
+    <Project Path="src/OpenBurn.Vision/OpenBurn.Vision.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OpenBurn.Cam.Tests/OpenBurn.Cam.Tests.csproj" />
+    <Project Path="tests/OpenBurn.Core.Tests/OpenBurn.Core.Tests.csproj" />
+    <Project Path="tests/OpenBurn.Devices.Tests/OpenBurn.Devices.Tests.csproj" />
+    <Project Path="tests/OpenBurn.GCode.Tests/OpenBurn.GCode.Tests.csproj" />
+    <Project Path="tests/OpenBurn.Transport.Tests/OpenBurn.Transport.Tests.csproj" />
+    <Project Path="tests/OpenBurn.Vision.Tests/OpenBurn.Vision.Tests.csproj" />
+  </Folder>
+</Solution>

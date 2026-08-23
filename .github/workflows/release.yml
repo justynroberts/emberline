@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest,   rid: osx-arm64, script: build/package-macos.sh,   arg: arm64 }
+          - { os: macos-13,       rid: osx-x64,   script: build/package-macos.sh,   arg: x86_64 }
+          - { os: windows-latest, rid: win-x64,   script: build/package-windows.sh, arg: win-x64 }
+          - { os: ubuntu-latest,  rid: linux-x64, script: build/package-linux.sh,   arg: linux-x64 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Package
+        shell: bash
+        run: bash ${{ matrix.script }} ${{ matrix.arg }}
+
+      - name: Archive
+        shell: bash
+        run: |
+          cd dist
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a "openburn-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
+          else
+            zip -qry "openburn-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openburn-${{ matrix.rid }}
+          path: dist/openburn-${{ matrix.rid }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip
+          generate_release_notes: true
+          body: |
+            ## Installing
+
+            **macOS** — unzip and move `OpenBurn.app` to Applications. The bundle is
+            ad-hoc signed, so the first launch needs right-click → Open.
+
+            **Windows** — unzip anywhere and run `OpenBurn.exe`. No installer, no runtime to install.
+
+            **Linux** — unzip and run `./OpenBurn`.
+
+            No account, no cloud, no telemetry. Press **Virtual** to try it without a machine.

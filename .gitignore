@@ -1,0 +1,29 @@
+# Build output
+bin/
+obj/
+dist/
+*.user
+*.suo
+
+# Test output
+TestResults/
+coverage/
+*.trx
+
+# Local state — never commit a key
+anthropic.key
+*.key
+appsettings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vs/
+.vscode/
+.idea/
+*.swp
+
+# The prototype kept for reference during the port
+reference/**/node_modules/

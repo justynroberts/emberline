@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenBurn.Core\OpenBurn.Core.csproj" />
+    <ProjectReference Include="..\OpenBurn.GCode\OpenBurn.GCode.csproj" />
+    <ProjectReference Include="..\OpenBurn.Cam\OpenBurn.Cam.csproj" />
+    <ProjectReference Include="..\OpenBurn.Materials\OpenBurn.Materials.csproj" />
+    <ProjectReference Include="..\OpenBurn.Devices\OpenBurn.Devices.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Anthropic" Version="12.42.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

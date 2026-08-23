@@ -1,0 +1,22 @@
+{
+  "id": "virtual-laser",
+  "manufacturer": "OpenBurn",
+  "model": "Virtual Laser",
+  "displayName": "Virtual Laser (simulator)",
+  "laserWatts": 10,
+  "bedWidthMm": 400,
+  "bedHeightMm": 400,
+  "origin": "FrontLeft",
+  "firmware": "GRBL 1.1 simulator",
+  "connections": ["Virtual"],
+  "maxSpeedMmMin": 12000,
+  "travelSpeedMmMin": 6000,
+  "maxSpindleValue": 1000,
+  "accelerationX": 1500,
+  "accelerationY": 1500,
+  "junctionDeviation": 0.01,
+  "capabilities": "Homing, Framing, LaserMode",
+  "initCommands": ["G21", "G90", "G17", "M5"],
+  "baudRate": 115200,
+  "driverId": "grbl"
+}

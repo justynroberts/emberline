@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenBurn.Core\OpenBurn.Core.csproj" />
+    <ProjectReference Include="..\OpenBurn.GCode\OpenBurn.GCode.csproj" />
+    <ProjectReference Include="..\OpenBurn.Transport\OpenBurn.Transport.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

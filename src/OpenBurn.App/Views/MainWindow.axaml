@@ -1,0 +1,596 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:OpenBurn.App.ViewModels"
+        xmlns:ctrl="clr-namespace:OpenBurn.App.Controls"
+        xmlns:conv="clr-namespace:OpenBurn.App.Converters"
+        xmlns:mach="clr-namespace:OpenBurn.Core.Machines;assembly=OpenBurn.Core"
+        xmlns:tr="clr-namespace:OpenBurn.Transport;assembly=OpenBurn.Transport"
+        xmlns:disc="clr-namespace:OpenBurn.Transport.Discovery;assembly=OpenBurn.Transport"
+        xmlns:mat="clr-namespace:OpenBurn.Materials;assembly=OpenBurn.Materials"
+        xmlns:cam="clr-namespace:OpenBurn.Camera;assembly=OpenBurn.Camera"
+        x:Class="OpenBurn.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="OpenBurn"
+        Width="1480" Height="940"
+        MinWidth="1080" MinHeight="700"
+        Icon="avares://OpenBurn/Assets/openburn.png"
+        Background="{DynamicResource BgSunken}">
+
+    <Window.Resources>
+        <conv:ThemeBrushConverter x:Key="ThemeBrush" />
+        <conv:EnumEqualsConverter x:Key="EnumEquals" />
+    </Window.Resources>
+
+    <Grid>
+        <!-- ============ The workspace fills the window; all chrome floats over it ============ -->
+        <ctrl:WorkspaceView x:Name="Workspace"
+                            Machine="{Binding SelectedMachine}"
+                            Design="{Binding Design}"
+                            Toolpath="{Binding Toolpath}"
+                            HeadPosition="{Binding HeadPosition}"
+                            ShowGrid="{Binding ShowGrid}"
+                            ShowTravel="{Binding ShowTravel}"
+                            SelectedShape="{Binding SelectedShape}"
+                            BedImage="{Binding BedImage}"
+                            BedImageOpacity="{Binding BedImageOpacity}" />
+
+        <!-- ============================== Left tool rail ============================== -->
+        <Border Classes="panel focusIn" Width="60" Margin="12,12,0,12"
+                HorizontalAlignment="Left" VerticalAlignment="Stretch" Padding="8,12">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Top" Spacing="6">
+                    <Button Classes="tool" Content="▭" ToolTip.Tip="Add rectangle" Command="{Binding AddRectangleCommand}" />
+                    <Button Classes="tool" Content="◯" ToolTip.Tip="Add circle" Command="{Binding AddCircleCommand}" />
+                    <Button Classes="tool" Content="⬡" ToolTip.Tip="Add polygon" Command="{Binding AddPolygonCommand}" />
+                    <Separator />
+                    <Button Classes="tool" Content="⤓" ToolTip.Tip="Import artwork (SVG, image or G-code)" Command="{Binding OpenCommand}" />
+                    <Button Classes="tool" Content="◈" ToolTip.Tip="Trace the selected image to vectors" Command="{Binding TraceSelectedCommand}" />
+                    <Button Classes="tool" Content="⧉" ToolTip.Tip="Duplicate selection" Command="{Binding DuplicateSelectedCommand}" />
+                    <Button Classes="tool" Content="␡" ToolTip.Tip="Delete selection" Command="{Binding DeleteSelectedCommand}" />
+                    <Separator />
+                    <Button Classes="tool" Content="⤢" ToolTip.Tip="Zoom to fit the bed" Click="OnZoomBed" />
+                    <Button Classes="tool" Content="⌖" ToolTip.Tip="Zoom to fit the artwork" Click="OnZoomContent" />
+                    <Button Classes="tool" Content="▦" ToolTip.Tip="Toggle the grid"
+                            Command="{Binding ToggleGridCommand}" />
+                    <Button Classes="tool" Content="⇢" ToolTip.Tip="Show travel moves"
+                            Command="{Binding ToggleTravelCommand}" />
+                    <Separator />
+                    <Button Classes="tool" Content="≣" ToolTip.Tip="Machine console" Command="{Binding ToggleConsoleCommand}" />
+                    <Button Classes="tool" Content="✦" ToolTip.Tip="Assistant" Command="{Binding ToggleAssistantCommand}" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Spacing="6">
+                    <Button Classes="tool" Content="◐" ToolTip.Tip="Switch theme" Command="{Binding CycleThemeCommand}" />
+                    <Button Classes="round" Content="i"
+                            HorizontalAlignment="Center"
+                            AutomationProperties.Name="About this app"
+                            ToolTip.Tip="About OpenBurn"
+                            Click="OnShowAbout" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================== Top status bar ============================== -->
+        <Border Classes="panel focusInDelay1" Margin="84,12,352,0"
+                VerticalAlignment="Top" Padding="14,10">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto">
+
+                <!-- Machine state -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                    <Ellipse Width="10" Height="10"
+                             Fill="{Binding StateColourKey, Converter={StaticResource ThemeBrush}}" />
+                    <StackPanel>
+                        <TextBlock Text="{Binding MachineStateName}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding StatusText}" Classes="label" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Grid.Column="1" Width="1" Background="{DynamicResource Hairline}" Margin="16,2" />
+
+                <!-- Coordinates -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="24" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="WORK" Classes="sectionTitle" Margin="0" />
+                        <TextBlock Text="{Binding WorkPositionText}" Classes="readout" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="MACHINE" Classes="sectionTitle" Margin="0" />
+                        <TextBlock Text="{Binding MachinePositionText}" Classes="mono"
+                                   Foreground="{DynamicResource InkMuted}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="FEED / POWER" Classes="sectionTitle" Margin="0" />
+                        <TextBlock Text="{Binding FeedPowerText}" Classes="mono" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="BUFFER" Classes="sectionTitle" Margin="0" />
+                        <TextBlock Text="{Binding BufferText}" Classes="mono"
+                                   Foreground="{DynamicResource InkMuted}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Job actions -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Content="Frame" Command="{Binding FrameCommand}"
+                            ToolTip.Tip="Trace the job outline at pointer power so you can align the work" />
+                    <Button Content="Start" Classes="primary" Command="{Binding StartJobCommand}"
+                            IsVisible="{Binding !IsJobActive}" />
+                    <Button Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}" />
+                    <Button Content="Resume" Classes="primary" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}" />
+                    <Button Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}" />
+                </StackPanel>
+
+                <Border Grid.Column="4" Width="1" Background="{DynamicResource Hairline}" Margin="12,2" />
+
+                <Button Grid.Column="5" Content="STOP" Classes="danger"
+                        Command="{Binding EmergencyStopCommand}"
+                        ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset (Escape)" />
+            </Grid>
+        </Border>
+
+        <!-- ============================ Job progress strip ============================ -->
+        <Border Classes="panel slideUp" Margin="84,0,352,0" Padding="14,10"
+                VerticalAlignment="Top"
+                IsVisible="{Binding IsJobActive}">
+            <Border.RenderTransform>
+                <TranslateTransform Y="84" />
+            </Border.RenderTransform>
+            <StackPanel Spacing="7">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="{Binding ProgressText}" Classes="mono" />
+                    <TextBlock Grid.Column="1" Text="{Binding JobProgress.CurrentLine}" Classes="mono"
+                               Foreground="{DynamicResource InkFaint}" MaxWidth="260"
+                               TextTrimming="CharacterEllipsis" />
+                </Grid>
+                <ProgressBar Minimum="0" Maximum="1" Value="{Binding JobProgress.Fraction, Mode=OneWay}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ============================= Fault banner ================================= -->
+        <Border Classes="panel slideUp" Margin="84,0,352,20" Padding="14,11"
+                VerticalAlignment="Bottom" IsVisible="{Binding HasFault}"
+                BorderBrush="{DynamicResource StateAlarm}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.Column="0" Text="⚠" FontSize="18" Margin="0,0,12,0"
+                           Foreground="{DynamicResource StateAlarm}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding FaultText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Content="Unlock" Command="{Binding UnlockCommand}" />
+                    <Button Content="Diagnose" Command="{Binding DiagnoseFaultCommand}"
+                            ToolTip.Tip="Ask the assistant what this means, with the console log attached" />
+                    <Button Content="Dismiss" Classes="ghost" Command="{Binding DismissFaultCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================= Right inspector ============================== -->
+        <Border Classes="panel focusInDelay2" Width="328" Margin="0,12,12,12"
+                HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="0">
+            <DockPanel LastChildFill="True">
+
+                <!-- Connection -->
+                <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="14,14,14,0">
+                    <TextBlock Classes="sectionTitle" Text="MACHINE" />
+                    <ComboBox ItemsSource="{Binding Machines.Profiles}"
+                              SelectedItem="{Binding SelectedMachine}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="mach:MachineProfile">
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding SerialPorts}"
+                                  SelectedValue="{Binding SelectedPort}"
+                                  SelectedValueBinding="{Binding PortName}"
+                                  HorizontalAlignment="Stretch"
+                                  PlaceholderText="Serial port">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="tr:SerialPortInfo">
+                                    <TextBlock Text="{Binding PortName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Grid.Column="1" Content="⟳" Width="34" Padding="0"
+                                ToolTip.Tip="Rescan serial ports" Command="{Binding RefreshPortsCommand}" />
+                    </Grid>
+
+                    <TextBox Text="{Binding NetworkAddress}" PlaceholderText="192.168.1.42:23" />
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                        <Button Grid.Column="0" Content="USB" Command="{Binding ConnectSerialCommand}" />
+                        <Button Grid.Column="1" Content="Wi-Fi" Command="{Binding ConnectNetworkCommand}" />
+                        <Button Grid.Column="2" Content="Virtual" Command="{Binding ConnectVirtualCommand}"
+                                ToolTip.Tip="Run against the built-in simulator — no hardware needed" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                        <Button Grid.Column="0" Content="Scan network" Command="{Binding ScanNetworkCommand}" />
+                        <Button Grid.Column="1" Content="Disconnect" Command="{Binding DisconnectCommand}" />
+                    </Grid>
+
+                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding DiscoveryProgress}"
+                                 IsVisible="{Binding IsBusy}" />
+                    <TextBlock Text="{Binding BusyMessage}" Classes="label" IsVisible="{Binding IsBusy}" />
+
+                    <ItemsControl ItemsSource="{Binding DiscoveredDevices}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="disc:DiscoveredDevice">
+                                <Button Classes="ghost" HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).ConnectDiscoveredCommand}"
+                                        CommandParameter="{Binding}">
+                                    <TextBlock Text="{Binding Summary}" Classes="mono" FontSize="11" />
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Scrollable body -->
+                <ScrollViewer Margin="14,10,14,14" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="14">
+
+                        <Separator />
+
+                        <!-- Jog -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="sectionTitle" Text="JOG" />
+                            <UniformGrid Rows="3" Columns="3" HorizontalAlignment="Center">
+                                <Button Classes="jog" Content="↖" Command="{Binding JogCommand}" CommandParameter="upleft" />
+                                <Button Classes="jog" Content="↑" Command="{Binding JogCommand}" CommandParameter="up" />
+                                <Button Classes="jog" Content="↗" Command="{Binding JogCommand}" CommandParameter="upright" />
+                                <Button Classes="jog" Content="←" Command="{Binding JogCommand}" CommandParameter="left" />
+                                <Button Classes="jog" Content="⌂" Command="{Binding HomeCommand}" ToolTip.Tip="Home ($H)" />
+                                <Button Classes="jog" Content="→" Command="{Binding JogCommand}" CommandParameter="right" />
+                                <Button Classes="jog" Content="↙" Command="{Binding JogCommand}" CommandParameter="downleft" />
+                                <Button Classes="jog" Content="↓" Command="{Binding JogCommand}" CommandParameter="down" />
+                                <Button Classes="jog" Content="↘" Command="{Binding JogCommand}" CommandParameter="downright" />
+                            </UniformGrid>
+
+                            <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="6">
+                                <TextBlock Grid.Column="0" Text="Step" Classes="label" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding JogSteps}"
+                                          SelectedItem="{Binding JogStepMm}" HorizontalAlignment="Stretch" />
+                                <TextBlock Grid.Column="2" Text="Feed" Classes="label" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="3" ItemsSource="{Binding JogFeeds}"
+                                          SelectedItem="{Binding JogFeedMmMin}" HorizontalAlignment="Stretch" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Zero XY" Command="{Binding ZeroAllCommand}" />
+                                <Button Grid.Column="1" Content="Unlock" Command="{Binding UnlockCommand}" />
+                                <Button Grid.Column="2" Content="Origin" Command="{Binding GoToOriginCommand}" />
+                            </Grid>
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Camera -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="sectionTitle" Text="CAMERA" />
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                <ComboBox Grid.Column="0" ItemsSource="{Binding Cameras}"
+                                          SelectedItem="{Binding SelectedCamera}"
+                                          HorizontalAlignment="Stretch"
+                                          PlaceholderText="No camera">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="cam:CameraDescriptor">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Grid.Column="1" Content="⟳" Width="34" Padding="0"
+                                        ToolTip.Tip="Rescan cameras" Command="{Binding RefreshCamerasCommand}" />
+                            </Grid>
+
+                            <TextBox Text="{Binding CameraAddress}"
+                                     PlaceholderText="http://192.168.1.50/stream" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Connect" Command="{Binding ConnectCameraCommand}" />
+                                <Button Grid.Column="1" Content="Capture bed" Command="{Binding CaptureBedCommand}" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Calibrate" Click="OnCalibrateCamera" />
+                                <Button Grid.Column="1" Content="Find objects" Command="{Binding DetectWorkpiecesCommand}"
+                                        ToolTip.Tip="Detect workpieces on the bed and move the selection onto the largest" />
+                            </Grid>
+
+                            <TextBlock Text="{Binding CalibrationSummary}" Classes="label" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding CameraStatus}" TextWrapping="Wrap"
+                                       FontSize="{DynamicResource FontSmall}"
+                                       Foreground="{DynamicResource InkMuted}"
+                                       IsVisible="{Binding CameraStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                <CheckBox Grid.Column="0" Content="Show" IsChecked="{Binding ShowBedImage}" />
+                                <Slider Grid.Column="1" Minimum="0.15" Maximum="1" Value="{Binding BedImageOpacity}"
+                                        ToolTip.Tip="How strongly the camera view shows through" />
+                                <Button Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
+                                        Command="{Binding ClearBedImageCommand}" />
+                            </Grid>
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Material -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="sectionTitle" Text="MATERIAL" />
+                            <ComboBox ItemsSource="{Binding AvailableMaterials}"
+                                      SelectedItem="{Binding SelectedMaterial}"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="Choose a material">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="mat:MaterialProfile">
+                                        <TextBlock Text="{Binding FullPath}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Text="{Binding MaterialNotes}" Classes="label" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding MaterialHazard}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource StateAlarm}" FontSize="{DynamicResource FontSmall}"
+                                       IsVisible="{Binding HasMaterialHazard}" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Apply" Command="{Binding ApplyMaterialCommand}" />
+                                <Button Grid.Column="1" Content="Test grid" Command="{Binding RunTestGridCommand}"
+                                        ToolTip.Tip="Burn a power × speed matrix on an offcut" />
+                            </Grid>
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Layers -->
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                                <TextBlock Grid.Column="0" Classes="sectionTitle" Text="LAYERS" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Content="↑" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerUpCommand}" />
+                                <Button Grid.Column="2" Content="↓" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerDownCommand}" />
+                                <Button Grid.Column="3" Content="+" Classes="ghost" Padding="6,2" Command="{Binding AddLayerCommand}" />
+                                <Button Grid.Column="4" Content="−" Classes="ghost" Padding="6,2" Command="{Binding RemoveLayerCommand}" />
+                            </Grid>
+
+                            <ListBox ItemsSource="{Binding Layers}" SelectedItem="{Binding SelectedLayer}"
+                                     Background="Transparent" BorderThickness="0" MaxHeight="190">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LayerViewModel">
+                                        <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8" Margin="0,3">
+                                            <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" />
+                                            <Border Grid.Column="1" Width="4" CornerRadius="2"
+                                                    Background="{Binding ColorHex, Converter={StaticResource ThemeBrush}}" />
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Medium" />
+                                                <TextBlock Text="{Binding Summary}" Classes="mono"
+                                                           FontSize="10" Foreground="{DynamicResource InkMuted}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- Selected layer settings -->
+                        <ContentControl Content="{Binding SelectedLayer}">
+                          <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="vm:LayerViewModel">
+                        <StackPanel Spacing="8">
+                            <Separator />
+                            <TextBlock Classes="sectionTitle" Text="OPERATION" />
+                            <ComboBox ItemsSource="{x:Static vm:LayerViewModel.Operations}"
+                                      SelectedItem="{Binding Operation}" HorizontalAlignment="Stretch" />
+
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto"
+                                  ColumnSpacing="10" RowSpacing="7">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Speed" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SpeedMmMin}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Power %" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PowerPercent}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Passes" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Passes}" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Interval" Classes="label" VerticalAlignment="Center" />
+                                <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                    <TextBox Grid.Column="0" Text="{Binding LineIntervalMm}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding DpiText}" Classes="label" VerticalAlignment="Center" />
+                                </Grid>
+                            </Grid>
+
+                            <CheckBox Content="Air assist" IsChecked="{Binding AirAssist}" />
+
+                            <StackPanel Spacing="7" IsVisible="{Binding IsFill}">
+                                <TextBlock Classes="sectionTitle" Text="FILL" Margin="0,4,0,0" />
+                                <ComboBox ItemsSource="{x:Static vm:LayerViewModel.FillStrategies}"
+                                          SelectedItem="{Binding FillStrategy}" HorizontalAlignment="Stretch" />
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <TextBlock Grid.Column="0" Text="Angle" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1" Text="{Binding FillAngleDeg}" />
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                            </DataTemplate>
+                          </ContentControl.ContentTemplate>
+                        </ContentControl>
+
+                        <Separator />
+
+                        <!-- Selection -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="sectionTitle" Text="SELECTION" />
+                            <TextBlock Text="{Binding SelectedShapeSummary}" Classes="mono" TextWrapping="Wrap" />
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                <Button Grid.Column="0" Content="Centre" Command="{Binding CentreSelectedCommand}" />
+                                <Button Grid.Column="1" Content="Rotate" Command="{Binding RotateSelectedCommand}" CommandParameter="90" />
+                                <Button Grid.Column="2" Content="Mirror" Command="{Binding MirrorSelectedCommand}" CommandParameter="horizontal" />
+                            </Grid>
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Job summary -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="sectionTitle" Text="JOB" />
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="4">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Estimate" Classes="label" />
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding EstimateText}" Classes="mono" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Size" Classes="label" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding JobSizeText}" Classes="mono" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="G-code" Classes="label" />
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LineCountText}" Classes="mono" />
+                            </Grid>
+
+                            <Border Classes="card" IsVisible="{Binding IssueSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Text="{Binding IssueSummary}" TextWrapping="Wrap"
+                                           FontSize="{DynamicResource FontSmall}" />
+                            </Border>
+
+                            <Button Content="Export G-code" HorizontalAlignment="Stretch"
+                                    Command="{Binding ExportGcodeCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- =============================== Assistant ================================== -->
+        <Border Classes="panel slideUp" Margin="84,0,352,12" Height="380" Width="620"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                IsVisible="{Binding ShowAssistant}" Padding="14">
+            <DockPanel LastChildFill="True">
+
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,10">
+                    <TextBlock Grid.Column="0" Classes="sectionTitle" Text="ASSISTANT" Margin="0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="thinking…" Classes="label" Margin="10,0,0,0"
+                               VerticalAlignment="Center" IsVisible="{Binding Assistant.IsThinking}" />
+                    <Button Grid.Column="2" Content="Stop" Classes="ghost" Padding="8,2"
+                            IsVisible="{Binding Assistant.IsThinking}"
+                            Command="{Binding Assistant.CancelCommand}" />
+                    <Button Grid.Column="3" Content="Clear" Classes="ghost" Padding="8,2"
+                            Command="{Binding Assistant.ClearCommand}" />
+                </Grid>
+
+                <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
+                    <TextBlock Text="{Binding Assistant.StatusMessage}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource StateHold}" FontSize="{DynamicResource FontSmall}"
+                               IsVisible="{Binding Assistant.StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBox Grid.Column="0" Text="{Binding Assistant.Input}"
+                                 PlaceholderText="Ask about settings, a fault, or this job"
+                                 KeyDown="OnAssistantKeyDown" />
+                        <Button Grid.Column="1" Content="Ask" Classes="primary"
+                                Command="{Binding Assistant.SendCommand}" />
+                    </Grid>
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="10">
+
+                        <!-- Safety gate: the assistant can put a card here, and nothing else. -->
+                        <ItemsControl ItemsSource="{Binding Assistant.PendingActions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:PendingActionViewModel">
+                                    <Border Classes="card" Margin="0,0,0,6"
+                                            BorderBrush="{DynamicResource EmberEdge}">
+                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="The assistant is asking permission" Classes="label" />
+                                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="Do it" Classes="primary"
+                                                    Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).Assistant.ConfirmActionCommand}"
+                                                    CommandParameter="{Binding}" />
+                                            <Button Grid.Column="2" Content="No" Classes="ghost"
+                                                    Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).Assistant.DismissActionCommand}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Starting points, shown until the conversation begins. -->
+                        <ItemsControl ItemsSource="{Binding Assistant.Suggestions}"
+                                      IsVisible="{Binding !Assistant.Messages.Count}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Button Classes="ghost" HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left" Margin="0,0,0,4"
+                                            Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).Assistant.UseSuggestionCommand}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource InkMuted}" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <ItemsControl ItemsSource="{Binding Assistant.Messages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:AssistantMessage">
+                                    <StackPanel Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding RoleLabel}" Classes="sectionTitle" Margin="0,0,0,2" />
+                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                                                   Foreground="{Binding ColourKey, Converter={StaticResource ThemeBrush}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================== Console drawer =============================== -->
+        <Border Classes="panel slideUp" Margin="84,0,352,12" Height="260"
+                VerticalAlignment="Bottom" IsVisible="{Binding ShowConsole}" Padding="12">
+            <DockPanel LastChildFill="True">
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+                    <TextBlock Grid.Column="0" Classes="sectionTitle" Text="MACHINE CONSOLE" Margin="0" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Content="Read $$" Classes="ghost" Padding="8,2"
+                            Command="{Binding ReadSettingsCommand}" />
+                    <Button Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
+                            Command="{Binding Console.ClearCommand}" />
+                </Grid>
+
+                <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+                    <TextBox Grid.Column="0" x:Name="ConsoleInput"
+                             Text="{Binding Console.Input}"
+                             PlaceholderText="Type a G-code or $ command and press Enter"
+                             KeyDown="OnConsoleKeyDown" />
+                    <Button Grid.Column="1" Content="Send" Command="{Binding Console.SendCommand}" />
+                </Grid>
+
+                <ScrollViewer x:Name="ConsoleScroll" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Console.Lines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ConsoleLine">
+                                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8">
+                                    <TextBlock Grid.Column="0" Text="{Binding Stamp}" Classes="mono"
+                                               FontSize="10" Foreground="{DynamicResource InkFaint}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Prefix}" Classes="mono"
+                                               FontSize="10"
+                                               Foreground="{Binding ColourKey, Converter={StaticResource ThemeBrush}}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Text}" Classes="mono"
+                                               TextWrapping="Wrap"
+                                               Foreground="{Binding ColourKey, Converter={StaticResource ThemeBrush}}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================ Cursor readout ================================= -->
+        <Border Classes="chip" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Margin="84,0,0,18" Padding="10,4">
+            <TextBlock Text="{Binding CursorText}" Classes="mono" FontSize="11" />
+        </Border>
+    </Grid>
+</Window>

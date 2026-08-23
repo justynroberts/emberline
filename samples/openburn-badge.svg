@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120mm" height="80mm" viewBox="0 0 120 80">
+  <!-- A sample that exercises most of the importer: rounded rects, circles,
+       ellipses, polygons, polylines, béziers, arcs and nested transforms. -->
+  <rect x="4" y="4" width="112" height="72" rx="6" ry="6" fill="none" stroke="#000"/>
+  <rect x="10" y="10" width="100" height="60" rx="3" fill="none" stroke="#000"/>
+
+  <g transform="translate(30,40)">
+    <circle cx="0" cy="0" r="16" fill="none" stroke="#000"/>
+    <circle cx="0" cy="0" r="9" fill="none" stroke="#000"/>
+    <path d="M -16 0 A 16 16 0 0 1 16 0 Z" fill="none" stroke="#000"/>
+  </g>
+
+  <g transform="translate(72,26) rotate(-8)">
+    <polygon points="0,0 30,0 30,14 0,14" fill="none" stroke="#000"/>
+    <polyline points="3,11 9,4 15,9 21,3 27,7" fill="none" stroke="#000"/>
+  </g>
+
+  <path d="M 56 52 C 62 44, 74 44, 80 52 S 98 60, 104 52"
+        fill="none" stroke="#000"/>
+
+  <ellipse cx="90" cy="66" rx="11" ry="5" fill="none" stroke="#000"/>
+  <line x1="56" y1="66" x2="76" y2="66" stroke="#000"/>
+</svg>

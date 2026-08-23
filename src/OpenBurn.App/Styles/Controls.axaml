@@ -1,0 +1,228 @@
+<!-- Control styling. Soft-product surface: translucent panels, soft ambient
+     shadow, generous radii, and hover/press feedback on everything the operator
+     can touch. -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style Selector="Window">
+        <Setter Property="Background" Value="{DynamicResource BgBase}" />
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontBody}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+    </Style>
+
+    <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+    </Style>
+
+    <Style Selector="TextBlock.label">
+        <Setter Property="FontSize" Value="{DynamicResource FontSmall}" />
+        <Setter Property="Foreground" Value="{DynamicResource InkMuted}" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <Style Selector="TextBlock.sectionTitle">
+        <Setter Property="FontSize" Value="{DynamicResource FontMicro}" />
+        <Setter Property="Foreground" Value="{DynamicResource InkFaint}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="LetterSpacing" Value="1.4" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+
+    <Style Selector="TextBlock.mono">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSmall}" />
+    </Style>
+
+    <Style Selector="TextBlock.readout">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontMedium}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- Floating panel: the workspace is visible through it, which is the point. -->
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="{DynamicResource Panel}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Hairline}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusPanel}" />
+        <Setter Property="Padding" Value="{DynamicResource PanelPadding}" />
+        <Setter Property="BoxShadow" Value="0 8 28 -6 #26000000" />
+    </Style>
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource PanelRaised}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Hairline}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusControl}" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.12" />
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.chip">
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusChip}" />
+        <Setter Property="Padding" Value="9,3" />
+        <Setter Property="Background" Value="{DynamicResource CyanSoft}" />
+    </Style>
+
+    <!-- Buttons: 120 ms feedback on hover and press, everywhere. -->
+    <Style Selector="Button">
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontBody}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Background" Value="{DynamicResource PanelRaised}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Hairline}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusControl}" />
+        <Setter Property="Padding" Value="12,7" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="RenderTransform" Value="scale(1)" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut" />
+                <BrushTransition Property="Background" Duration="0:0:0.12" />
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource CyanSoft}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CyanEdge}" />
+        <Setter Property="TextBlock.Foreground" Value="{DynamicResource Ink}" />
+    </Style>
+
+    <Style Selector="Button:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.965)" />
+    </Style>
+
+    <Style Selector="Button:disabled">
+        <Setter Property="Opacity" Value="0.42" />
+    </Style>
+
+    <!-- Primary: ember, because the primary action fires the laser. -->
+    <Style Selector="Button.primary /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Ember}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Ember}" />
+        <Setter Property="TextBlock.Foreground" Value="{DynamicResource InkOnAccent}" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Ember}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Ember}" />
+        <Setter Property="TextBlock.Foreground" Value="{DynamicResource InkOnAccent}" />
+    </Style>
+    <Style Selector="Button.primary">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="Button.danger /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource StateAlarm}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StateAlarm}" />
+        <Setter Property="TextBlock.Foreground" Value="#FFFFFF" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource StateAlarm}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StateAlarm}" />
+    </Style>
+
+    <Style Selector="Button.ghost /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Button.tool">
+        <Setter Property="Width" Value="42" />
+        <Setter Property="Height" Value="42" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusControl}" />
+    </Style>
+
+    <Style Selector="Button.tool.selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EmberSoft}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource EmberEdge}" />
+    </Style>
+
+    <Style Selector="Button.jog">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="15" />
+    </Style>
+
+    <Style Selector="Button.round">
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="999" />
+    </Style>
+
+    <Style Selector="TextBox">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontBody}" />
+        <Setter Property="Background" Value="{DynamicResource BgSunken}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Hairline}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusInput}" />
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource CyanEdge}" />
+    </Style>
+
+    <Style Selector="ComboBox">
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontBody}" />
+        <Setter Property="Background" Value="{DynamicResource BgSunken}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Hairline}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusInput}" />
+        <Setter Property="Padding" Value="9,6" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <Style Selector="Slider">
+        <Setter Property="MinHeight" Value="24" />
+    </Style>
+
+    <Style Selector="CheckBox">
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSmall}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <Style Selector="Separator">
+        <Setter Property="Background" Value="{DynamicResource Hairline}" />
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="0,8" />
+    </Style>
+
+    <Style Selector="ProgressBar">
+        <Setter Property="Height" Value="6" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Foreground" Value="{DynamicResource Ember}" />
+        <Setter Property="Background" Value="{DynamicResource BgSunken}" />
+    </Style>
+
+    <Style Selector="ScrollViewer">
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+
+    <!-- Respect the platform's reduced-motion preference: strip the entry
+         animations rather than shortening them, which is what a user who has
+         asked for less motion actually wants. -->
+    <Style Selector=":is(Control).noMotion">
+        <Setter Property="Opacity" Value="1" />
+        <Setter Property="RenderTransform" Value="none" />
+    </Style>
+</Styles>
