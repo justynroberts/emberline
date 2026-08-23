@@ -10,13 +10,11 @@ namespace OpenBurn.App.Tests;
 /// <summary>
 /// Describing the material on the bed, and lining artwork up against it.
 /// </summary>
-public class WorkpieceShellTests
+public class WorkpieceShellTests : ShellTest
 {
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(AppSettings.Default);
+        return NewShell();
     }
 
     private static PathShape Square(double x, double y, double size) => new([new Polyline(
@@ -156,5 +154,79 @@ public class WorkpieceShellTests
         shell.RegenerateNow();
 
         Assert.DoesNotContain(shell.Issues, i => i.Title.Contains("workpiece", StringComparison.OrdinalIgnoreCase));
+    }
+}
+
+/// <summary>
+/// Blanks the user described themselves, kept between sessions.
+/// </summary>
+public class SavedWorkpieceTests : ShellTest
+{
+    private MainViewModel Shell(AppSettings settings)
+    {
+        return NewShell(settings);
+    }
+
+    [AvaloniaFact]
+    public void ASavedBlankComesBackNextSession()
+    {
+        var first = Shell(AppSettings.Default);
+        first.UseCustomWorkpieceCommand.Execute(null);
+        first.WorkpieceWidthMm = 63;
+        first.WorkpieceHeightMm = 41;
+
+        Assert.True(first.CanSaveWorkpiece);
+        first.SaveWorkpieceCommand.Execute(null);
+
+        // What a restart would load.
+        var next = Shell(first.Settings);
+
+        Assert.Contains(next.WorkpiecePresets, p => p.Name == "63 × 41 mm");
+        var preset = next.WorkpiecePresets.First(p => p.Name == "63 × 41 mm");
+        Assert.Equal(63, preset.Piece.WidthMm, 3);
+        Assert.Equal(41, preset.Piece.HeightMm, 3);
+    }
+
+    [AvaloniaFact]
+    public void ARoundBlankIsSavedAsRound()
+    {
+        var shell = Shell(AppSettings.Default);
+        shell.UseCustomWorkpieceCommand.Execute(null);
+        shell.WorkpieceIsRound = true;
+        shell.WorkpieceWidthMm = 88;
+        shell.SaveWorkpieceCommand.Execute(null);
+
+        var next = Shell(shell.Settings);
+        var preset = next.WorkpiecePresets.First(p => p.Name == "88 mm circle");
+
+        Assert.Equal(WorkpieceShape.Circle, preset.Piece.Shape);
+        Assert.Equal(88, preset.Piece.HeightMm, 3);
+    }
+
+    [AvaloniaFact]
+    public void SavingIsNotOfferedForASizeAlreadyInTheList()
+    {
+        var shell = Shell(AppSettings.Default);
+        shell.SelectedWorkpiecePreset = shell.WorkpiecePresets.First(p => p.Name.StartsWith("100 mm square tile"));
+
+        Assert.False(shell.CanSaveWorkpiece);
+    }
+
+    [AvaloniaFact]
+    public void SavingTheSameSizeTwiceDoesNotDuplicateIt()
+    {
+        var shell = Shell(AppSettings.Default);
+        shell.UseCustomWorkpieceCommand.Execute(null);
+        shell.WorkpieceWidthMm = 55;
+        shell.WorkpieceHeightMm = 55;
+        shell.SaveWorkpieceCommand.Execute(null);
+
+        var again = Shell(shell.Settings);
+        again.UseCustomWorkpieceCommand.Execute(null);
+        again.WorkpieceWidthMm = 55;
+        again.WorkpieceHeightMm = 55;
+        again.SaveWorkpieceCommand.Execute(null);
+
+        Assert.Single(again.Settings.SavedWorkpieces, w => w.Name == "55 mm square");
     }
 }

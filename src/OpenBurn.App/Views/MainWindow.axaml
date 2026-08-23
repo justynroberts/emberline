@@ -68,6 +68,8 @@
                     <Button Classes="tool" Content="↻" ToolTip.Tip="Redo" Command="{Binding RedoEditCommand}" />
                     <Separator />
                     <Button Classes="tool" Content="⤓" ToolTip.Tip="Import artwork (SVG, image or G-code)" Command="{Binding OpenCommand}" />
+                    <Button Classes="tool" Content="✦" Click="OnShowWizard"
+                            ToolTip.Tip="Walk me through it — machine, material, artwork, settings, then a check before you run anything." />
                     <Button Classes="tool" Content="◈" Click="OnTraceImage"
                             ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file" />
                     <Button Classes="tool" Content="⧉" ToolTip.Tip="Duplicate selection" Command="{Binding DuplicateSelectedCommand}" />
@@ -468,7 +470,7 @@
                                              ToolTip.Tip="Corner radius in millimetres, for blanks with rounded corners. Zero is square." />
                                 </Grid>
 
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="6" RowDefinitions="Auto,Auto" RowSpacing="6">
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="6" RowDefinitions="Auto,Auto,Auto" RowSpacing="6">
                                     <Button Grid.Row="0" Grid.Column="0" Content="Centre on bed"
                                             Command="{Binding CentreWorkpieceOnBedCommand}"
                                             ToolTip.Tip="Put the material in the middle of the bed." />
@@ -479,6 +481,10 @@
                                             Content="Centre artwork on it"
                                             Command="{Binding CentreArtworkOnWorkpieceCommand}"
                                             ToolTip.Tip="Move the artwork to the middle of the material. Uses the selection if there is one, otherwise everything in the design." />
+                                    <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="Save this size"
+                                            Command="{Binding SaveWorkpieceCommand}"
+                                            IsVisible="{Binding CanSaveWorkpiece}"
+                                            ToolTip.Tip="Keep this blank in the list, so a shape you cut repeatedly does not have to be measured and typed in again next time." />
                                 </Grid>
                             </StackPanel>
                         </StackPanel>

@@ -15,13 +15,11 @@ namespace OpenBurn.App.Tests;
 /// controller for a beginner: nothing on screen says whether the problem is the
 /// machine, the artwork or the settings. These check that it says.
 /// </summary>
-public class GuidanceTests
+public class GuidanceTests : ShellTest
 {
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(AppSettings.Default);
+        return NewShell();
     }
 
     [AvaloniaFact]
@@ -135,13 +133,11 @@ public class GuidanceTests
 /// The crosshair on the canvas has to agree with the coordinate readout above it.
 /// They are fed from different properties, so they can silently drift apart.
 /// </summary>
-public class HeadPositionTests
+public class HeadPositionTests : ShellTest
 {
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(AppSettings.Default);
+        return NewShell();
     }
 
     [AvaloniaFact]

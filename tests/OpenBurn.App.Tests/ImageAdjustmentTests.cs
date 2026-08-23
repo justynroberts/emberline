@@ -17,13 +17,11 @@ namespace OpenBurn.App.Tests;
 /// most: without it a picture meant for slate or anodised aluminium comes out as
 /// a negative.
 /// </summary>
-public class ImageAdjustmentTests
+public class ImageAdjustmentTests : ShellTest
 {
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(AppSettings.Default);
+        return NewShell();
     }
 
     /// <summary>A gradient, so an inversion is unmistakable in the pixels.</summary>
@@ -37,7 +35,7 @@ public class ImageAdjustmentTests
         return new ImageShape(new RasterImage(size, size, px), 50, 50) { Name = "photo" };
     }
 
-    private static MainViewModel ShellWithImage(out ImageShape image)
+    private MainViewModel ShellWithImage(out ImageShape image)
     {
         var shell = CreateShell();
         image = Photo();

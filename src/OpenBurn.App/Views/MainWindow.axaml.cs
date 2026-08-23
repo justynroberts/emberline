@@ -185,6 +185,18 @@ public partial class MainWindow : Window
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
 
+    private async void OnShowWizard(object? sender, RoutedEventArgs e)
+    {
+        if (Model is not { } model) return;
+
+        var dialog = new WizardWindow(new WizardViewModel(model));
+        await dialog.ShowDialog(this);
+
+        // Whatever the wizard set is already in the document; just make sure the
+        // canvas and the job readouts agree with it.
+        model.RegenerateNow();
+    }
+
     private async void OnShowJobLibrary(object? sender, RoutedEventArgs e)
     {
         if (Model is not { } model) return;

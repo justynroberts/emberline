@@ -17,8 +17,6 @@ public class MachineEditorTests
 {
     private static MachineEditorViewModel Create(out MachineLibrary library)
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
 
         library = MachineLibrary.Load();
         var editor = new MachineEditorViewModel(library, library.Profiles.First(), _ => { });

@@ -14,13 +14,11 @@ namespace OpenBurn.App.Tests;
 /// stays put otherwise — a panel that rearranges itself while you are reaching for
 /// a control is worse than one that scrolls.
 /// </summary>
-public class InspectorTests
+public class InspectorTests : ShellTest
 {
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(AppSettings.Default);
+        return NewShell();
     }
 
     private static PathShape Square(double x = 0) => new([new Polyline(
@@ -147,13 +145,11 @@ public class InspectorTests
 /// <summary>
 /// What the machine panel says it will connect to must be what it connects to.
 /// </summary>
-public class ConnectionAddressTests
+public class ConnectionAddressTests : ShellTest
 {
-    private static MainViewModel Shell(AppSettings settings)
+    private MainViewModel Shell(AppSettings settings)
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(settings);
+        return NewShell(settings);
     }
 
     [AvaloniaFact]

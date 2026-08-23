@@ -16,16 +16,14 @@ namespace OpenBurn.App.Tests;
 /// preview that shows the job before a workpiece is committed — so they are worth
 /// testing against the actual pipeline rather than a stub toolpath.
 /// </summary>
-public class SimulationTests
+public class SimulationTests : ShellTest
 {
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
         // Point application storage at a scratch directory so a test run never
         // touches the machine's real settings or job history.
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
 
-        var shell = new MainViewModel(AppSettings.Default);
+        var shell = NewShell();
 
         var square = new PathShape([new Polyline(
         [
@@ -199,13 +197,11 @@ public class SimulationTests
 /// job runs; the rule these tests protect is that the live view is only ever an
 /// aid — it never gates or interferes with the job itself.
 /// </summary>
-public class JobMonitorTests
+public class JobMonitorTests : ShellTest
 {
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(AppSettings.Default);
+        return NewShell();
     }
 
     [AvaloniaFact]

@@ -19,6 +19,8 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Connection** | USB serial, TCP (telnet), WebSocket, HTTP command, and a built-in simulator |
 | **Discovery** | USB port enumeration, and an opt-in local network scan that probes for GRBL |
 | **Import** | SVG (paths, primitives, nested transforms, real-world sizing), DXF (lines, arcs, polylines with bulges, ellipses, splines, blocks), PNG/JPEG/BMP/GIF/WebP, G-code |
+| **Guided setup** | A wizard that walks through machine, material, artwork, settings and a final check — without ever starting the job for you |
+| **Workpiece** | Describe the blank on the bed, see its outline under the artwork, centre onto it, and get warned when a job runs off it |
 | **Photo engraving** | Invert, brightness, contrast, gamma, sharpen, tone clipping and twelve dithering kernels, with a live preview of what will actually burn |
 | **CAM** | Raster engraving, vector cut/score/engrave, hatch and offset fills, text to outlines |
 | **Tracing** | Bitmap to paths with a live preview — outlines or centrelines, threshold seeded from the image itself, simplify and smooth |
@@ -110,6 +112,20 @@ Escape is the emergency stop from anywhere in the window.
 ---
 
 ## If you have never used a laser
+
+Press **✦** in the tool rail. It walks through the five things a job needs —
+which machine, what is on the bed, what you are burning onto it, how hard and how
+fast, and a check of the result — setting up the same objects the panels do, so
+nothing it does is trapped inside the wizard.
+
+It stops short of starting the job. The last step hands back to the workspace with
+the machine ready and the artwork placed, because pressing Start is a decision to
+take while looking at the bed, not at a dialog.
+
+Beyond that: hover over anything. Every button, dropdown, slider and tick box says
+what it does in plain words — including the ones that are greyed out, which is
+exactly when you need to know why. The Start button explains what is stopping it:
+not connected, nothing drawn yet, or a specific problem with the job.
 
 Hover over anything. Every button, dropdown, slider and tick box says what it
 does in plain words — including the ones that are greyed out, which is exactly
@@ -256,7 +272,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 440 tests, no hardware required
+dotnet test                     # 457 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -266,7 +282,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-440 tests, no hardware required. The ones that matter most run complete jobs
+457 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

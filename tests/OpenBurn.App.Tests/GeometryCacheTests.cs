@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Headless.XUnit;
-using Avalonia.Media;
 using OpenBurn.App.Controls;
 using OpenBurn.Cam.Trace;
 using OpenBurn.Core.Documents;
@@ -55,17 +54,16 @@ public class GeometryCacheTests
         };
     }
 
-    private static void Render(WorkspaceView view)
-    {
-        view.Measure(new Size(800, 600));
-        view.Arrange(new Rect(0, 0, 800, 600));
-
-        // Render into a throwaway drawing context, so this measures the control
-        // rather than the headless platform's redraw scheduling.
-        var visual = new DrawingGroup();
-        using var context = visual.Open();
-        view.Render(context);
-    }
+    /// <summary>
+    /// One frame's worth of geometry work — the same call DrawShapes makes.
+    ///
+    /// Deliberately not a real render pass: driving Render in a headless test
+    /// leaves rendering infrastructure to be disposed later on another thread,
+    /// and the resulting cleanup failure is reported against whichever unrelated
+    /// test happened to run last. What is under test here is the cache, not
+    /// Avalonia's rasteriser.
+    /// </summary>
+    private static void Render(WorkspaceView view) => view.EnsureShapeGeometry();
 
     [AvaloniaFact]
     public void TheTracedShapeIsBigEnoughForThisToMatter()

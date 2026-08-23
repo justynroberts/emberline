@@ -872,6 +872,15 @@ public sealed class WorkspaceView : Control
         return geometry;
     }
 
+    /// <summary>
+    /// Build the outline geometry, or hand back the cached one. This is exactly
+    /// what <c>DrawShapes</c> calls; it is public so the cache can be exercised
+    /// without driving a render pass, which in a headless test leaves rendering
+    /// infrastructure to be torn down later on another thread.
+    /// </summary>
+    public StreamGeometry EnsureShapeGeometry() =>
+        Design is { } design ? BuildShapeGeometry(design) : new StreamGeometry();
+
     /// <summary>Drop the cached geometry — for edits made on the canvas itself.</summary>
     public void InvalidateShapes()
     {

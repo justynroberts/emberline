@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
+using OpenBurn.Core.Storage;
 using OpenBurn.Core.Documents;
 
 namespace OpenBurn.App.ViewModels;
@@ -18,7 +20,7 @@ public sealed record WorkpiecePreset(string Name, Workpiece Piece)
 /// </summary>
 public sealed partial class MainViewModel
 {
-    public IReadOnlyList<WorkpiecePreset> WorkpiecePresets { get; } =
+    private static readonly IReadOnlyList<WorkpiecePreset> BuiltInWorkpieces =
     [
         new("No workpiece", Workpiece.None),
         new("100 mm square tile", new Workpiece { Shape = WorkpieceShape.Rectangle, WidthMm = 100, HeightMm = 100, Name = "100 mm square tile" }),
@@ -30,6 +32,73 @@ public sealed partial class MainViewModel
         new("A4 sheet, 210 × 297", new Workpiece { Shape = WorkpieceShape.Rectangle, WidthMm = 210, HeightMm = 297, Name = "A4 sheet, 210 × 297" }),
         new("Plywood offcut, 300 × 200", new Workpiece { Shape = WorkpieceShape.Rectangle, WidthMm = 300, HeightMm = 200, Name = "Plywood offcut, 300 × 200" }),
     ];
+
+    /// <summary>Built-in blanks first, then whatever the user has saved.</summary>
+    public ObservableCollection<WorkpiecePreset> WorkpiecePresets { get; } = [];
+
+    private void RebuildWorkpiecePresets()
+    {
+        var keep = _selectedWorkpiecePreset?.Name;
+
+        WorkpiecePresets.Clear();
+        foreach (var preset in BuiltInWorkpieces) WorkpiecePresets.Add(preset);
+
+        foreach (var saved in Settings.SavedWorkpieces)
+        {
+            WorkpiecePresets.Add(new WorkpiecePreset(saved.Name, new Workpiece
+            {
+                Shape = saved.Round ? WorkpieceShape.Circle : WorkpieceShape.Rectangle,
+                WidthMm = saved.WidthMm,
+                HeightMm = saved.HeightMm,
+                CornerRadiusMm = saved.CornerRadiusMm,
+                Name = saved.Name,
+            }));
+        }
+
+        if (keep is not null)
+        {
+            _selectedWorkpiecePreset = WorkpiecePresets.FirstOrDefault(p => p.Name == keep);
+            OnPropertyChanged(nameof(SelectedWorkpiecePreset));
+        }
+    }
+
+    /// <summary>Can the current blank be saved — is it set, and not already a preset?</summary>
+    public bool CanSaveWorkpiece =>
+        Design.Workpiece.IsSet &&
+        !WorkpiecePresets.Any(p => p.Piece.Shape == Design.Workpiece.Shape &&
+                                   Math.Abs(p.Piece.WidthMm - Design.Workpiece.WidthMm) < 0.01 &&
+                                   Math.Abs(p.Piece.HeightMm - Design.Workpiece.HeightMm) < 0.01 &&
+                                   Math.Abs(p.Piece.CornerRadiusMm - Design.Workpiece.CornerRadiusMm) < 0.01);
+
+    /// <summary>
+    /// Keep this blank for next time. Named from its size, because a dialog asking
+    /// for a name is a worse trade than a list that reads "80 mm circle".
+    /// </summary>
+    [RelayCommand]
+    private void SaveWorkpiece()
+    {
+        var piece = Design.Workpiece;
+        if (!piece.IsSet) return;
+
+        var name = piece.Summary;
+        var saved = Settings.SavedWorkpieces.Where(w => w.Name != name).ToList();
+        saved.Add(new SavedWorkpiece
+        {
+            Name = name,
+            Round = piece.Shape == WorkpieceShape.Circle,
+            WidthMm = piece.WidthMm,
+            HeightMm = piece.HeightMm,
+            CornerRadiusMm = piece.CornerRadiusMm,
+        });
+
+        Settings = Settings with { SavedWorkpieces = saved };
+        RebuildWorkpiecePresets();
+
+        _selectedWorkpiecePreset = WorkpiecePresets.FirstOrDefault(p => p.Name == name);
+        OnPropertyChanged(nameof(SelectedWorkpiecePreset));
+        OnPropertyChanged(nameof(CanSaveWorkpiece));
+        Console.AppendInfo($"Saved “{name}” — it will be in the list next time.");
+    }
 
     private WorkpiecePreset? _selectedWorkpiecePreset;
 
@@ -187,6 +256,7 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(WorkpieceXMm));
         OnPropertyChanged(nameof(WorkpieceYMm));
         OnPropertyChanged(nameof(WorkpieceCornerMm));
+        OnPropertyChanged(nameof(CanSaveWorkpiece));
         QueueRegenerate();
     }
 }

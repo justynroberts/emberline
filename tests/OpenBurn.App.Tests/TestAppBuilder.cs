@@ -23,10 +23,19 @@ namespace OpenBurn.App.Tests;
 public static class TestAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() =>
-        AppBuilder.Configure<App>().UseHeadless(new AvaloniaHeadlessPlatformOptions
-        {
-            // No text rendering needed; skipping it keeps the tests fast and
-            // removes any dependency on which fonts a CI runner happens to have.
-            UseHeadlessDrawing = true,
-        });
+        AppBuilder.Configure<App>()
+            .UseSkia()
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions
+            {
+                // Real drawing, not the null backend.
+                //
+                // The null backend is faster, and it is also inconsistent with what
+                // these tests do: the trace preview and the image panel build real
+                // Avalonia bitmaps. Asking a null drawing platform for those makes
+                // the compositor be constructed lazily, and under load that landed
+                // during test teardown on a different thread — an occasional
+                // "cleaning thread cannot access this object" reported against
+                // whichever unrelated test finished last.
+                UseHeadlessDrawing = false,
+            });
 }

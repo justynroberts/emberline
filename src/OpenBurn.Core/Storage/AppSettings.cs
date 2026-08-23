@@ -6,6 +6,16 @@ namespace OpenBurn.Core.Storage;
 
 public enum ThemeMode { System, Light, Dark }
 
+/// <summary>A workpiece the user described and asked to keep.</summary>
+public sealed record SavedWorkpiece
+{
+    public string Name { get; init; } = "";
+    public bool Round { get; init; }
+    public double WidthMm { get; init; } = 100;
+    public double HeightMm { get; init; } = 100;
+    public double CornerRadiusMm { get; init; }
+}
+
 /// <summary>Everything the application remembers between sessions. One versioned file.</summary>
 public sealed record AppSettings
 {
@@ -31,6 +41,12 @@ public sealed record AppSettings
     public bool ShowGridLines { get; init; } = true;
     public bool ShowTravelMoves { get; init; }
     public bool ShowRulers { get; init; } = true;
+
+    /// <summary>
+    /// Blanks the user has described themselves, kept so a shape cut repeatedly
+    /// does not have to be measured and typed in again every session.
+    /// </summary>
+    public IReadOnlyList<SavedWorkpiece> SavedWorkpieces { get; init; } = [];
 
     /// <summary>Warn before starting a job when the machine has not been homed.</summary>
     public bool WarnWhenNotHomed { get; init; } = true;

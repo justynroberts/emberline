@@ -270,7 +270,11 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
 - The right panel is grouped by context — machine, design, object, job — rather
   than stacked fourteen sections deep in one scrolling column, and follows the
   selection.
-- 440 tests, none requiring hardware, including headless UI tests that drive the
+- A setup wizard: machine, workpiece, artwork, settings, then a pre-flight check.
+  It never starts the job.
+- Workpiece definition with presets and saved custom sizes, drawn on the canvas
+  and checked during validation.
+- 457 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons

@@ -1,0 +1,178 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:OpenBurn.App.ViewModels"
+        xmlns:mach="clr-namespace:OpenBurn.Core.Machines;assembly=OpenBurn.Core"
+        xmlns:mat="clr-namespace:OpenBurn.Materials;assembly=OpenBurn.Materials"
+        x:Class="OpenBurn.App.Views.WizardWindow"
+        x:DataType="vm:WizardViewModel"
+        Title="Set up a job"
+        Width="640" Height="620"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgSunken}">
+
+    <Border Classes="panel focusIn" Margin="14">
+        <DockPanel LastChildFill="True">
+
+            <StackPanel DockPanel.Dock="Top" Spacing="4">
+                <TextBlock Text="{Binding StepNumber}" Classes="sectionTitle" />
+                <TextBlock Text="{Binding Step.Question}" FontSize="19"
+                           FontFamily="{DynamicResource DisplayFont}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Spacing="10" Margin="0,14,0,0">
+                <Border Classes="card" IsVisible="{Binding HasBlocker}">
+                    <TextBlock Text="{Binding StepBlocker}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Ember}" />
+                </Border>
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button Grid.Column="0" Content="Back" Command="{Binding BackCommand}"
+                            IsEnabled="{Binding CanGoBack}"
+                            ToolTip.Tip="Go back a step. Nothing is lost — everything set here is already part of the design." />
+                    <Button Grid.Column="2" Content="Next" Classes="primary" Command="{Binding NextCommand}"
+                            IsVisible="{Binding !IsLastStep}"
+                            ToolTip.Tip="Move on. You can come back, and every setting is also on the main window." />
+                    <Button Grid.Column="2" Content="Done" Classes="primary" Click="OnClose"
+                            IsVisible="{Binding IsLastStep}"
+                            ToolTip.Tip="Close the wizard and go back to the workspace." />
+                </Grid>
+            </StackPanel>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                <Panel>
+
+                    <!-- 1. Machine -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsMachineStep}">
+                        <ComboBox ItemsSource="{Binding Machines}" SelectedItem="{Binding SelectedMachine}"
+                                  HorizontalAlignment="Stretch"
+                                  ToolTip.Tip="Your machine. This sets the bed size, wattage and speed limits used for every calculation that follows.">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="mach:MachineProfile">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Text="{Binding MachineSummary}" Classes="mono" FontSize="11"
+                                   Foreground="{DynamicResource InkMuted}" />
+
+                        <TextBlock Text="Connect" Classes="sectionTitle" Margin="0,6,0,0" />
+                        <TextBox Text="{Binding NetworkAddress}" PlaceholderText="192.168.1.42:23"
+                                 ToolTip.Tip="The machine's address on the network, if you are connecting over Wi-Fi." />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0" Content="USB" Command="{Binding ConnectUsbCommand}"
+                                    ToolTip.Tip="Connect over the USB cable." />
+                            <Button Grid.Column="1" Content="Wi-Fi" Command="{Binding ConnectNetworkCommand}"
+                                    ToolTip.Tip="Connect over the network to the address above." />
+                            <Button Grid.Column="2" Content="Virtual" Classes="primary" Command="{Binding ConnectVirtualCommand}"
+                                    ToolTip.Tip="Use the built-in simulator. Everything works exactly as it would with a real machine, and nothing burns — the best way to learn this." />
+                        </Grid>
+                        <TextBlock Text="{Binding ConnectionSummary}" Classes="mono" FontSize="11"
+                                   Foreground="{DynamicResource Cyan}" />
+                        <TextBlock Classes="label" TextWrapping="Wrap"
+                                   Text="No laser to hand? Virtual runs the whole job against a simulator — streaming, progress, timing and all — so you can walk through this and see what happens." />
+                    </StackPanel>
+
+                    <!-- 2. Material -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsMaterialStep}">
+                        <ComboBox ItemsSource="{Binding WorkpiecePresets}" SelectedItem="{Binding SelectedWorkpiecePreset}"
+                                  HorizontalAlignment="Stretch" PlaceholderText="No workpiece"
+                                  ToolTip.Tip="The blank you are burning onto. Its outline is drawn faintly on the canvas so you can line artwork up against the material rather than the whole bed." />
+                        <Button Content="Set a size instead" HorizontalAlignment="Left"
+                                Command="{Binding UseCustomWorkpieceCommand}"
+                                ToolTip.Tip="Type the size of an offcut that matches none of the presets." />
+
+                        <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="8" IsVisible="{Binding HasWorkpiece}">
+                            <TextBlock Grid.Column="0" Text="W" Classes="label" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" Text="{Binding WorkpieceWidthMm, StringFormat={}{0:0.##}}"
+                                     ToolTip.Tip="Width in millimetres. For a round blank this is the diameter." />
+                            <TextBlock Grid.Column="2" Text="H" Classes="label" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="3" Text="{Binding WorkpieceHeightMm, StringFormat={}{0:0.##}}"
+                                     ToolTip.Tip="Height in millimetres." />
+                        </Grid>
+                        <CheckBox IsChecked="{Binding WorkpieceIsRound}" Content="Round" IsVisible="{Binding HasWorkpiece}"
+                                  ToolTip.Tip="Draw the outline as a circle — for coasters, discs and round tags." />
+
+                        <TextBlock Text="{Binding WorkpieceSummary}" Classes="mono" FontSize="11"
+                                   Foreground="{DynamicResource Cyan}" />
+                        <TextBlock Classes="label" TextWrapping="Wrap"
+                                   Text="This is optional. It costs nothing to skip, but describing the blank means the canvas shows where the material actually is, and OpenBurn will warn you if the job runs off it." />
+                    </StackPanel>
+
+                    <!-- 3. Artwork -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsArtworkStep}">
+                        <Button Content="Open a file…" HorizontalAlignment="Stretch"
+                                Command="{Binding OpenArtworkCommand}"
+                                ToolTip.Tip="Open an SVG, DXF, photograph or G-code file." />
+
+                        <TextBlock Text="or add some text" Classes="sectionTitle" Margin="0,6,0,0" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Grid.Column="0" Text="{Binding Text}" PlaceholderText="Type something"
+                                     ToolTip.Tip="Text is converted to cuttable outlines, so it engraves exactly as it looks." />
+                            <Button Grid.Column="1" Content="Add" Command="{Binding AddTextCommand}"
+                                    ToolTip.Tip="Add this text to the design as outlines." />
+                        </Grid>
+
+                        <TextBlock Text="{Binding ArtworkSummary}" Classes="mono" FontSize="11"
+                                   Foreground="{DynamicResource Cyan}" />
+                        <Button Content="Centre it on the workpiece" HorizontalAlignment="Stretch"
+                                Command="{Binding CentreOnWorkpieceCommand}"
+                                IsVisible="{Binding HasWorkpiece}"
+                                ToolTip.Tip="Move the artwork to the middle of the material." />
+                    </StackPanel>
+
+                    <!-- 4. Settings -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsSettingsStep}">
+                        <ComboBox ItemsSource="{Binding Materials}" SelectedItem="{Binding SelectedMaterial}"
+                                  HorizontalAlignment="Stretch" PlaceholderText="Choose a material"
+                                  ToolTip.Tip="Pick what you are burning to get a tested starting point for speed and power, rescaled for your machine's wattage.">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="mat:MaterialProfile">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="{Binding MaterialNotes}" Classes="label" TextWrapping="Wrap" />
+                        <Border Classes="card" IsVisible="{Binding HasMaterialHazard}">
+                            <TextBlock Text="{Binding MaterialHazard}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Ember}" />
+                        </Border>
+
+                        <Button Content="Use these settings" Classes="primary" HorizontalAlignment="Stretch"
+                                Command="{Binding ApplyMaterialCommand}"
+                                ToolTip.Tip="Copy this material's speed and power onto your layers." />
+
+                        <TextBlock Classes="label" TextWrapping="Wrap"
+                                   Text="These are a starting point, not an answer. Every machine, lens and batch of plywood is different — when a setting matters, burn a test grid on an offcut and measure it." />
+                    </StackPanel>
+
+                    <!-- 5. Check -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsCheckStep}">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="6">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Takes about" Classes="label" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding EstimateText}" Classes="mono" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Size" Classes="label" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding JobSizeText}" Classes="mono" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="G-code" Classes="label" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LineCountText}" Classes="mono" />
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding IssueLines}" IsVisible="{Binding HasIssues}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Border Classes="card" Margin="0,0,0,6">
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border Classes="card">
+                            <TextBlock Text="{Binding ReadyText}" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+
+                </Panel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</Window>

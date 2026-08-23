@@ -77,6 +77,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         };
 
         RefreshPorts();
+        RebuildWorkpiecePresets();
         LoadPlugins();
         QueueRegenerate();
         Console.AppendInfo("OpenBurn ready. Select a machine and connect, or pick the virtual laser to try it without hardware.");
@@ -427,7 +428,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        // Every timer, not just the regenerate one. A playback timer left running
+        // keeps ticking on the dispatcher long after whatever created it has gone.
         _regenerateTimer?.Stop();
+        _playback?.Stop();
         _device?.DisposeAsync().AsTask().GetAwaiter().GetResult();
     }
 

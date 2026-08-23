@@ -17,7 +17,7 @@ namespace OpenBurn.App.Tests;
 /// the result, that the preview keeps up, and that what lands on the bed sits
 /// exactly where the image it came from was sitting.
 /// </summary>
-public class TraceTests
+public class TraceTests : ShellTest
 {
     /// <summary>A disc on white — something with an unambiguous outline.</summary>
     private static RasterImage Disc(int size = 80, byte ink = 0)
@@ -56,11 +56,9 @@ public class TraceTests
     private static TraceViewModel Editor(RasterImage image, double widthMm = 60, double heightMm = 60) =>
         new(image, "test image", widthMm, heightMm, useTimer: false);
 
-    private static MainViewModel CreateShell()
+    private MainViewModel CreateShell()
     {
-        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
-        AppPaths.EnsureCreated();
-        return new MainViewModel(AppSettings.Default);
+        return NewShell();
     }
 
     // ------------------------------------------------------------- the editor
@@ -259,9 +257,20 @@ public class TraceTests
     public void TheWindowReturnsTheShapeOnlyWhenAccepted()
     {
         var editor = Editor(Disc());
-        var window = new TraceWindow(editor);
 
-        // Nothing has been accepted yet.
-        Assert.Null(window.Result);
+        // Constructing it parses the XAML, so a broken binding fails here rather
+        // than at runtime. Closing it again matters: a headless window left open
+        // tears down its compositor on another thread later, and the failure lands
+        // on whichever unrelated test ran last.
+        var window = new TraceWindow(editor);
+        try
+        {
+            // Nothing has been accepted yet.
+            Assert.Null(window.Result);
+        }
+        finally
+        {
+            window.Close();
+        }
     }
 }
