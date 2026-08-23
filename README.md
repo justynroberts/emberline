@@ -231,7 +231,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 406 tests, no hardware required
+dotnet test                     # 409 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -241,7 +241,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-406 tests, no hardware required. The ones that matter most run complete jobs
+409 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

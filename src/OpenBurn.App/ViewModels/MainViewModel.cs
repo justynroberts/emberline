@@ -376,6 +376,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(MachineStateName));
         OnPropertyChanged(nameof(StateColourKey));
         OnPropertyChanged(nameof(HeadPosition));
+
+        // The canvas binds DisplayHeadPosition, not HeadPosition — it has to,
+        // because during a replay the crosshair follows the simulation instead of
+        // the machine. Raising only the underlying one leaves the coordinate
+        // readout ticking along while the crosshair sits still, which looks like
+        // the machine is not moving.
+        OnPropertyChanged(nameof(DisplayHeadPosition));
+
         OnPropertyChanged(nameof(JobSizeText));
     }
 

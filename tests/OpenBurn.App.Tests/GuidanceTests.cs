@@ -130,3 +130,71 @@ public class GuidanceTests
         throw new FileNotFoundException($"Could not find {name} above {AppContext.BaseDirectory}");
     }
 }
+
+/// <summary>
+/// The crosshair on the canvas has to agree with the coordinate readout above it.
+/// They are fed from different properties, so they can silently drift apart.
+/// </summary>
+public class HeadPositionTests
+{
+    private static MainViewModel CreateShell()
+    {
+        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
+        AppPaths.EnsureCreated();
+        return new MainViewModel(AppSettings.Default);
+    }
+
+    [AvaloniaFact]
+    public async Task MovingTheHeadTellsTheCanvasAndNotJustTheReadout()
+    {
+        var shell = CreateShell();
+        await shell.ConnectAsync(Core.Machines.ConnectionKind.Virtual);
+
+        var raised = new List<string>();
+        shell.PropertyChanged += (_, e) => raised.Add(e.PropertyName ?? "");
+
+        await shell.MoveHeadToAsync(60, 45);
+
+        // Wait for the machine to report where it ended up.
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (DateTime.UtcNow < deadline && !raised.Contains(nameof(shell.WorkPositionText)))
+        {
+            await Task.Delay(50);
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        }
+
+        Assert.Contains(nameof(shell.WorkPositionText), raised);
+
+        // The canvas binds DisplayHeadPosition. If only the readout property is
+        // raised, the numbers move and the crosshair does not.
+        Assert.Contains(nameof(shell.DisplayHeadPosition), raised);
+    }
+
+    [AvaloniaFact]
+    public async Task TheCrosshairShowsWhereTheMachineActuallyIs()
+    {
+        var shell = CreateShell();
+        await shell.ConnectAsync(Core.Machines.ConnectionKind.Virtual);
+
+        await shell.MoveHeadToAsync(70, 30);
+
+        // Wait for the move to finish, not merely to start.
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < deadline && shell.DisplayHeadPosition is null or { X: < 69 })
+        {
+            await Task.Delay(50);
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        }
+
+        Assert.NotNull(shell.DisplayHeadPosition);
+        Assert.Equal(shell.HeadPosition, shell.DisplayHeadPosition);
+        Assert.InRange(shell.DisplayHeadPosition!.Value.X, 60, 80);
+    }
+
+    [AvaloniaFact]
+    public void WithNothingConnectedThereIsNoCrosshairToDraw()
+    {
+        var shell = CreateShell();
+        Assert.Null(shell.DisplayHeadPosition);
+    }
+}
