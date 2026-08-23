@@ -21,6 +21,7 @@ public static class AssistantTools
     public const string SetLayerSettings = "set_layer_settings";
     public const string PrepareTestGrid = "prepare_test_grid";
     public const string ProposeMachineAction = "propose_machine_action";
+    public const string DrawSvg = "draw_svg";
 
     private static JsonElement Json(object value) => JsonSerializer.SerializeToElement(value);
 
@@ -117,6 +118,33 @@ public static class AssistantTools
 
         new Tool
         {
+            Name = DrawSvg,
+            Description =
+                "Draw artwork by supplying an SVG document, which is placed on the bed as editable paths. " +
+                "Use this when asked to design, draw or lay out something. Nothing is burned — this adds " +
+                "shapes to the canvas exactly as opening a file would, and the operator can move, resize or " +
+                "delete them afterwards.\n" +
+                "Write SVG for a laser, which is not the same as SVG for a screen:\n" +
+                "• Outlines only. A laser follows paths; it has no concept of a fill, and filled regions are " +
+                "traced as their boundary. Use fill=\"none\" and stroke=\"black\".\n" +
+                "• Set width and height in millimetres and a matching viewBox, so the artwork arrives at the " +
+                "size asked for. Check get_job_summary or ask for the workpiece size if it matters.\n" +
+                "• Keep strokes simple: path, line, rect, circle, ellipse, polyline, polygon. Text is not " +
+                "supported here — describe letterforms as paths, or tell the operator to use the text tool.\n" +
+                "• Detail finer than about 0.2 mm will not survive the beam. Prefer bold, separable shapes.",
+            InputSchema = new()
+            {
+                Properties = new Dictionary<string, JsonElement>
+                {
+                    ["svg"] = Json(new { type = "string", description = "A complete SVG document, outlines only, sized in millimetres." }),
+                    ["name"] = Json(new { type = "string", description = "A short name for the shape, shown in the design." }),
+                },
+                Required = ["svg"],
+            },
+        },
+
+        new Tool
+        {
             Name = ProposeMachineAction,
             Description = "Propose an action that would move the machine or fire the laser — home, frame, jog, " +
                           "start the job. This does NOT perform the action: it puts a confirmation card in front of " +
@@ -179,5 +207,18 @@ public static class AssistantTools
             machine is not a trade-off worth discussing.
           - If a request would put the head outside the bed, over-power the material, or cut a part free before the
             job finishes, say so before answering the question that was asked.
-        """;
+        
+        Drawing
+        -------
+        You can draw. draw_svg puts artwork on the bed as editable paths, and it is
+        the right tool whenever somebody asks you to design, draw or lay something
+        out. It burns nothing and the operator can move, resize or delete what you
+        add, so there is no need to ask permission first — but do say what you drew
+        and how big it is.
+
+        Design for a beam, not a screen. Outlines rather than fills, millimetres
+        rather than pixels, and nothing finer than about 0.2 mm. If a workpiece has
+        been set, fit the artwork inside it; if you do not know how much room there
+        is, call get_job_summary rather than guessing.
+""";
 }

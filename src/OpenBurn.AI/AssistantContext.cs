@@ -81,6 +81,12 @@ public interface IAssistantHost
     /// <summary>Surface a proposed machine action for the operator to confirm or ignore.</summary>
     void ProposeAction(ProposedAction action);
 
+    /// <summary>
+    /// Add drawn artwork to the design. Nothing is burned by this: it puts shapes
+    /// on the canvas, exactly as opening a file would, and it is undoable.
+    /// </summary>
+    string AddArtwork(string svg, string name);
+
     /// <summary>The greyscale bitmap of the selected image, if one is selected, as PNG bytes.</summary>
     byte[]? GetSelectedImagePng();
 }

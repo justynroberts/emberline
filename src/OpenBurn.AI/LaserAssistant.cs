@@ -289,6 +289,15 @@ public sealed class LaserAssistant
                             _host.PrepareTestGrid(powers, speeds, cell));
                 }
 
+                case AssistantTools.DrawSvg:
+                {
+                    var svg = Text(input, "svg");
+                    if (string.IsNullOrWhiteSpace(svg)) return ("nothing drawn", "No SVG was supplied.");
+
+                    var name = Text(input, "name");
+                    return ($"drew {name ?? "artwork"}", _host.AddArtwork(svg, name ?? "Drawing"));
+                }
+
                 case AssistantTools.ProposeMachineAction:
                 {
                     var kind = Text(input, "kind") ?? "unknown";

@@ -2,6 +2,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenBurn.AI;
+using OpenBurn.Core.Geometry;
 using OpenBurn.Cam;
 using OpenBurn.Cam.Import;
 using OpenBurn.Core.Documents;
@@ -45,6 +46,87 @@ public sealed partial class MainViewModel : IAssistantHost
         ShowAssistant = true;
         await Assistant.DiagnoseAsync(
             $"{(LastFaultIsAlarm ? "ALARM" : "error")}:{fault.Code} — {fault.Title}. {fault.Message}").ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Largest SVG the assistant may hand over. Generous for real artwork and far
+    /// below anything that would take a noticeable time to parse.
+    /// </summary>
+    private const int MaxAssistantSvgBytes = 512 * 1024;
+
+    /// <summary>
+    /// Put drawn artwork on the bed.
+    ///
+    /// This is a document change, not a machine action, so it does not go through
+    /// the confirmation gate: nothing moves and nothing burns, it appears on the
+    /// canvas exactly as an opened file would, and Ctrl+Z removes it. The gate
+    /// exists for the laser, and widening it to cover harmless edits would train
+    /// people to dismiss confirmations without reading them.
+    ///
+    /// What is checked here is that the SVG is sane: bounded in size, parseable,
+    /// non-empty, and small enough to sit on the bed.
+    /// </summary>
+    public string AddArtwork(string svg, string name)
+    {
+        if (string.IsNullOrWhiteSpace(svg)) return "Nothing was supplied.";
+
+        if (svg.Length > MaxAssistantSvgBytes)
+        {
+            return $"That SVG is {svg.Length / 1024} KB, over the {MaxAssistantSvgBytes / 1024} KB limit. Send something simpler.";
+        }
+
+        Cam.Import.SvgImportResult result;
+        try
+        {
+            result = SvgImporter.Import(svg);
+        }
+        catch (Exception ex)
+        {
+            return $"That SVG could not be read: {ex.Message}";
+        }
+
+        if (result.Paths.Count == 0)
+        {
+            return "That SVG produced no paths. A laser follows outlines — use stroked shapes with fill=\"none\" rather than filled regions.";
+        }
+
+        var shape = new PathShape(result.Paths) { Name = string.IsNullOrWhiteSpace(name) ? "Drawing" : name.Trim() };
+        var size = shape.LocalBounds;
+
+        if (size.IsEmpty || size.Width <= 0.01 || size.Height <= 0.01)
+        {
+            return "That artwork has no size. Give the SVG a width, a height and a matching viewBox, in millimetres.";
+        }
+
+        if (size.Width > SelectedMachine.BedWidthMm * 4 || size.Height > SelectedMachine.BedHeightMm * 4)
+        {
+            return $"That artwork is {size.Width:0} × {size.Height:0} mm, far larger than the " +
+                   $"{SelectedMachine.BedWidthMm:0} × {SelectedMachine.BedHeightMm:0} mm bed. Check the SVG units.";
+        }
+
+        // Land it on the workpiece when there is one, since that is what the
+        // operator is actually burning onto.
+        var target = Design.Workpiece.IsSet
+            ? Design.Workpiece.Bounds.Center
+            : new Vec2(SelectedMachine.BedWidthMm / 2, SelectedMachine.BedHeightMm / 2);
+
+        shape.Translate(new Vec2(target.X - size.Center.X, target.Y - size.Center.Y));
+
+        EditDocument($"Draw {shape.Name}", () =>
+        {
+            Design.AddShape(shape, SelectedLayer?.Layer);
+            Selection.Clear();
+            Selection.Add(shape);
+        });
+
+        var placed = Design.Workpiece.IsSet ? "centred on the workpiece" : "centred on the bed";
+        var warnings = result.Warnings.Count > 0 ? " " + string.Join(" ", result.Warnings) : "";
+
+        Console.AppendInfo($"The assistant drew “{shape.Name}” — {result.Paths.Count} path(s), " +
+                           $"{size.Width:0.#} × {size.Height:0.#} mm, {placed}. Undo removes it.");
+
+        return $"Added “{shape.Name}”: {result.Paths.Count} path(s), {size.Width:0.#} × {size.Height:0.#} mm, {placed}. " +
+               $"It is selected on the canvas and can be moved, resized or undone.{warnings}";
     }
 
     // --------------------------------------------------------- IAssistantHost

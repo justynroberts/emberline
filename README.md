@@ -32,7 +32,7 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Materials** | A built-in library keyed by laser wattage, with rescaling and hazard warnings |
 | **Configuration** | A `$` settings editor with every value named, explained and unit-labelled, and confirmation on the ones that can drive a machine into itself |
 | **Rotary** | Roller and chuck attachments, with the axis rescaled from the real steps-per-millimetre rather than a guess |
-| **Assistant** | Optional Claude-powered help with settings, faults and job setup |
+| **Assistant** | Optional Claude-powered help with settings, faults and job setup — and it can draw, adding SVG artwork straight to the canvas |
 | **Job library** | Every job recorded locally with its settings, so "what worked last time" is answerable |
 
 ---
@@ -206,6 +206,13 @@ Optional, and off until you give it a key. Open the assistant drawer and paste a
 Anthropic key from `console.anthropic.com` — it takes effect immediately, no
 restart. `ANTHROPIC_API_KEY` in your environment still works and takes precedence.
 
+It can also draw. Ask it to design something and it adds SVG artwork to the
+canvas as editable paths — centred on the workpiece if you have set one. That is
+a document change, not a machine action, so it happens without a confirmation
+prompt: nothing burns, and Ctrl+Z removes it. The confirmation gate exists for the
+laser, and widening it to cover harmless edits would only train you to dismiss
+confirmations without reading them.
+
 The key is written to `anthropic.key` in the application data folder, with
 owner-only permissions, and never into `settings.json` — that is the file people
 paste into forum posts when asking for help. It is shown back masked, and can be
@@ -281,7 +288,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 465 tests, no hardware required
+dotnet test                     # 476 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -291,7 +298,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-465 tests, no hardware required. The ones that matter most run complete jobs
+476 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.
