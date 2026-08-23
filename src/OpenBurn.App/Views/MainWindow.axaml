@@ -30,6 +30,7 @@
                             Design="{Binding Design}"
                             Toolpath="{Binding Toolpath}"
                             HeadPosition="{Binding DisplayHeadPosition}"
+                            DocumentVersion="{Binding DocumentVersion}"
                             ProgressSegment="{Binding ProgressSegment}"
                             ShowGrid="{Binding ShowGrid}"
                             ShowTravel="{Binding ShowTravel}"

@@ -309,8 +309,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// setters fire during construction, before the timer exists — an ordering trap
     /// that otherwise kills the application on startup with a null reference.
     /// </summary>
+    /// <summary>
+    /// Bumped on every change to the document. The canvas caches its geometry
+    /// against this rather than rebuilding it each frame.
+    /// </summary>
+    [ObservableProperty]
+    private int _documentVersion;
+
     public void QueueRegenerate()
     {
+        DocumentVersion++;
         _regeneratePending = true;
         if (_regenerateTimer is null) return;
         _regenerateTimer.Stop();

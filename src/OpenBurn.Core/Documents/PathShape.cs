@@ -18,19 +18,45 @@ public sealed class PathShape : Shape
 
     public IReadOnlyList<Polyline> Paths => _paths;
 
-    public void Add(Polyline p) => _paths.Add(p);
+    private Rect2? _localBounds;
 
-    public void AddRange(IEnumerable<Polyline> paths) => _paths.AddRange(paths);
+    public void Add(Polyline p)
+    {
+        _paths.Add(p);
+        _localBounds = null;
+    }
 
+    public void AddRange(IEnumerable<Polyline> paths)
+    {
+        _paths.AddRange(paths);
+        _localBounds = null;
+    }
+
+    /// <summary>
+    /// Cached, because this walks every point of every path and the canvas asks
+    /// for it on each pointer move to decide what is under the cursor. On a traced
+    /// bitmap that is a quarter of a million points per mouse movement, which is
+    /// felt as the drag lagging behind the pointer.
+    ///
+    /// Only the path list invalidates it. Moving, scaling and rotating a shape all
+    /// change <see cref="Shape.Transform"/> rather than the points, and
+    /// <see cref="Shape.Bounds"/> applies that transform to these bounds afterwards.
+    /// </summary>
     public override Rect2 LocalBounds
     {
         get
         {
+            if (_localBounds is { } cached) return cached;
+
             var r = Rect2.Empty;
             foreach (var p in _paths) r = r.Union(p.Bounds);
+            _localBounds = r;
             return r;
         }
     }
+
+    /// <summary>Recompute the bounds after editing the polylines in place.</summary>
+    public void InvalidateBounds() => _localBounds = null;
 
     public override IReadOnlyList<Polyline> GetOutlines(double tolerance = Curves.DefaultTolerance)
     {

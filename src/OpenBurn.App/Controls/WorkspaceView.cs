@@ -79,6 +79,9 @@ public sealed class WorkspaceView : Control
         AvaloniaProperty.Register<WorkspaceView, int>(nameof(ProgressSegment), -1);
 
     /// <summary>Snap increment in millimetres while dragging. Zero disables snapping.</summary>
+    public static readonly StyledProperty<int> DocumentVersionProperty =
+        AvaloniaProperty.Register<WorkspaceView, int>(nameof(DocumentVersion));
+
     public static readonly StyledProperty<double> SnapMmProperty =
         AvaloniaProperty.Register<WorkspaceView, double>(nameof(SnapMm), 1.0);
 
@@ -89,6 +92,9 @@ public sealed class WorkspaceView : Control
     public Design? Design { get => GetValue(DesignProperty); set => SetValue(DesignProperty, value); }
     public Toolpath? Toolpath { get => GetValue(ToolpathProperty); set => SetValue(ToolpathProperty, value); }
     public Point? HeadPosition { get => GetValue(HeadPositionProperty); set => SetValue(HeadPositionProperty, value); }
+
+    /// <summary>Changes whenever the document does. Drives the shape-geometry cache.</summary>
+    public int DocumentVersion { get => GetValue(DocumentVersionProperty); set => SetValue(DocumentVersionProperty, value); }
     public double JobFraction { get => GetValue(JobFractionProperty); set => SetValue(JobFractionProperty, value); }
     public bool ShowGrid { get => GetValue(ShowGridProperty); set => SetValue(ShowGridProperty, value); }
     public bool ShowTravel { get => GetValue(ShowTravelProperty); set => SetValue(ShowTravelProperty, value); }
@@ -162,6 +168,7 @@ public sealed class WorkspaceView : Control
     static WorkspaceView()
     {
         AffectsRender<WorkspaceView>(MachineProperty, DesignProperty, ToolpathProperty, HeadPositionProperty,
+            DocumentVersionProperty,
                                      JobFractionProperty, ShowGridProperty, ShowTravelProperty, SelectionProperty,
                                      BedImageProperty, BedImageOpacityProperty, ProgressSegmentProperty);
     }
@@ -459,6 +466,7 @@ public sealed class WorkspaceView : Control
             }
         }
 
+        _shapeGeometry = null;
         EditChanged?.Invoke();
         InvalidateVisual();
     }
@@ -762,13 +770,39 @@ public sealed class WorkspaceView : Control
         _travelGeometry = travelUsed ? travel : null;
     }
 
-    private void DrawShapes(DrawingContext context)
-    {
-        var design = Design;
-        if (design is null || design.Shapes.Count == 0) return;
+    private StreamGeometry? _shapeGeometry;
+    private object? _geometrySource;
+    private int _geometryVersion = -1;
 
-        // The document is small compared with a toolpath, so rebuilding each frame
-        // is cheap and avoids an invalidation bug where an edit fails to show up.
+    /// <summary>
+    /// How many times the shape geometry has been rebuilt. Diagnostic: a cache
+    /// that silently stops working looks exactly like one that works, so this is
+    /// what the tests assert against.
+    /// </summary>
+    public int GeometryRebuilds { get; private set; }
+
+    /// <summary>
+    /// The shape outlines, in millimetres, cached until the document changes.
+    ///
+    /// This used to be rebuilt every frame on the grounds that a document is small
+    /// next to a toolpath. That holds for a handful of imported curves and breaks
+    /// completely for a traced bitmap: a quarter of a million points means
+    /// GetOutlines allocating a transformed copy of every polyline, several times
+    /// over per frame once selection and hit-testing have had their turn, and
+    /// dragging turns to treacle.
+    ///
+    /// Pan and zoom do not invalidate it — the transform is applied at draw time,
+    /// so the geometry itself only depends on the document.
+    /// </summary>
+    private StreamGeometry BuildShapeGeometry(Design design)
+    {
+        if (_shapeGeometry is not null &&
+            ReferenceEquals(_geometrySource, design) &&
+            _geometryVersion == DocumentVersion)
+        {
+            return _shapeGeometry;
+        }
+
         var geometry = new StreamGeometry();
         using (var ctx = geometry.Open())
         {
@@ -785,6 +819,27 @@ public sealed class WorkspaceView : Control
                 }
             }
         }
+
+        _shapeGeometry = geometry;
+        _geometrySource = design;
+        _geometryVersion = DocumentVersion;
+        GeometryRebuilds++;
+        return geometry;
+    }
+
+    /// <summary>Drop the cached geometry — for edits made on the canvas itself.</summary>
+    public void InvalidateShapes()
+    {
+        _shapeGeometry = null;
+        InvalidateVisual();
+    }
+
+    private void DrawShapes(DrawingContext context)
+    {
+        var design = Design;
+        if (design is null || design.Shapes.Count == 0) return;
+
+        var geometry = BuildShapeGeometry(design);
 
         using (context.PushTransform(BuildRenderTransform()))
         {
