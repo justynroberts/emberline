@@ -335,7 +335,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _cam = CamPipeline.Generate(
                 Design,
                 SelectedMachine,
-                CamOptions.Default with { Rotary = Rotary },
+                CamOptions.Default with { Rotary = Rotary, DitherOptions = DitherOptions },
                 settings,
                 IsHomed);
             Toolpath = _cam.Toolpath;

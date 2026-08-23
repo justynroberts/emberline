@@ -19,7 +19,8 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Connection** | USB serial, TCP (telnet), WebSocket, HTTP command, and a built-in simulator |
 | **Discovery** | USB port enumeration, and an opt-in local network scan that probes for GRBL |
 | **Import** | SVG (paths, primitives, nested transforms, real-world sizing), DXF (lines, arcs, polylines with bulges, ellipses, splines, blocks), PNG/JPEG/BMP/GIF/WebP, G-code |
-| **CAM** | Raster engraving with ten dithering kernels, vector cut/score/engrave, hatch and offset fills, text to outlines |
+| **Photo engraving** | Invert, brightness, contrast, gamma, sharpen, tone clipping and twelve dithering kernels, with a live preview of what will actually burn |
+| **CAM** | Raster engraving, vector cut/score/engrave, hatch and offset fills, text to outlines |
 | **Tracing** | Bitmap to paths with a live preview — outlines or centrelines, threshold seeded from the image itself, simplify and smooth |
 | **Job engine** | Character-counting streaming, pause/resume/stop, resume-from-line after a dropped link, live progress and acceleration-aware time estimates |
 | **Editing** | Drag, scale and rotate on the canvas, marquee selection, snapping, align, distribute, group, array, and undo across all of it |
@@ -133,6 +134,30 @@ the material system exists to stop you starting from nothing.
 
 ---
 
+## Engraving a photograph
+
+Select an imported bitmap and the **Object** tab shows the picture as it will be
+engraved, with the controls that decide it.
+
+**Invert** is the one to know about. Engraving burns the dark parts, so a picture
+meant to come out light-on-dark — slate, anodised aluminium, a painted tile —
+must be inverted or it engraves as a negative.
+
+The rest are tone controls: brightness and contrast, gamma for the mid-tones,
+sharpen, and two clips — *skip lighter than*, which leaves pale areas untouched
+and saves time, and *full power darker than*, which deepens the blacks.
+
+Dithering decides how greys become laser pulses. At engraving speed the beam is
+close to on-or-off, so this changes the result more than any other single setting,
+and which kernel looks best genuinely depends on the material. Each one says what
+it suits.
+
+The original picture is never altered. Every adjustment is applied when the job is
+generated, so you can push the sliders around all afternoon and still get back to
+where you started.
+
+---
+
 ## Tracing an image
 
 Press **◈** in the tool rail. With a bitmap selected it traces that; with nothing
@@ -231,7 +256,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 409 tests, no hardware required
+dotnet test                     # 418 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -241,7 +266,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-409 tests, no hardware required. The ones that matter most run complete jobs
+418 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

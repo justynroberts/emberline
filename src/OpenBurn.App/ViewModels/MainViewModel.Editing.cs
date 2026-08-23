@@ -83,6 +83,7 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(SelectedHeightMm));
         OnPropertyChanged(nameof(SelectedXMm));
         OnPropertyChanged(nameof(SelectedYMm));
+        RaiseImageSelection();
     }
 
     // ------------------------------------------------------- canvas dragging

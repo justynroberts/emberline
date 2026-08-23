@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:OpenBurn.App.ViewModels"
+        xmlns:raster="clr-namespace:OpenBurn.Cam.Raster;assembly=OpenBurn.Cam"
         xmlns:ctrl="clr-namespace:OpenBurn.App.Controls"
         xmlns:conv="clr-namespace:OpenBurn.App.Converters"
         xmlns:mach="clr-namespace:OpenBurn.Core.Machines;assembly=OpenBurn.Core"
@@ -219,8 +220,10 @@
                             ToolTip.Tip="What the job comes to, and anything blocking it" />
                 </Grid>
 
-                <ScrollViewer Margin="14,12,14,14" VerticalScrollBarVisibility="Auto">
-                    <Panel>
+                <!-- The scrollbar is an overlay, so leave it room or it sits on top of
+                     the right-hand value readouts. -->
+                <ScrollViewer Margin="14,12,8,14" VerticalScrollBarVisibility="Auto">
+                    <Panel Margin="0,0,8,0">
                     <StackPanel Spacing="14" IsVisible="{Binding IsMachineTab}">
                     <!-- Connection -->
                     <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="14,14,14,0">
@@ -527,6 +530,86 @@
                     </StackPanel>
 
                     <StackPanel Spacing="14" IsVisible="{Binding IsObjectTab}">
+                        <!-- Image adjustments. Only for a selected bitmap: none of it
+                             means anything for vector geometry. -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsImageSelected}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="sectionTitle" Text="IMAGE" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Classes="ghost" Content="Reset" Padding="8,3"
+                                        Command="{Binding ResetImageAdjustmentsCommand}"
+                                        IsVisible="{Binding ImageIsAdjusted}"
+                                        ToolTip.Tip="Put every adjustment back to normal. The original picture was never altered, so nothing is lost." />
+                            </Grid>
+
+                            <Border Classes="card" Padding="6" HorizontalAlignment="Stretch">
+                                <Image Source="{Binding ImagePreview}" Stretch="Uniform" MaxHeight="150"
+                                       ToolTip.Tip="The picture as it will be engraved. Dark areas burn, light areas are skipped." />
+                            </Border>
+
+                            <CheckBox IsChecked="{Binding ImageInvert}" Content="Invert"
+                                      ToolTip.Tip="Swap light and dark. Engraving burns the dark parts, so a picture meant to come out light-on-dark — slate, anodised aluminium, painted tile — needs this or it engraves as a negative." />
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0" Text="Brightness" Classes="label" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding ImageBrightness, StringFormat={}{0:0}}" Classes="readout" FontSize="13" />
+                            </Grid>
+                            <Slider Minimum="-100" Maximum="100" Value="{Binding ImageBrightness}" TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Lighten or darken the whole picture. Raise it if the engraving comes out too dark and muddy." />
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0" Text="Contrast" Classes="label" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding ImageContrast, StringFormat={}{0:0}}" Classes="readout" FontSize="13" />
+                            </Grid>
+                            <Slider Minimum="-100" Maximum="100" Value="{Binding ImageContrast}" TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Push the lights and darks apart. Wood and leather usually need more contrast than the photograph started with." />
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0" Text="Gamma" Classes="label" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding ImageGamma, StringFormat={}{0:0.00}}" Classes="readout" FontSize="13" />
+                            </Grid>
+                            <Slider Minimum="0.1" Maximum="3" Value="{Binding ImageGamma}" TickFrequency="0.05" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Adjust the mid-tones without moving black or white. This is the control that rescues a face that has gone flat." />
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0" Text="Sharpen" Classes="label" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding ImageSharpen, StringFormat={}{0:0.00}}" Classes="readout" FontSize="13" />
+                            </Grid>
+                            <Slider Minimum="0" Maximum="2" Value="{Binding ImageSharpen}" TickFrequency="0.05" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Bring out edges. A little helps almost every photograph, because the beam softens fine detail anyway." />
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0" Text="Skip lighter than" Classes="label" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding ImageWhiteClip, StringFormat={}{0:0}}" Classes="readout" FontSize="13" />
+                            </Grid>
+                            <Slider Minimum="0" Maximum="255" Value="{Binding ImageWhiteClip}" TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Anything this light is treated as blank and skipped entirely, which saves time and stops the laser faintly scorching what should stay clean. 255 skips nothing." />
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0" Text="Full power darker than" Classes="label" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding ImageBlackClip, StringFormat={}{0:0}}" Classes="readout" FontSize="13" />
+                            </Grid>
+                            <Slider Minimum="0" Maximum="255" Value="{Binding ImageBlackClip}" TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ToolTip.Tip="Anything this dark burns at full power. Raise it to deepen the blacks when an engraving looks washed out. 0 changes nothing." />
+
+                            <TextBlock Text="Colour to grey" Classes="label" />
+                            <ComboBox ItemsSource="{Binding GreyscaleModes}" SelectedItem="{Binding ImageGreyscaleMode}"
+                                      HorizontalAlignment="Stretch"
+                                      ToolTip.Tip="How colour is turned into brightness. Luma matches how the eye weights colours and suits photographs; the single-channel options can rescue artwork where one colour carries all the detail." />
+
+                            <TextBlock Text="Dithering" Classes="label" Margin="0,4,0,0" />
+                            <ComboBox ItemsSource="{Binding DitherKinds}" SelectedItem="{Binding SelectedDither}"
+                                      HorizontalAlignment="Stretch"
+                                      ToolTip.Tip="How shades of grey become laser pulses. At engraving speed the beam is nearly on-or-off, so the pattern used to fake the greys changes the result more than any other single setting.">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="raster:DitherInfo">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Text="{Binding DitherHint}" Classes="label" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource InkMuted}" />
+                        </StackPanel>
+
                         <!-- Selection -->
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="SELECTION" />
