@@ -457,9 +457,14 @@
             </DockPanel>
         </Border>
 
+        <!-- The two drawers share the bottom of the window. A stack keeps them
+             clear of each other when both are open, which they often are while
+             diagnosing something. -->
+        <StackPanel VerticalAlignment="Bottom" Margin="84,0,352,12" Spacing="10">
+
         <!-- =============================== Assistant ================================== -->
-        <Border Classes="panel slideUp" Margin="84,0,352,12" Height="380" Width="620"
-                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+        <Border Classes="panel slideUp" Height="360" Width="620"
+                HorizontalAlignment="Left"
                 IsVisible="{Binding ShowAssistant}" Padding="14">
             <DockPanel LastChildFill="True">
 
@@ -547,8 +552,8 @@
         </Border>
 
         <!-- ============================== Console drawer =============================== -->
-        <Border Classes="panel slideUp" Margin="84,0,352,12" Height="260"
-                VerticalAlignment="Bottom" IsVisible="{Binding ShowConsole}" Padding="12">
+        <Border Classes="panel slideUp" Height="240"
+                IsVisible="{Binding ShowConsole}" Padding="12">
             <DockPanel LastChildFill="True">
                 <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
                     <TextBlock Grid.Column="0" Classes="sectionTitle" Text="MACHINE CONSOLE" Margin="0" VerticalAlignment="Center" />
@@ -586,6 +591,8 @@
                 </ScrollViewer>
             </DockPanel>
         </Border>
+
+        </StackPanel>
 
         <!-- ============================ Cursor readout ================================= -->
         <Border Classes="chip" HorizontalAlignment="Left" VerticalAlignment="Bottom"
