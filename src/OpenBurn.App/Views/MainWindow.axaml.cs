@@ -59,7 +59,7 @@ public partial class MainWindow : Window
 
     private void OnShowAbout(object? sender, RoutedEventArgs e)
     {
-        var dialog = new AboutDialog(Model?.SelectedMachine);
+        var dialog = new AboutDialog(Model?.SelectedMachine, Model?.LoadedPlugins);
         dialog.ShowDialog(this);
     }
 

@@ -69,6 +69,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         };
 
         RefreshPorts();
+        LoadPlugins();
         QueueRegenerate();
         Console.AppendInfo("OpenBurn ready. Select a machine and connect, or pick the virtual laser to try it without hardware.");
     }

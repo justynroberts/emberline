@@ -155,6 +155,17 @@ reasonable way to build software that commands a ten-watt laser.
 
 ---
 
+## Plugins
+
+New machines, transports, cameras, file formats and materials can be added without
+touching OpenBurn. See [`src/OpenBurn.Plugins/README.md`](src/OpenBurn.Plugins/README.md).
+
+Loading is off by default and has to be turned on deliberately. A plugin is
+ordinary code running in the OpenBurn process with your permissions; there is no
+sandbox. What OpenBurn does guarantee is that a plugin cannot displace a built-in —
+registering `.svg` or the `grbl` driver is refused and reported — and that a plugin
+which throws while registering is skipped rather than taking the application down.
+
 ## Architecture
 
 ```
@@ -168,6 +179,7 @@ OpenBurn.Camera       Frame sources — MJPEG, snapshot, file
 OpenBurn.Vision       Lens correction, homography, bed rectification, detection
 OpenBurn.Materials    Material library
 OpenBurn.VirtualLaser An in-process GRBL 1.1 controller
+OpenBurn.Plugins      Plugin contracts, registry and load host
 OpenBurn.AI           The optional assistant
 ```
 
@@ -179,7 +191,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 338 tests, no hardware required
+dotnet test                     # 352 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -189,7 +201,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-338 tests, no hardware required. The ones that matter most run complete jobs
+352 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

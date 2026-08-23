@@ -36,6 +36,11 @@
                     <TextBlock x:Name="MachineText" Classes="mono" TextWrapping="Wrap" />
                 </StackPanel>
 
+                <StackPanel Spacing="3" x:Name="PluginSection">
+                    <TextBlock Classes="sectionTitle" Text="PLUGINS" />
+                    <TextBlock x:Name="PluginText" Classes="mono" TextWrapping="Wrap" FontSize="11" />
+                </StackPanel>
+
                 <StackPanel Spacing="3">
                     <TextBlock Classes="sectionTitle" Text="LICENCE" />
                     <TextBlock Text="GPLv3. OpenBurn incorporates algorithms derived from LaserGRBL, which is GPL-licensed."

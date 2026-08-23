@@ -13,11 +13,29 @@ namespace OpenBurn.Devices;
 /// </summary>
 public static class DeviceFactory
 {
-    public static ILaserDevice CreateDevice(MachineProfile profile) => profile.DriverId switch
+    /// <summary>
+    /// Drivers and transports contributed by plugins.
+    ///
+    /// A delegate rather than a reference to the plugin assembly, so the device
+    /// layer stays unaware that plugins exist at all — which is what keeps the
+    /// dependency arrows pointing inward.
+    /// </summary>
+    public static Func<string, Func<MachineProfile, ILaserDevice>?>? PluginDriverLookup { get; set; }
+
+    public static Func<string, Func<string, ITransport>?>? PluginTransportLookup { get; set; }
+
+    public static ILaserDevice CreateDevice(MachineProfile profile)
     {
-        "blazex" => new BlazeXDevice(profile),
-        _ => new GrblDevice(profile),
-    };
+        // Built-ins first: a plugin cannot displace the tested GRBL path.
+        switch (profile.DriverId)
+        {
+            case "blazex": return new BlazeXDevice(profile);
+            case "grbl": return new GrblDevice(profile);
+        }
+
+        var plugin = PluginDriverLookup?.Invoke(profile.DriverId);
+        return plugin is not null ? plugin(profile) : new GrblDevice(profile);
+    }
 
     public static ITransport CreateTransport(MachineProfile profile, ConnectionKind kind, string? address = null)
     {
@@ -60,7 +78,13 @@ public static class DeviceFactory
                 });
 
             default:
+            {
+                // A plugin may have registered this scheme.
+                var plugin = PluginTransportLookup?.Invoke(kind.ToString());
+                if (plugin is not null && address is not null) return plugin(address);
+
                 throw new NotSupportedException($"Connection type {kind} is not supported.");
+            }
         }
     }
 

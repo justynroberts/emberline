@@ -13,7 +13,7 @@ the visual decisions and why.
 
 ```bash
 dotnet build OpenBurn.slnx          # whole solution
-dotnet test                         # 196 tests, no hardware needed
+dotnet test                         # 352 tests, no hardware needed
 dotnet test tests/OpenBurn.Cam.Tests           # one project
 dotnet test --filter "FullyQualifiedName~Raster"   # one area
 
@@ -40,6 +40,7 @@ Devices     ILaserDevice, GRBL driver, discovery, probe                  ← Cor
 Camera      frame sources                                                ← Core
 Vision      lens, homography, rectification, detection                   ← Core, Camera
 Materials   material library                                             ← Core
+Plugins     plugin contracts, registry, load host                       ← Core, Cam, Devices, Transport, Camera, Materials
 AI          the optional assistant                                       ← Core, GCode, Cam, Materials, Devices
 App         Avalonia UI                                                  ← everything
 ```
@@ -63,6 +64,11 @@ the tests prove.
 **The assistant cannot move the machine.** `IAssistantHost` has no method that
 starts, jogs or homes anything; `ProposeAction` displays a card. This is
 architectural, not a prompt rule. Do not add a convenience method that bypasses it.
+
+**Plugins cannot displace built-ins.** `PluginRegistry` refuses a registration
+that clashes with a built-in importer or driver and reports it. Do not "helpfully"
+relax that — silently shadowing the tested G-code path with third-party code is
+not a trade anybody agreed to.
 
 **Millimetres everywhere, Y up.** Inches exist only in the view layer. The SVG
 importer performs the single Y flip at the boundary; nothing downstream flips again.

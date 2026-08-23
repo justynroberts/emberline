@@ -130,6 +130,11 @@ public static class SelfTest
 
         await device.DisconnectAsync();
 
+        // --- Plugins ------------------------------------------------------------
+        var pluginRegistry = new OpenBurn.Plugins.PluginRegistry();
+        var pluginReport = OpenBurn.Plugins.PluginHost.Load(pluginRegistry, enabled: true);
+        Check("plugin host runs", pluginReport.Failures.Count == 0, pluginReport.Summary);
+
         // --- Job library --------------------------------------------------------
         try
         {

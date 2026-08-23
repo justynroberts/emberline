@@ -41,6 +41,15 @@ public sealed record AppSettings
     public string? LastOpenedFolder { get; init; }
     public IReadOnlyList<string> RecentFiles { get; init; } = [];
 
+    /// <summary>
+    /// Load plugins from the plugins folder.
+    ///
+    /// Off by default: a plugin is ordinary code running in this process with the
+    /// user's permissions, and there is no sandbox. Turning it on is a decision
+    /// about trust, so it has to be made deliberately.
+    /// </summary>
+    public bool PluginsEnabled { get; init; }
+
     /// <summary>Opt-in. Everything works without it; nothing is sent anywhere until it is set.</summary>
     public bool AiEnabled { get; init; }
     public string? AiModel { get; init; } = "claude-opus-5";

@@ -11,13 +11,24 @@ namespace OpenBurn.App.Views;
 /// </summary>
 public partial class AboutDialog : Window
 {
-    public AboutDialog() : this(null)
+    public AboutDialog() : this(null, null)
     {
     }
 
-    public AboutDialog(MachineProfile? machine)
+    public AboutDialog(MachineProfile? machine, IReadOnlyList<OpenBurn.Plugins.LoadedPlugin>? plugins = null)
     {
         InitializeComponent();
+
+        var section = this.FindControl<StackPanel>("PluginSection")!;
+        if (plugins is { Count: > 0 })
+        {
+            this.FindControl<TextBlock>("PluginText")!.Text =
+                string.Join("\n", plugins.Select(p => $"{p.Name} {p.Version} — {p.Description}"));
+        }
+        else
+        {
+            section.IsVisible = false;
+        }
 
         var version = typeof(AboutDialog).Assembly.GetName().Version?.ToString(3) ?? "0.1.0";
         this.FindControl<TextBlock>("VersionText")!.Text = $"version {version}  ·  .NET {Environment.Version}";

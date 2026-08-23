@@ -104,7 +104,7 @@ public sealed partial class MainViewModel
                 Console.AppendInfo($"Imported {result.Lines.Count:N0} lines of G-code. " +
                                    "It is shown for reference; regenerating the job will not reproduce it byte for byte.");
             }
-            else
+            else if (!TryPluginImport(path))
             {
                 Console.AppendError($"OpenBurn does not know how to open {Path.GetExtension(path)} files.");
                 return;

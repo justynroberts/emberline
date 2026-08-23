@@ -264,7 +264,7 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
   library window, rotary support for rollers and chucks.
 - Fiducial re-registration: mark where a workpiece was, take it off, put it back,
   and the artwork follows it.
-- 329 tests, none requiring hardware, including headless UI tests that drive the
+- 352 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons
@@ -293,7 +293,10 @@ rescaled from the controller's own steps-per-millimetre rather than a guess, and
 the panel says where that number came from — a rotary job at the wrong scale looks
 correct on screen and is only discovered on the workpiece. **Batch jobs** are
 covered by the array tool and by camera-driven placement onto detected workpieces.
-**Plugin loading** remains MVP 0.4 in §35.
+**Plugin loading** is now implemented — device drivers, transports, cameras,
+importers and materials, each in its own assembly load context so two plugins can
+depend on different versions of the same library. It is off by default and says
+plainly that there is no sandbox.
 
 **Flame and smoke detection.** §24 requires it be described as an additional aid;
 shipping an unvalidated fire detector invites exactly the misplaced trust that

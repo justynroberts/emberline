@@ -8,6 +8,7 @@
     <Project Path="src/OpenBurn.Devices/OpenBurn.Devices.csproj" />
     <Project Path="src/OpenBurn.GCode/OpenBurn.GCode.csproj" />
     <Project Path="src/OpenBurn.Materials/OpenBurn.Materials.csproj" />
+    <Project Path="src/OpenBurn.Plugins/OpenBurn.Plugins.csproj" />
     <Project Path="src/OpenBurn.Transport/OpenBurn.Transport.csproj" />
     <Project Path="src/OpenBurn.VirtualLaser/OpenBurn.VirtualLaser.csproj" />
     <Project Path="src/OpenBurn.Vision/OpenBurn.Vision.csproj" />
@@ -18,6 +19,7 @@
     <Project Path="tests/OpenBurn.Core.Tests/OpenBurn.Core.Tests.csproj" />
     <Project Path="tests/OpenBurn.Devices.Tests/OpenBurn.Devices.Tests.csproj" />
     <Project Path="tests/OpenBurn.GCode.Tests/OpenBurn.GCode.Tests.csproj" />
+    <Project Path="tests/OpenBurn.Plugins.Tests/OpenBurn.Plugins.Tests.csproj" />
     <Project Path="tests/OpenBurn.Transport.Tests/OpenBurn.Transport.Tests.csproj" />
     <Project Path="tests/OpenBurn.Vision.Tests/OpenBurn.Vision.Tests.csproj" />
   </Folder>

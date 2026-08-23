@@ -40,5 +40,6 @@
     <ProjectReference Include="..\OpenBurn.Materials\OpenBurn.Materials.csproj" />
     <ProjectReference Include="..\OpenBurn.VirtualLaser\OpenBurn.VirtualLaser.csproj" />
     <ProjectReference Include="..\OpenBurn.AI\OpenBurn.AI.csproj" />
+    <ProjectReference Include="..\OpenBurn.Plugins\OpenBurn.Plugins.csproj" />
   </ItemGroup>
 </Project>
