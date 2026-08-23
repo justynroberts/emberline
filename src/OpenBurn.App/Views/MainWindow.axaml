@@ -427,6 +427,64 @@
                     </StackPanel>
 
                     <StackPanel Spacing="14" IsVisible="{Binding IsDesignTab}">
+                        <!-- Workpiece: the material actually on the bed, as
+                             opposed to the bed itself. -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="sectionTitle" Text="WORKPIECE" />
+
+                            <ComboBox ItemsSource="{Binding WorkpiecePresets}" SelectedItem="{Binding SelectedWorkpiecePreset}"
+                                      HorizontalAlignment="Stretch" PlaceholderText="No workpiece"
+                                      ToolTip.Tip="The piece of material you are burning onto. Its outline is drawn faintly on the canvas so you can line artwork up against the material rather than against the whole bed." />
+
+                            <StackPanel Spacing="8" IsVisible="{Binding !HasWorkpiece}">
+                                <Button Content="Set a size" HorizontalAlignment="Stretch"
+                                        Command="{Binding UseCustomWorkpieceCommand}"
+                                        ToolTip.Tip="Describe the blank by typing its size, for an offcut that does not match any of the presets." />
+                            </StackPanel>
+
+                            <StackPanel Spacing="8" IsVisible="{Binding HasWorkpiece}">
+                                <CheckBox IsChecked="{Binding WorkpieceIsRound}" Content="Round"
+                                          ToolTip.Tip="Draw the outline as a circle rather than a rectangle — for coasters, discs and round tags." />
+
+                                <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="6" RowSpacing="6" RowDefinitions="Auto,Auto">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="W" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding WorkpieceWidthMm, StringFormat={}{0:0.##}}"
+                                             ToolTip.Tip="How wide the material is, in millimetres. For a round blank this is the diameter." />
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="H" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding WorkpieceHeightMm, StringFormat={}{0:0.##}}"
+                                             ToolTip.Tip="How tall the material is, in millimetres." />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="X" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding WorkpieceXMm, StringFormat={}{0:0.##}}"
+                                             ToolTip.Tip="Where the left edge of the material sits on the bed." />
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Y" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding WorkpieceYMm, StringFormat={}{0:0.##}}"
+                                             ToolTip.Tip="Where the bottom edge of the material sits on the bed." />
+                                </Grid>
+
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" IsVisible="{Binding !WorkpieceIsRound}">
+                                    <TextBlock Grid.Column="0" Text="Corner" Classes="label" VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1" Text="{Binding WorkpieceCornerMm, StringFormat={}{0:0.##}}"
+                                             ToolTip.Tip="Corner radius in millimetres, for blanks with rounded corners. Zero is square." />
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="6" RowDefinitions="Auto,Auto" RowSpacing="6">
+                                    <Button Grid.Row="0" Grid.Column="0" Content="Centre on bed"
+                                            Command="{Binding CentreWorkpieceOnBedCommand}"
+                                            ToolTip.Tip="Put the material in the middle of the bed." />
+                                    <Button Grid.Row="0" Grid.Column="1" Content="Clear"
+                                            Command="{Binding ClearWorkpieceCommand}"
+                                            ToolTip.Tip="Forget the workpiece and go back to showing just the bed." />
+                                    <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Classes="primary"
+                                            Content="Centre artwork on it"
+                                            Command="{Binding CentreArtworkOnWorkpieceCommand}"
+                                            ToolTip.Tip="Move the artwork to the middle of the material. Uses the selection if there is one, otherwise everything in the design." />
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Separator />
+
                         <!-- Material -->
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="MATERIAL" />

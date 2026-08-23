@@ -562,6 +562,7 @@ public sealed class WorkspaceView : Control
         DrawBed(context, machine);
         DrawBedImage(context, machine);
         if (ShowGrid) DrawGrid(context, machine);
+        DrawWorkpiece(context);
         DrawShapes(context);
         DrawToolpath(context);
         DrawSelection(context);
@@ -610,6 +611,50 @@ public sealed class WorkspaceView : Control
             var major = Math.Abs(y % 50) < 0.01;
             if (!major && !showMinor) continue;
             context.DrawLine(major ? majorPen : minorPen, ToPixels(0, y), ToPixels(machine.BedWidthMm, y));
+        }
+    }
+
+    /// <summary>
+    /// The material outline, drawn faintly under the artwork.
+    ///
+    /// Quiet on purpose: it is a guide for lining work up, not part of the job,
+    /// and anything more assertive competes with the artwork it exists to help
+    /// position. Centre lines are included because "get it central" is what the
+    /// outline is nearly always for.
+    /// </summary>
+    private void DrawWorkpiece(DrawingContext context)
+    {
+        var workpiece = Design?.Workpiece;
+        if (workpiece is null || !workpiece.IsSet) return;
+
+        var box = workpiece.Bounds;
+        var fill = Brush("EmberSoft", Color.FromArgb(28, 217, 83, 30));
+        var edge = Brush("EmberEdge", Color.FromArgb(120, 217, 83, 30));
+
+        using (context.PushTransform(BuildRenderTransform()))
+        {
+            var pen = new Pen(edge, 1.2 / Zoom) { DashStyle = new DashStyle([5, 4], 0) };
+
+            if (workpiece.Shape == WorkpieceShape.Circle)
+            {
+                var centre = new Point(box.Center.X, box.Center.Y);
+                context.DrawEllipse(fill, pen, centre, workpiece.WidthMm / 2, workpiece.HeightMm / 2);
+            }
+            else
+            {
+                var rect = new Rect(box.MinX, box.MinY, box.Width, box.Height);
+                var radius = Math.Min(workpiece.CornerRadiusMm, Math.Min(box.Width, box.Height) / 2);
+                context.DrawRectangle(fill, pen, rect, radius, radius);
+            }
+
+            // Centre lines, fainter still.
+            var centreLine = new Pen(edge, 0.8 / Zoom) { DashStyle = new DashStyle([2, 5], 0) };
+            var mid = box.Center;
+            using (context.PushOpacity(0.7))
+            {
+                context.DrawLine(centreLine, new Point(box.MinX, mid.Y), new Point(box.MaxX, mid.Y));
+                context.DrawLine(centreLine, new Point(mid.X, box.MinY), new Point(mid.X, box.MaxY));
+            }
         }
     }
 

@@ -4,6 +4,12 @@ using OpenBurn.App;
 
 [assembly: AvaloniaTestApplication(typeof(OpenBurn.App.Tests.TestAppBuilder))]
 
+// Headless Avalonia tests all share one dispatcher and one UI thread, so running
+// classes in parallel lets an await in one test be starved by another's work. It
+// surfaces as an occasional failure in whichever test happened to be waiting on a
+// connection — the worst kind, since it looks real and passes when run alone.
+[assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
+
 namespace OpenBurn.App.Tests;
 
 /// <summary>

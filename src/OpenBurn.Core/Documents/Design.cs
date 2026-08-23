@@ -20,6 +20,9 @@ public sealed class Design
     /// <summary>Path this design was loaded from or last saved to.</summary>
     public string? FilePath { get; set; }
 
+    /// <summary>The material on the bed, when it has been described. See <see cref="Workpiece"/>.</summary>
+    public Workpiece Workpiece { get; set; } = Workpiece.None;
+
     public static Design CreateDefault()
     {
         var d = new Design();

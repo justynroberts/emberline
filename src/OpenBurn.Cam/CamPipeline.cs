@@ -51,6 +51,44 @@ public sealed record CamResult(
 /// </summary>
 public static class CamPipeline
 {
+    /// <summary>
+    /// Warn when the job runs off the material.
+    ///
+    /// A warning rather than an error: overhanging the blank is occasionally
+    /// deliberate — scoring a fold line past the edge, or engraving a sheet that
+    /// will be trimmed afterwards — and the machine is perfectly capable of doing
+    /// it. What it must not do is happen silently, because the usual cause is
+    /// artwork that was never centred and the first sign is a scorched bed.
+    ///
+    /// For a round blank this is measured against the bounding square, so it is
+    /// the optimistic answer: art can fit the square and still overhang the disc.
+    /// The text says so rather than implying a precision it does not have.
+    /// </summary>
+    private static ValidationIssue? WorkpieceWarning(Design design, Toolpath toolpath)
+    {
+        var workpiece = design.Workpiece;
+        if (!workpiece.IsSet || toolpath.Count == 0) return null;
+
+        // Where the laser actually fires, not where the head travels. The rapid
+        // back to the work origin at the end of every job would otherwise put the
+        // toolpath's bounds at the corner of the bed and warn on every job.
+        var bounds = toolpath.BurnBounds;
+        if (bounds.IsEmpty) return null;
+
+        var (x, y) = workpiece.Overhang(bounds);
+        if (x <= 0.05 && y <= 0.05) return null;
+
+        var detail = $"The job overruns the {workpiece.Summary} workpiece by {x:0.#} mm in X and {y:0.#} mm in Y. " +
+                     "Centre the artwork on the workpiece, or make it smaller.";
+
+        if (workpiece.Shape == WorkpieceShape.Circle)
+        {
+            detail += " This is measured against the square around the circle, so anything near a corner may overhang by more.";
+        }
+
+        return new ValidationIssue(ValidationSeverity.Warning, "Job runs off the workpiece", detail);
+    }
+
     public static CamResult Generate(
         Design design,
         MachineProfile machine,
@@ -141,7 +179,8 @@ public static class CamPipeline
             : LimitsFromProfile(machine);
 
         var estimate = TimeEstimator.Estimate(toolpath, limits);
-        var issues = JobValidator.Validate(toolpath, machine, isHomed, machineSettings);
+        var issues = JobValidator.Validate(toolpath, machine, isHomed, machineSettings).ToList();
+        if (WorkpieceWarning(design, toolpath) is { } overhang) issues.Add(overhang);
 
         o.Progress?.Report(("Done", 1.0));
 
