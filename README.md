@@ -24,7 +24,7 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Editing** | Drag, scale and rotate on the canvas, marquee selection, snapping, align, distribute, group, array, and undo across all of it |
 | **Preview** | Toolpath simulation with scrubbing, and a G-code view of the exact lines that will be sent |
 | **Safety** | Pre-flight validation, framing at pointer power, emergency stop on Escape, an assistant that cannot move the machine |
-| **Camera** | MJPEG, HTTP snapshot and synthetic sources; lens and perspective correction; bed overlay; workpiece detection; fiducial re-registration |
+| **Camera** | MJPEG, HTTP snapshot and synthetic sources; lens and perspective correction; bed overlay; workpiece detection; fiducial re-registration; live view while a job runs |
 | **Materials** | A built-in library keyed by laser wattage, with rescaling and hazard warnings |
 | **Configuration** | A `$` settings editor with every value named, explained and unit-labelled, and confirmation on the ones that can drive a machine into itself |
 | **Rotary** | Roller and chuck attachments, with the axis rescaled from the real steps-per-millimetre rather than a guess |
@@ -191,7 +191,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 352 tests, no hardware required
+dotnet test                     # 355 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -201,7 +201,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-352 tests, no hardware required. The ones that matter most run complete jobs
+355 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

@@ -154,15 +154,27 @@
             <Border.RenderTransform>
                 <TranslateTransform Y="84" />
             </Border.RenderTransform>
-            <StackPanel Spacing="7">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" Text="{Binding ProgressText}" Classes="mono" />
-                    <TextBlock Grid.Column="1" Text="{Binding JobProgress.CurrentLine}" Classes="mono"
-                               Foreground="{DynamicResource InkFaint}" MaxWidth="260"
-                               TextTrimming="CharacterEllipsis" />
-                </Grid>
-                <ProgressBar Minimum="0" Maximum="1" Value="{Binding JobProgress.Fraction, Mode=OneWay}" />
-            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                <StackPanel Grid.Column="0" Spacing="7" VerticalAlignment="Center">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="{Binding ProgressText}" Classes="mono" />
+                        <TextBlock Grid.Column="1" Text="{Binding JobProgress.CurrentLine}" Classes="mono"
+                                   Foreground="{DynamicResource InkFaint}" MaxWidth="260"
+                                   TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding JobProgress.Fraction, Mode=OneWay}" />
+                </StackPanel>
+
+                <!-- Live bed view while a job runs. An aid to watching the machine,
+                     never a substitute for being in the room with it. -->
+                <Border Grid.Column="1" Classes="card" Padding="3" IsVisible="{Binding ShowLiveView}">
+                    <StackPanel Spacing="3">
+                        <Image Source="{Binding LiveView}" Width="150" Height="96" Stretch="UniformToFill" />
+                        <TextBlock Text="live bed" Classes="sectionTitle" Margin="0"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
         <!-- ============================= Fault banner ================================= -->

@@ -115,6 +115,7 @@ public sealed partial class MainViewModel
 
             IsCameraLive = true;
             CameraStatus = $"Connected to {descriptor.Name}.";
+            OnPropertyChanged(nameof(ShowLiveView));
             LoadCalibration();
         }
         catch (Exception ex)
@@ -134,12 +135,32 @@ public sealed partial class MainViewModel
         await _camera.DisposeAsync().ConfigureAwait(true);
         _camera = null;
         IsCameraLive = false;
+        LiveView = null;
         CameraStatus = null;
+        OnPropertyChanged(nameof(ShowLiveView));
     }
+
+    /// <summary>
+    /// A small live view of the bed, shown beside the progress bar while a job
+    /// runs. Kept separate from the canvas overlay because it stays useful when
+    /// the camera is not calibrated — watching for a flare-up does not need
+    /// millimetre accuracy.
+    /// </summary>
+    [ObservableProperty]
+    private Bitmap? _liveView;
+
+    public bool ShowLiveView => IsCameraLive && LiveView is not null && IsJobActive;
 
     private void OnFrame(CameraFrame frame)
     {
         _lastRawFrame = frame;
+
+        // The live view works with or without calibration.
+        Dispatcher.UIThread.Post(() =>
+        {
+            LiveView = FrameConverter.ToBitmap(frame);
+            OnPropertyChanged(nameof(ShowLiveView));
+        });
 
         // Only the rectified view goes on the canvas; a raw frame would be the
         // wrong shape and would place artwork wrongly, which is worse than no

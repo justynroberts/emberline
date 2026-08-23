@@ -163,6 +163,7 @@ public sealed partial class MainViewModel
             OnPropertyChanged(nameof(IsJobPaused));
             OnPropertyChanged(nameof(IsJobActive));
             OnPropertyChanged(nameof(CanStartJob));
+            OnPropertyChanged(nameof(ShowLiveView));
             StartJobCommand.NotifyCanExecuteChanged();
         });
 

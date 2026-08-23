@@ -193,3 +193,74 @@ public class SimulationTests
         Assert.True(text.Bounds.MaxX <= shell.SelectedMachine.BedWidthMm);
     }
 }
+
+/// <summary>
+/// Job monitoring with a camera. §23 asks that the camera can stay active while a
+/// job runs; the rule these tests protect is that the live view is only ever an
+/// aid — it never gates or interferes with the job itself.
+/// </summary>
+public class JobMonitorTests
+{
+    private static MainViewModel CreateShell()
+    {
+        AppPaths.OverrideRoot(Path.Combine(Path.GetTempPath(), "openburn-tests", Guid.NewGuid().ToString("N")));
+        AppPaths.EnsureCreated();
+        return new MainViewModel(AppSettings.Default);
+    }
+
+    [AvaloniaFact]
+    public void TheLiveViewIsHiddenWithNoCamera()
+    {
+        var shell = CreateShell();
+        Assert.False(shell.ShowLiveView);
+        Assert.Null(shell.LiveView);
+    }
+
+    [AvaloniaFact]
+    public async Task ConnectingTheSyntheticCameraProducesFrames()
+    {
+        var shell = CreateShell();
+        shell.RefreshCamerasCommand.Execute(null);
+
+        await shell.ConnectCameraCommand.ExecuteAsync(null);
+
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (shell.LiveView is null && DateTimeOffset.UtcNow < deadline)
+        {
+            await Task.Delay(25);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        Assert.True(shell.IsCameraLive);
+        Assert.NotNull(shell.LiveView);
+
+        // Shown only while a job is running — a live view of an idle bed is clutter.
+        Assert.False(shell.ShowLiveView);
+
+        await shell.DisconnectCameraCommand.ExecuteAsync(null);
+        Assert.Null(shell.LiveView);
+    }
+
+    [AvaloniaFact]
+    public async Task AnUncalibratedCameraStillGivesALiveViewButNoBedOverlay()
+    {
+        // Watching for a flare-up does not need millimetre accuracy; placing
+        // artwork does. The two must not be conflated.
+        var shell = CreateShell();
+        shell.RefreshCamerasCommand.Execute(null);
+        await shell.ConnectCameraCommand.ExecuteAsync(null);
+
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (shell.LiveView is null && DateTimeOffset.UtcNow < deadline)
+        {
+            await Task.Delay(25);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        Assert.False(shell.IsCalibrated);
+        Assert.NotNull(shell.LiveView);
+        Assert.Null(shell.BedImage);
+
+        await shell.DisconnectCameraCommand.ExecuteAsync(null);
+    }
+}

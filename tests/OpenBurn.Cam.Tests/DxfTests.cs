@@ -141,7 +141,7 @@ public class DxfImporterTests
         var result = DxfImporter.Parse(Dxf(Line(0, 0, 100, 0), header));
 
         Assert.Equal(100, result.WidthMm, 6);
-        Assert.Empty(result.Warnings.Where(w => w.Contains("units", StringComparison.OrdinalIgnoreCase)));
+        Assert.DoesNotContain(result.Warnings, w => w.Contains("units", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
