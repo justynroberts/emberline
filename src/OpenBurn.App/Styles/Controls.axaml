@@ -151,6 +151,46 @@
         <Setter Property="BorderBrush" Value="{DynamicResource EmberEdge}" />
     </Style>
 
+    <!-- Selection in a list is a tint, not a slab. The accent override makes Fluent's
+         default selection ember rather than blue, but a solid fill still shouts in a
+         panel built out of translucency. -->
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EmberSoft}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource EmberEdge}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EmberSoft}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Ember}" />
+    </Style>
+
+    <!-- Segmented tabs for the inspector. Flat and quiet unselected, so the panel
+         header reads as navigation rather than as four more things to press. -->
+    <Style Selector="Button.segment">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusControl}" />
+    </Style>
+
+    <Style Selector="Button.segment /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Button.segment.selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EmberSoft}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource EmberEdge}" />
+    </Style>
+
+    <Style Selector="Button.segment.selected">
+        <Setter Property="Foreground" Value="{DynamicResource Ember}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
     <Style Selector="Button.jog">
         <Setter Property="Width" Value="40" />
         <Setter Property="Height" Value="40" />

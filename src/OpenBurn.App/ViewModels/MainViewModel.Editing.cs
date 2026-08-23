@@ -64,8 +64,14 @@ public sealed partial class MainViewModel
         RaiseSelectionChanged();
     }
 
+    private bool _hadSelection;
+
     private void RaiseSelectionChanged()
     {
+        var has = Selection.Count > 0;
+        FollowSelectionContext(_hadSelection, has);
+        _hadSelection = has;
+
         OnPropertyChanged(nameof(Selection));
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(HasMultipleSelected));

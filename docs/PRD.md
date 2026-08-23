@@ -267,7 +267,10 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
 - Job monitoring: the camera stays live beside the progress bar while a job runs.
 - Bitmap tracing with a live preview: outlines or centrelines, Otsu-seeded
   threshold, simplify and smooth, all judged against the image they came from.
-- 382 tests, none requiring hardware, including headless UI tests that drive the
+- The right panel is grouped by context — machine, design, object, job — rather
+  than stacked fourteen sections deep in one scrolling column, and follows the
+  selection.
+- 391 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons

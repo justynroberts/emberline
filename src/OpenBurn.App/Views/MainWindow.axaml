@@ -200,76 +200,92 @@
                 HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="0">
             <DockPanel LastChildFill="True">
 
-                <!-- Connection -->
-                <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="14,14,14,0">
-                    <TextBlock Classes="sectionTitle" Text="MACHINE" />
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                    <ComboBox Grid.Column="0" ItemsSource="{Binding Machines.Profiles}"
-                              SelectedItem="{Binding SelectedMachine}"
-                              HorizontalAlignment="Stretch">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="mach:MachineProfile">
-                                <TextBlock Text="{Binding DisplayName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                        <Button Grid.Column="1" Content="⋯" Width="34" Padding="0"
-                                ToolTip.Tip="Add or edit machine profiles" Click="OnEditMachines" />
-                    </Grid>
+                <!-- Context tabs. Four short panels rather than one column fourteen
+                     sections deep, grouped by the question being asked: what is the
+                     machine doing, what will be burned, what is selected, what is
+                     about to run. -->
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,*,*,*" ColumnSpacing="4" Margin="14,14,14,0">
+                    <Button Grid.Column="0" Classes="segment" Classes.selected="{Binding IsMachineTab}"
+                            Content="Machine" Command="{Binding SelectInspectorTabCommand}" CommandParameter="Machine"
+                            ToolTip.Tip="Connection, jogging, camera and rotary" />
+                    <Button Grid.Column="1" Classes="segment" Classes.selected="{Binding IsDesignTab}"
+                            Content="Design" Command="{Binding SelectInspectorTabCommand}" CommandParameter="Design"
+                            ToolTip.Tip="Material, layers and what each one does" />
+                    <Button Grid.Column="2" Classes="segment" Classes.selected="{Binding IsObjectTab}"
+                            Content="Object" Command="{Binding SelectInspectorTabCommand}" CommandParameter="Object"
+                            ToolTip.Tip="Size, position, alignment and text — for what is selected" />
+                    <Button Grid.Column="3" Classes="segment" Classes.selected="{Binding IsJobTab}"
+                            Content="Job" Command="{Binding SelectInspectorTabCommand}" CommandParameter="Job"
+                            ToolTip.Tip="What the job comes to, and anything blocking it" />
+                </Grid>
 
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding SerialPorts}"
-                                  SelectedValue="{Binding SelectedPort}"
-                                  SelectedValueBinding="{Binding PortName}"
-                                  HorizontalAlignment="Stretch"
-                                  PlaceholderText="Serial port">
+                <ScrollViewer Margin="14,12,14,14" VerticalScrollBarVisibility="Auto">
+                    <Panel>
+                    <StackPanel Spacing="14" IsVisible="{Binding IsMachineTab}">
+                    <!-- Connection -->
+                    <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="14,14,14,0">
+                        <TextBlock Classes="sectionTitle" Text="MACHINE" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding Machines.Profiles}"
+                                  SelectedItem="{Binding SelectedMachine}"
+                                  HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="tr:SerialPortInfo">
-                                    <TextBlock Text="{Binding PortName}" />
+                                <DataTemplate x:DataType="mach:MachineProfile">
+                                    <TextBlock Text="{Binding DisplayName}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Button Grid.Column="1" Content="⟳" Width="34" Padding="0"
-                                ToolTip.Tip="Rescan serial ports" Command="{Binding RefreshPortsCommand}" />
-                    </Grid>
+                            <Button Grid.Column="1" Content="⋯" Width="34" Padding="0"
+                                    ToolTip.Tip="Add or edit machine profiles" Click="OnEditMachines" />
+                        </Grid>
 
-                    <TextBox Text="{Binding NetworkAddress}" PlaceholderText="192.168.1.42:23" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding SerialPorts}"
+                                      SelectedValue="{Binding SelectedPort}"
+                                      SelectedValueBinding="{Binding PortName}"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="Serial port">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="tr:SerialPortInfo">
+                                        <TextBlock Text="{Binding PortName}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button Grid.Column="1" Content="⟳" Width="34" Padding="0"
+                                    ToolTip.Tip="Rescan serial ports" Command="{Binding RefreshPortsCommand}" />
+                        </Grid>
 
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
-                        <Button Grid.Column="0" Content="USB" Command="{Binding ConnectSerialCommand}" />
-                        <Button Grid.Column="1" Content="Wi-Fi" Command="{Binding ConnectNetworkCommand}" />
-                        <Button Grid.Column="2" Content="Virtual" Command="{Binding ConnectVirtualCommand}"
-                                ToolTip.Tip="Run against the built-in simulator — no hardware needed" />
-                    </Grid>
+                        <TextBox Text="{Binding NetworkAddress}" PlaceholderText="192.168.1.42:23" />
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                        <Button Grid.Column="0" Content="Scan network" Command="{Binding ScanNetworkCommand}" />
-                        <Button Grid.Column="1" Content="Disconnect" Command="{Binding DisconnectCommand}" />
-                    </Grid>
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                            <Button Grid.Column="0" Content="USB" Command="{Binding ConnectSerialCommand}" />
+                            <Button Grid.Column="1" Content="Wi-Fi" Command="{Binding ConnectNetworkCommand}" />
+                            <Button Grid.Column="2" Content="Virtual" Command="{Binding ConnectVirtualCommand}"
+                                    ToolTip.Tip="Run against the built-in simulator — no hardware needed" />
+                        </Grid>
 
-                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding DiscoveryProgress}"
-                                 IsVisible="{Binding IsBusy}" />
-                    <TextBlock Text="{Binding BusyMessage}" Classes="label" IsVisible="{Binding IsBusy}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                            <Button Grid.Column="0" Content="Scan network" Command="{Binding ScanNetworkCommand}" />
+                            <Button Grid.Column="1" Content="Disconnect" Command="{Binding DisconnectCommand}" />
+                        </Grid>
 
-                    <ItemsControl ItemsSource="{Binding DiscoveredDevices}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="disc:DiscoveredDevice">
-                                <Button Classes="ghost" HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).ConnectDiscoveredCommand}"
-                                        CommandParameter="{Binding}">
-                                    <TextBlock Text="{Binding Summary}" Classes="mono" FontSize="11" />
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+                        <ProgressBar Minimum="0" Maximum="1" Value="{Binding DiscoveryProgress}"
+                                     IsVisible="{Binding IsBusy}" />
+                        <TextBlock Text="{Binding BusyMessage}" Classes="label" IsVisible="{Binding IsBusy}" />
 
-                <!-- Scrollable body -->
-                <ScrollViewer Margin="14,10,14,14" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="14">
-
-                        <Separator />
+                        <ItemsControl ItemsSource="{Binding DiscoveredDevices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="disc:DiscoveredDevice">
+                                    <Button Classes="ghost" HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).ConnectDiscoveredCommand}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding Summary}" Classes="mono" FontSize="11" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
 
                         <!-- Jog -->
                         <StackPanel Spacing="8">
@@ -404,6 +420,9 @@
 
                         <Separator />
 
+                    </StackPanel>
+
+                    <StackPanel Spacing="14" IsVisible="{Binding IsDesignTab}">
                         <!-- Material -->
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="MATERIAL" />
@@ -505,6 +524,9 @@
 
                         <Separator />
 
+                    </StackPanel>
+
+                    <StackPanel Spacing="14" IsVisible="{Binding IsObjectTab}">
                         <!-- Selection -->
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="SELECTION" />
@@ -554,11 +576,12 @@
                                         Command="{Binding DistributeSelectionCommand}" CommandParameter="Vertical" />
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Group" Command="{Binding GroupSelectionCommand}" />
-                                <Button Grid.Column="1" Content="Ungroup" Command="{Binding UngroupSelectionCommand}" />
-                                <Button Grid.Column="2" Content="Lock" Command="{Binding ToggleLockSelectionCommand}" />
-                                <Button Grid.Column="3" Content="Hide" Command="{Binding ToggleVisibilitySelectionCommand}" />
+                            <!-- Two rows: four across a 300 px panel clips "Ungroup". -->
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6" RowSpacing="6">
+                                <Button Grid.Row="0" Grid.Column="0" Content="Group" Command="{Binding GroupSelectionCommand}" />
+                                <Button Grid.Row="0" Grid.Column="1" Content="Ungroup" Command="{Binding UngroupSelectionCommand}" />
+                                <Button Grid.Row="1" Grid.Column="0" Content="Lock" Command="{Binding ToggleLockSelectionCommand}" />
+                                <Button Grid.Row="1" Grid.Column="1" Content="Hide" Command="{Binding ToggleVisibilitySelectionCommand}" />
                             </Grid>
 
                             <CheckBox Content="Snap to grid" IsChecked="{Binding SnapEnabled}"
@@ -602,6 +625,9 @@
 
                         <Separator />
 
+                    </StackPanel>
+
+                    <StackPanel Spacing="14" IsVisible="{Binding IsJobTab}">
                         <!-- Job summary -->
                         <StackPanel Spacing="6">
                             <TextBlock Classes="sectionTitle" Text="JOB" />
@@ -623,6 +649,8 @@
                                     Command="{Binding ExportGcodeCommand}" />
                         </StackPanel>
                     </StackPanel>
+
+                    </Panel>
                 </ScrollViewer>
             </DockPanel>
         </Border>

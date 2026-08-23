@@ -160,6 +160,7 @@ public sealed partial class MainViewModel
             OnPropertyChanged(nameof(ProgressText));
             OnPropertyChanged(nameof(JobState));
             OnPropertyChanged(nameof(IsJobRunning));
+            FollowJobContext(IsJobRunning);
             OnPropertyChanged(nameof(IsJobPaused));
             OnPropertyChanged(nameof(IsJobActive));
             OnPropertyChanged(nameof(CanStartJob));

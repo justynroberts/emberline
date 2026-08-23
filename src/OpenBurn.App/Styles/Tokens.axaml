@@ -38,6 +38,18 @@
                     <SolidColorBrush x:Key="InkFaint" Color="#17120E" Opacity="0.38" />
                     <SolidColorBrush x:Key="InkOnAccent" Color="#FFFFFF" />
 
+                    <!-- Fluent's own accent, so checkboxes, list selection, sliders and
+                         focus rings stop coming out macOS blue in the middle of an
+                         ember-and-cyan panel. Overriding the accent colours reaches all
+                         of them at once; restyling each control's template does not. -->
+                    <Color x:Key="SystemAccentColor">#D9531E</Color>
+                    <Color x:Key="SystemAccentColorLight1">#E4703F</Color>
+                    <Color x:Key="SystemAccentColorLight2">#EE8C60</Color>
+                    <Color x:Key="SystemAccentColorLight3">#F5A883</Color>
+                    <Color x:Key="SystemAccentColorDark1">#BF4416</Color>
+                    <Color x:Key="SystemAccentColorDark2">#A0380F</Color>
+                    <Color x:Key="SystemAccentColorDark3">#7C2B0A</Color>
+
                     <SolidColorBrush x:Key="Ember" Color="#D9531E" />
                     <SolidColorBrush x:Key="EmberSoft" Color="#D9531E" Opacity="0.14" />
                     <SolidColorBrush x:Key="EmberEdge" Color="#D9531E" Opacity="0.45" />
@@ -81,6 +93,15 @@
                     <SolidColorBrush x:Key="InkMuted" Color="#F4F1EE" Opacity="0.66" />
                     <SolidColorBrush x:Key="InkFaint" Color="#F4F1EE" Opacity="0.40" />
                     <SolidColorBrush x:Key="InkOnAccent" Color="#14110F" />
+
+                    <!-- Same again for dark. See the note in the light dictionary. -->
+                    <Color x:Key="SystemAccentColor">#FF7A3D</Color>
+                    <Color x:Key="SystemAccentColorLight1">#FF9463</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FFAC86</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FFC3A8</Color>
+                    <Color x:Key="SystemAccentColorDark1">#E0621F</Color>
+                    <Color x:Key="SystemAccentColorDark2">#B84C15</Color>
+                    <Color x:Key="SystemAccentColorDark3">#8F390E</Color>
 
                     <SolidColorBrush x:Key="Ember" Color="#FF7A3D" />
                     <SolidColorBrush x:Key="EmberSoft" Color="#FF7A3D" Opacity="0.16" />
