@@ -171,8 +171,15 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test
+dotnet test                     # 196 tests, no hardware required
+OpenBurn --selftest             # headless end-to-end check of a built application
 ```
+
+`--selftest` is worth knowing about: it loads the device profiles from beside the
+executable, imports the sample SVG, generates a job, streams it to the virtual
+controller and checks every line was acknowledged, then exits with a status code.
+It catches the class of problem the unit tests cannot — a build assembled wrongly
+rather than code written wrongly.
 
 196 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive

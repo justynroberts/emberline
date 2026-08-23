@@ -61,6 +61,18 @@ jobs:
         shell: bash
         run: bash ${{ matrix.script }} ${{ matrix.arg }}
 
+      # Verify the packaged artefact, not just the source tree: this catches a
+      # build that compiled but was assembled without its device profiles.
+      - name: Self-test the package
+        if: matrix.rid == 'linux-x64' || matrix.rid == 'osx-arm64'
+        shell: bash
+        run: |
+          if [ -d "dist/${{ matrix.rid }}/OpenBurn.app" ]; then
+            "dist/${{ matrix.rid }}/OpenBurn.app/Contents/MacOS/OpenBurn" --selftest
+          else
+            "dist/${{ matrix.rid }}/OpenBurn" --selftest
+          fi
+
       - uses: actions/upload-artifact@v4
         with:
           name: openburn-${{ matrix.rid }}
