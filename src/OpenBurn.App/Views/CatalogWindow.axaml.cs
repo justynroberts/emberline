@@ -46,21 +46,23 @@ public partial class CatalogWindow : Window
 
     private async void Import(CatalogImportMode mode)
     {
-        if (Model?.Selected is not { } chosen) return;
-
+        // Everything after the await is on the dispatcher with no caller left to
+        // catch it, so the catch has to cover the whole body rather than just the
+        // fetch — including Close(), which can throw if the window has gone.
         try
         {
+            if (Model?.Selected is not { } chosen) return;
+
             ImportedSvg = await Model.FetchChosenAsync();
             ImportedName = chosen.Icon.Name;
             Mode = mode;
+            Close();
         }
         catch (Exception ex)
         {
-            Model.Status = $"Could not fetch that artwork: {ex.Message}";
-            return;
+            CrashLog.Write(ex, "Importing catalogue artwork");
+            if (Model is not null) Model.Status = $"Could not fetch that artwork: {ex.Message}";
         }
-
-        Close();
     }
 
     protected override void OnKeyDown(KeyEventArgs e)

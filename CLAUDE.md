@@ -77,6 +77,12 @@ is, so that byte reaches a laser part-way through a job and ends the job. `$I`
 only, plus a listen for controllers that greet on connect. `DiscoveryTests` pins
 this; do not "improve" detection rates by putting the reset back.
 
+**`async void` handlers are a loaded gun.** An exception in one is raised on the
+dispatcher after the handler has returned, finds no catch, and aborts the process
+— silently, mid-job. Every one in `MainWindow` goes through `GuardAsync`, which
+catches, writes a `CrashLog` entry and reports in the console. Add a new event
+handler that awaits, and it needs the same treatment.
+
 **Plugin assemblies must not be loaded by path.** `LoadFromAssemblyPath` holds the
 file open for the process lifetime, which on Windows locks the DLL so a plugin
 cannot be updated or removed while OpenBurn runs. Read the bytes and use

@@ -53,6 +53,32 @@ public partial class MainWindow : Window
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
+    /// <summary>
+    /// Run an action that opens a dialog or awaits, without letting it kill the
+    /// application.
+    ///
+    /// An exception inside an <c>async void</c> handler has nowhere to go: it is
+    /// raised on the dispatcher after the handler has returned, finds no catch,
+    /// and aborts the process. Every button that opens a window used to be one
+    /// unexpected exception away from taking the whole application down mid-job,
+    /// silently. Now it is written to a crash log and said out loud in the console,
+    /// and the window stays up.
+    /// </summary>
+    private async Task GuardAsync(string what, Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            var path = CrashLog.Write(ex, what);
+            Model?.Console.AppendError(
+                $"{what} failed: {ex.Message}" +
+                (path is null ? "" : $" — details written to {path}"));
+        }
+    }
+
     private void OnZoomBed(object? sender, RoutedEventArgs e) => _workspace?.ZoomToFitBed();
 
     private void OnZoomContent(object? sender, RoutedEventArgs e) => _workspace?.ZoomToFitContent();
@@ -90,49 +116,52 @@ public partial class MainWindow : Window
     /// Captures one first if nothing has arrived yet, so the button works from a
     /// cold start rather than telling the user to press something else.
     /// </summary>
-    private async void OnCalibrateCamera(object? sender, RoutedEventArgs e)
-    {
-        if (Model is not { } model) return;
-
-        if (model.LastRawFrame is null) await model.CaptureBedCommand.ExecuteAsync(null);
-
-        if (model.LastRawFrame is not { } frame)
+        private async void OnCalibrateCamera(object? sender, RoutedEventArgs e) =>
+        await GuardAsync("Opening camera calibration", async () =>
         {
-            model.Console.AppendError("No camera frame to calibrate against. Connect a camera and capture the bed first.");
-            return;
-        }
+            if (Model is not { } model) return;
 
-        var dialog = new CalibrationWindow(frame, model.SelectedMachine.BedWidthMm, model.SelectedMachine.BedHeightMm);
-        await dialog.ShowDialog(this);
+            if (model.LastRawFrame is null) await model.CaptureBedCommand.ExecuteAsync(null);
 
-        if (dialog.Result is { Count: 4 } corners) model.ApplyCalibration(corners, dialog.LensK1);
-    }
+            if (model.LastRawFrame is not { } frame)
+            {
+                model.Console.AppendError("No camera frame to calibrate against. Connect a camera and capture the bed first.");
+                return;
+            }
 
-    private async void OnShowSettings(object? sender, RoutedEventArgs e)
-    {
-        if (Model is not { } model) return;
+            var dialog = new CalibrationWindow(frame, model.SelectedMachine.BedWidthMm, model.SelectedMachine.BedHeightMm);
+            await dialog.ShowDialog(this);
 
-        // Read fresh values first if the machine is connected but nothing has been
-        // read yet, so the editor never opens showing an empty table.
-        if (model.IsConnected && model.MachineSettingCount == 0)
+            if (dialog.Result is { Count: 4 } corners) model.ApplyCalibration(corners, dialog.LensK1);
+        });
+
+        private async void OnShowSettings(object? sender, RoutedEventArgs e) =>
+        await GuardAsync("Opening controller settings", async () =>
         {
-            await model.ReadSettingsCommand.ExecuteAsync(null);
-        }
+            if (Model is not { } model) return;
 
-        var dialog = new SettingsWindow(model.CreateSettingsEditor());
-        await dialog.ShowDialog(this);
-    }
+            // Read fresh values first if the machine is connected but nothing has been
+            // read yet, so the editor never opens showing an empty table.
+            if (model.IsConnected && model.MachineSettingCount == 0)
+            {
+                await model.ReadSettingsCommand.ExecuteAsync(null);
+            }
 
-    private async void OnEditMachines(object? sender, RoutedEventArgs e)
-    {
-        if (Model is not { } model) return;
+            var dialog = new SettingsWindow(model.CreateSettingsEditor());
+            await dialog.ShowDialog(this);
+        });
 
-        var editor = new MachineEditorViewModel(model.Machines, model.SelectedMachine, text => model.Console.AppendInfo(text));
-        var dialog = new MachineWindow(editor);
-        await dialog.ShowDialog(this);
+        private async void OnEditMachines(object? sender, RoutedEventArgs e) =>
+        await GuardAsync("Opening machine profiles", async () =>
+        {
+            if (Model is not { } model) return;
 
-        model.ReloadMachines(dialog.Result?.Id);
-    }
+            var editor = new MachineEditorViewModel(model.Machines, model.SelectedMachine, text => model.Console.AppendInfo(text));
+            var dialog = new MachineWindow(editor);
+            await dialog.ShowDialog(this);
+
+            model.ReloadMachines(dialog.Result?.Id);
+        });
 
     /// <summary>
     /// Trace the selected image, or — if nothing traceable is selected — ask for a
@@ -140,30 +169,31 @@ public partial class MainWindow : Window
     /// it on the bed as a raster first, and making people import before they can
     /// trace is a step with no purpose.
     /// </summary>
-    private async void OnTraceImage(object? sender, RoutedEventArgs e)
-    {
-        if (Model is not { } model) return;
-
-        var editor = model.CreateTraceEditor();
-
-        if (editor is null)
+        private async void OnTraceImage(object? sender, RoutedEventArgs e) =>
+        await GuardAsync("Tracing an image", async () =>
         {
-            var path = await PickImageAsync();
-            if (path is null)
+            if (Model is not { } model) return;
+
+            var editor = model.CreateTraceEditor();
+
+            if (editor is null)
             {
-                model.Console.AppendInfo("Nothing to trace. Select an imported image, or pick an image file.");
-                return;
+                var path = await PickImageAsync();
+                if (path is null)
+                {
+                    model.Console.AppendInfo("Nothing to trace. Select an imported image, or pick an image file.");
+                    return;
+                }
+
+                editor = model.CreateTraceEditor(path);
+                if (editor is null) return;
             }
 
-            editor = model.CreateTraceEditor(path);
-            if (editor is null) return;
-        }
+            var dialog = new TraceWindow(editor);
+            await dialog.ShowDialog(this);
 
-        var dialog = new TraceWindow(editor);
-        await dialog.ShowDialog(this);
-
-        if (dialog.Result is { } traced) model.ApplyTrace(editor, traced);
-    }
+            if (dialog.Result is { } traced) model.ApplyTrace(editor, traced);
+        });
 
     private async Task<string?> PickImageAsync()
     {
@@ -185,37 +215,40 @@ public partial class MainWindow : Window
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
 
-    private async void OnShowWizard(object? sender, RoutedEventArgs e)
-    {
-        if (Model is not { } model) return;
-
-        var dialog = new WizardWindow(new WizardViewModel(model));
-        await dialog.ShowDialog(this);
-
-        // Whatever the wizard set is already in the document; just make sure the
-        // canvas and the job readouts agree with it.
-        model.RegenerateNow();
-    }
-
-    private async void OnFindArtwork(object? sender, RoutedEventArgs e)
-    {
-        if (Model is not { } model) return;
-
-        var dialog = new CatalogWindow(new CatalogViewModel());
-        await dialog.ShowDialog(this);
-
-        if (dialog.ImportedSvg is { Length: > 0 } svg)
+        private async void OnShowWizard(object? sender, RoutedEventArgs e) =>
+        await GuardAsync("Opening the setup wizard", async () =>
         {
-            model.AddCatalogArtwork(svg, dialog.ImportedName ?? "Artwork", dialog.Mode, model.CatalogSizeMm);
-        }
-    }
+            if (Model is not { } model) return;
 
-    private async void OnShowJobLibrary(object? sender, RoutedEventArgs e)
-    {
-        if (Model is not { } model) return;
-        var dialog = new JobLibraryWindow(model.JobLibrary);
-        await dialog.ShowDialog(this);
-    }
+            var dialog = new WizardWindow(new WizardViewModel(model));
+            await dialog.ShowDialog(this);
+
+            // Whatever the wizard set is already in the document; just make sure the
+            // canvas and the job readouts agree with it.
+            model.RegenerateNow();
+        });
+
+        private async void OnFindArtwork(object? sender, RoutedEventArgs e) =>
+        await GuardAsync("Searching artwork", async () =>
+        {
+            if (Model is not { } model) return;
+
+            var dialog = new CatalogWindow(new CatalogViewModel());
+            await dialog.ShowDialog(this);
+
+            if (dialog.ImportedSvg is { Length: > 0 } svg)
+            {
+                model.AddCatalogArtwork(svg, dialog.ImportedName ?? "Artwork", dialog.Mode, model.CatalogSizeMm);
+            }
+        });
+
+        private async void OnShowJobLibrary(object? sender, RoutedEventArgs e) =>
+        await GuardAsync("Opening the job history", async () =>
+        {
+            if (Model is not { } model) return;
+            var dialog = new JobLibraryWindow(model.JobLibrary);
+            await dialog.ShowDialog(this);
+        });
 
     private void OnAssistantKeyDown(object? sender, KeyEventArgs e)
     {

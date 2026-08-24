@@ -19,6 +19,20 @@ internal static class Program
             return SelfTest.RunAsync().GetAwaiter().GetResult();
         }
 
+        // Anything that gets this far has already escaped every handler in the
+        // application. Write it down before the process goes: a laser controller
+        // that vanishes leaving nothing behind is not diagnosable, and "it crashed"
+        // is not a bug report anybody can act on.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            CrashLog.Write(e.ExceptionObject as Exception ?? new Exception(e.ExceptionObject?.ToString() ?? "unknown"),
+                           "AppDomain.UnhandledException");
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            CrashLog.Write(e.Exception, "TaskScheduler.UnobservedTaskException");
+            e.SetObserved();
+        };
+
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         return 0;
     }
