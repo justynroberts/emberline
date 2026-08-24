@@ -132,23 +132,30 @@
                 <!-- Job actions sit apart, at the far end, because they are the ones
                      that move a machine. -->
                 <StackPanel Grid.Column="12" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Button Content="Frame" Command="{Binding FrameCommand}"
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Button Classes="job" Content="Frame" Command="{Binding FrameCommand}"
                                 ToolTip.Tip="Trace the job outline at pointer power so you can check where it will land before burning anything." />
-                        <Button ToolTip.Tip="{Binding StartHint}" Content="Start" Classes="primary" Command="{Binding StartJobCommand}"
-                                IsVisible="{Binding !IsJobActive}" />
-                        <Button ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}" />
-                        <Button ToolTip.Tip="Carry on from exactly where the job paused." Content="Resume" Classes="primary" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}" />
-                        <Button ToolTip.Tip="Stop the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}" />
+                        <Button Classes="job primary" Content="Start" Command="{Binding StartJobCommand}"
+                                IsVisible="{Binding !IsJobActive}" ToolTip.Tip="{Binding StartHint}" />
+                        <Button Classes="job" Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}"
+                                ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." />
+                        <Button Classes="job primary" Content="Resume" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}"
+                                ToolTip.Tip="Carry on from exactly where the job paused." />
+                        <Button Classes="job" Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}"
+                                ToolTip.Tip="End the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." />
                     </StackPanel>
                     <TextBlock Text="JOB" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
                 </StackPanel>
 
-                <Border Grid.Column="13" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
-
-                <Button Grid.Column="14" Content="STOP" Classes="danger" VerticalAlignment="Center"
+                <Button Grid.Column="14" Classes="estop" VerticalAlignment="Center"
                         Command="{Binding EmergencyStopCommand}"
-                        ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset. Escape does the same from anywhere." />
+                        AutomationProperties.Name="Emergency stop"
+                        ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset. Escape does the same from anywhere in the window. This is not a substitute for the switch on the machine.">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="✋" FontSize="22" VerticalAlignment="Center" />
+                        <TextBlock Text="STOP" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
             </Grid>
         </Border>
 

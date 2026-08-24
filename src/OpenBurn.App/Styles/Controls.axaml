@@ -216,6 +216,46 @@
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
+    <!-- The emergency stop.
+         Deliberately unlike every other control: taller, wider, its own colour,
+         and carrying the palm symbol used on real machine stops. In a hurry
+         nobody reads a label — they look for the big red one, and it must be
+         findable by shape and colour alone, from the corner of the eye, while
+         looking at the workpiece rather than the screen. -->
+    <Style Selector="Button.estop">
+        <Setter Property="MinHeight" Value="52" />
+        <Setter Property="MinWidth" Value="104" />
+        <Setter Property="Padding" Value="14,6" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Background" Value="{DynamicResource StateAlarm}" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="Button.estop /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource StateAlarm}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StateAlarm}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="CornerRadius" Value="14" />
+    </Style>
+
+    <Style Selector="Button.estop:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource StateAlarm}" />
+    </Style>
+
+    <Style Selector="Button.estop:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.96)" />
+    </Style>
+
+    <!-- The job buttons sit beside it, so they share a height and read as a row. -->
+    <Style Selector="Button.job">
+        <Setter Property="MinHeight" Value="38" />
+        <Setter Property="MinWidth" Value="86" />
+        <Setter Property="Padding" Value="14,7" />
+    </Style>
+
     <Style Selector="Button.jog">
         <Setter Property="Width" Value="40" />
         <Setter Property="Height" Value="40" />
