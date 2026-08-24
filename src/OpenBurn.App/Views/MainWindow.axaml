@@ -23,9 +23,15 @@
         <conv:EnumEqualsConverter x:Key="EnumEquals" />
     </Window.Resources>
 
-    <Grid>
+    <!-- Three rows: the toolbar and the status bar reserve their own height, and
+         everything else lives between them. The chrome used to be a stack of
+         floating panels positioned by hand-tuned margins, which meant the right
+         inspector sat on top of the toolbar's far end the moment the toolbar
+         grew — and every future change to either would have needed the numbers
+         re-guessed. The canvas still spans all three rows and shows through. -->
+    <Grid RowDefinitions="Auto,*,Auto">
         <!-- ============ The workspace fills the window; all chrome floats over it ============ -->
-        <ctrl:WorkspaceView x:Name="Workspace"
+        <ctrl:WorkspaceView x:Name="Workspace" Grid.Row="0" Grid.RowSpan="3"
                             Machine="{Binding SelectedMachine}"
                             Design="{Binding Design}"
                             Toolpath="{Binding Toolpath}"
@@ -46,7 +52,7 @@
              window, which meant the tools at the bottom were both unlabelled and
              hidden. Groups are separated by a rule and named underneath, so the
              icons are learnable rather than guessable. -->
-        <Border Classes="panel focusIn" Margin="12,12,12,0" VerticalAlignment="Top" Padding="12,8">
+        <Border Grid.Row="0" Classes="panel focusIn" Margin="12,12,12,0" Padding="12,8">
             <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto">
 
                 <StackPanel Grid.Column="0" Spacing="2">
@@ -147,12 +153,9 @@
         </Border>
 
         <!-- ============================ Job progress strip ============================ -->
-        <Border Classes="panel slideUp" Margin="12,0,352,0" Padding="14,10"
+        <Border Grid.Row="1" Classes="panel slideUp" Margin="12,12,352,0" Padding="14,10"
                 VerticalAlignment="Top"
                 IsVisible="{Binding IsJobActive}">
-            <Border.RenderTransform>
-                <TranslateTransform Y="84" />
-            </Border.RenderTransform>
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
                 <StackPanel Grid.Column="0" Spacing="7" VerticalAlignment="Center">
                     <Grid ColumnDefinitions="*,Auto">
@@ -177,7 +180,7 @@
         </Border>
 
         <!-- ============================= Fault banner ================================= -->
-        <Border Classes="panel slideUp" Margin="12,0,352,20" Padding="14,11"
+        <Border Grid.Row="1" Classes="panel slideUp" Margin="12,0,352,12" Padding="14,11"
                 VerticalAlignment="Bottom" IsVisible="{Binding HasFault}"
                 BorderBrush="{DynamicResource StateAlarm}">
             <Grid ColumnDefinitions="Auto,*,Auto">
@@ -194,7 +197,7 @@
         </Border>
 
         <!-- ============================= Right inspector ============================== -->
-        <Border Classes="panel focusInDelay2" Width="328" Margin="0,12,12,12"
+        <Border Grid.Row="1" Classes="panel focusInDelay2" Width="328" Margin="0,12,12,0"
                 HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="0">
             <DockPanel LastChildFill="True">
 
@@ -800,7 +803,7 @@
         <!-- The two drawers share the bottom of the window. A stack keeps them
              clear of each other when both are open, which they often are while
              diagnosing something. -->
-        <StackPanel VerticalAlignment="Bottom" Margin="12,0,352,58" Spacing="10">
+        <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Margin="12,0,352,12" Spacing="10">
 
         <!-- =============================== Assistant ================================== -->
         <Border Classes="panel slideUp" Height="360" Width="620"
@@ -999,7 +1002,7 @@
         </StackPanel>
 
         <!-- ============================== G-code panel ================================= -->
-        <Border Classes="panel focusIn" Width="520" Margin="12,104,0,0"
+        <Border Grid.Row="1" Classes="panel focusIn" Width="520" Margin="12,12,0,0"
                 HorizontalAlignment="Left" VerticalAlignment="Stretch"
                 MaxHeight="620"
                 IsVisible="{Binding ShowGcode}" Padding="14">
@@ -1026,8 +1029,7 @@
              top, competing with the job actions for the most valuable strip on the
              screen — and readouts are glanced at, while the buttons beside them
              were pressed. -->
-        <Border Classes="panel focusInDelay1" Margin="12,0,12,12"
-                VerticalAlignment="Bottom" Padding="14,8">
+        <Border Grid.Row="2" Classes="panel focusInDelay1" Margin="12,12,12,12" Padding="14,8">
             <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
