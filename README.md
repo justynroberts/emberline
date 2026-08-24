@@ -23,6 +23,7 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Workpiece** | Describe the blank on the bed, see its outline under the artwork, centre onto it, and get warned when a job runs off it |
 | **Photo engraving** | Invert, brightness, contrast, gamma, sharpen, tone clipping and twelve dithering kernels, with a live preview of what will actually burn |
 | **CAM** | Raster engraving, vector cut/score/engrave, hatch and offset fills, text to outlines |
+| **Artwork search** | Search 150+ open icon sets, see each licence before importing, and bring a shape in to etch or to cut |
 | **Tracing** | Bitmap to paths with a live preview — outlines or centrelines, threshold seeded from the image itself, simplify and smooth |
 | **Job engine** | Character-counting streaming, pause/resume/stop, resume-from-line after a dropped link, live progress and acceleration-aware time estimates |
 | **Editing** | Drag, scale and rotate on the canvas, marquee selection, snapping, align, distribute, group, array, and undo across all of it |
@@ -174,6 +175,32 @@ where you started.
 
 ---
 
+## Finding artwork
+
+Press **✧** in the Draw group. It searches open icon catalogues — 150-odd sets,
+around 200,000 shapes — and shows the licence against every result, because that
+is what decides whether a piece of artwork can go on something you sell. Sets that
+declare no licence say so rather than being left blank, which would read as
+permission. Tick **No credit required** to hide anything under a CC-BY licence.
+
+Two ways in, because an icon is a filled shape and a laser follows lines:
+
+**Import to etch** puts it on a fill layer, so the whole shape is darkened and it
+looks like the icon does on screen.
+
+**Import to cut** puts it on a cut layer, so only the outline is followed and the
+shape drops out.
+
+The geometry is identical either way — the difference is the layer, so you can
+change your mind afterwards by moving the shape rather than importing it again.
+
+The previews are rendered by OpenBurn's own importer, not by a browser engine, so
+what you see is what will land on the bed. This and the assistant are the only two
+things in OpenBurn that talk to the internet, and searching sends only the word
+you typed.
+
+---
+
 ## Tracing an image
 
 Press **◈** in the tool rail. With a bitmap selected it traces that; with nothing
@@ -288,7 +315,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 479 tests, no hardware required
+dotnet test                     # 496 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -298,7 +325,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-479 tests, no hardware required. The ones that matter most run complete jobs
+496 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

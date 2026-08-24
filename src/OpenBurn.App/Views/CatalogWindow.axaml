@@ -1,0 +1,85 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:OpenBurn.App.ViewModels"
+        x:Class="OpenBurn.App.Views.CatalogWindow"
+        x:DataType="vm:CatalogViewModel"
+        Title="Find artwork"
+        Width="860" Height="680"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgSunken}">
+
+    <Border Classes="panel focusIn" Margin="14">
+        <DockPanel LastChildFill="True">
+
+            <StackPanel DockPanel.Dock="Top" Spacing="8">
+                <TextBlock Classes="sectionTitle" Text="SEARCH OPEN ARTWORK" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Grid.Column="0" Text="{Binding Query}" PlaceholderText="fox, leaf, anchor, heart…"
+                             KeyDown="OnQueryKeyDown"
+                             ToolTip.Tip="Single words work best — catalogues index nouns rather than phrases." />
+                    <Button Grid.Column="1" Content="Search" Classes="primary" Command="{Binding SearchCommand}"
+                            ToolTip.Tip="Look for artwork. Only what you type is sent." />
+                </Grid>
+
+                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="16">
+                    <CheckBox Grid.Column="0" IsChecked="{Binding FreeToUseOnly}" Content="No credit required"
+                              ToolTip.Tip="Hide artwork whose licence asks you to credit the author wherever the work appears. Worth ticking for anything you intend to sell." />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Size" Classes="label" VerticalAlignment="Center" />
+                        <TextBox Text="{Binding SizeMm, StringFormat={}{0:0.#}}" Width="70"
+                                 ToolTip.Tip="How large the artwork should arrive, in millimetres, across its longest side." />
+                        <TextBlock Text="mm" Classes="label" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="{Binding PrivacyNote}" Classes="label" TextWrapping="Wrap" />
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSearching}" />
+                <TextBlock Text="{Binding Status}" Classes="mono" FontSize="11"
+                           Foreground="{DynamicResource Cyan}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
+                <TextBlock Classes="label" TextWrapping="Wrap"
+                           Text="Etch darkens the whole shape, as the icon looks on screen. Cut follows only its outline, so the shape drops out. Both import the same geometry — the difference is the layer, so you can change your mind afterwards." />
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                    <Button Grid.Column="0" Content="Close" Click="OnClose"
+                            ToolTip.Tip="Close without importing anything." />
+                    <Button Grid.Column="2" Content="Import to etch" Classes="primary" Click="OnImportEtch"
+                            IsEnabled="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Margin="0,0,8,0"
+                            ToolTip.Tip="Add the selected artwork on a fill layer, so the whole shape is darkened." />
+                    <Button Grid.Column="3" Content="Import to cut" Click="OnImportCut"
+                            IsEnabled="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            ToolTip.Tip="Add the selected artwork on a cut layer, so only its outline is followed." />
+                </Grid>
+            </StackPanel>
+
+            <ScrollViewer Margin="0,14,0,0" VerticalScrollBarVisibility="Auto">
+                <ListBox ItemsSource="{Binding Results}" SelectedItem="{Binding Selected}"
+                         Background="Transparent" BorderThickness="0">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CatalogResult">
+                            <StackPanel Width="150" Spacing="4" Margin="4">
+                                <Border Classes="card" Height="104" Padding="4">
+                                    <Image Source="{Binding Preview}" Stretch="Uniform" />
+                                </Border>
+                                <TextBlock Text="{Binding Title}" FontSize="11" TextWrapping="Wrap"
+                                           MaxLines="2" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Licence}" Classes="label" FontSize="10"
+                                           TextWrapping="Wrap" MaxLines="2" />
+                                <TextBlock Text="credit required" Classes="label" FontSize="10"
+                                           Foreground="{DynamicResource Ember}"
+                                           IsVisible="{Binding NeedsCredit}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</Window>

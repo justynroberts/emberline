@@ -43,6 +43,7 @@
     <ProjectReference Include="..\OpenBurn.Transport\OpenBurn.Transport.csproj" />
     <ProjectReference Include="..\OpenBurn.Devices\OpenBurn.Devices.csproj" />
     <ProjectReference Include="..\OpenBurn.Camera\OpenBurn.Camera.csproj" />
+    <ProjectReference Include="..\OpenBurn.Catalog\OpenBurn.Catalog.csproj" />
     <ProjectReference Include="..\OpenBurn.Vision\OpenBurn.Vision.csproj" />
     <ProjectReference Include="..\OpenBurn.Materials\OpenBurn.Materials.csproj" />
     <ProjectReference Include="..\OpenBurn.VirtualLaser\OpenBurn.VirtualLaser.csproj" />

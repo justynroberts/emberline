@@ -17,6 +17,15 @@ The full text is in `fonts/OFL.txt`.
 | Bricolage Grotesque | Copyright The Bricolage Project Authors |
 | Spline Sans Mono | Copyright The Spline Sans Mono Project Authors |
 
+## Artwork imported from catalogues
+
+OpenBurn can search public icon catalogues through the Iconify API. Nothing is
+bundled: artwork is fetched only when you search and import, and each icon carries
+the licence of the set it came from — shown in the search window before import.
+Those licences are the sets' own, not OpenBurn's, and honouring them is the
+responsibility of whoever burns the result. Sets that declare no licence are
+labelled as such rather than assumed permissive.
+
 ## Packages
 
 All permissively licensed and restored from NuGet rather than vendored, so their

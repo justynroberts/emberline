@@ -197,6 +197,19 @@ public partial class MainWindow : Window
         model.RegenerateNow();
     }
 
+    private async void OnFindArtwork(object? sender, RoutedEventArgs e)
+    {
+        if (Model is not { } model) return;
+
+        var dialog = new CatalogWindow(new CatalogViewModel());
+        await dialog.ShowDialog(this);
+
+        if (dialog.ImportedSvg is { Length: > 0 } svg)
+        {
+            model.AddCatalogArtwork(svg, dialog.ImportedName ?? "Artwork", dialog.Mode, model.CatalogSizeMm);
+        }
+    }
+
     private async void OnShowJobLibrary(object? sender, RoutedEventArgs e)
     {
         if (Model is not { } model) return;

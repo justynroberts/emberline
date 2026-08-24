@@ -72,6 +72,8 @@
                         <Button Classes="tool" Content="◯" ToolTip.Tip="Add a circle." Command="{Binding AddCircleCommand}" />
                         <Button Classes="tool" Content="⬡" ToolTip.Tip="Add a polygon." Command="{Binding AddPolygonCommand}" />
                         <Button Classes="tool" Content="T" ToolTip.Tip="Add text, converted to cuttable outlines." Command="{Binding AddTextCommand}" />
+                        <Button Classes="tool" Content="✧" Click="OnFindArtwork"
+                                ToolTip.Tip="Search open artwork catalogues and bring a shape onto the bed — to etch, or to cut out. The licence is shown against every result." />
                         <Button Classes="tool" Content="◈" Click="OnTraceImage"
                                 ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file." />
                     </StackPanel>

@@ -4,6 +4,7 @@
     <Project Path="src/OpenBurn.App/OpenBurn.App.csproj" />
     <Project Path="src/OpenBurn.Cam/OpenBurn.Cam.csproj" />
     <Project Path="src/OpenBurn.Camera/OpenBurn.Camera.csproj" />
+    <Project Path="src/OpenBurn.Catalog/OpenBurn.Catalog.csproj" />
     <Project Path="src/OpenBurn.Core/OpenBurn.Core.csproj" />
     <Project Path="src/OpenBurn.Devices/OpenBurn.Devices.csproj" />
     <Project Path="src/OpenBurn.GCode/OpenBurn.GCode.csproj" />
@@ -16,6 +17,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/OpenBurn.App.Tests/OpenBurn.App.Tests.csproj" />
     <Project Path="tests/OpenBurn.Cam.Tests/OpenBurn.Cam.Tests.csproj" />
+    <Project Path="tests/OpenBurn.Catalog.Tests/OpenBurn.Catalog.Tests.csproj" />
     <Project Path="tests/OpenBurn.Core.Tests/OpenBurn.Core.Tests.csproj" />
     <Project Path="tests/OpenBurn.Devices.Tests/OpenBurn.Devices.Tests.csproj" />
     <Project Path="tests/OpenBurn.GCode.Tests/OpenBurn.GCode.Tests.csproj" />
