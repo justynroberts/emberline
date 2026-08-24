@@ -205,27 +205,38 @@
                     </StackPanel>
                 </WrapPanel>
 
-                <!-- Pinned right, always on one line, never wrapped. -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="10,0,0,0">
-                    <StackPanel Spacing="2">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Button Classes="job" Content="Frame" Command="{Binding FrameCommand}"
-                                    ToolTip.Tip="Trace the job outline at pointer power so you can check where it will land before burning anything." />
-                            <Button Classes="job primary" Content="Start" Command="{Binding StartJobCommand}"
-                                    IsVisible="{Binding !IsJobActive}" ToolTip.Tip="{Binding StartHint}" />
-                            <Button Classes="job" Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}"
-                                    ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." />
-                            <Button Classes="job primary" Content="Resume" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}"
-                                    ToolTip.Tip="Carry on from exactly where the job paused." />
-                            <Button Classes="job" Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}"
-                                    ToolTip.Tip="End the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." />
-                        </StackPanel>
-                        <TextBlock Text="JOB" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                <!-- Pinned right, always on one line, never wrapped.
+
+                     The job buttons and the emergency stop share row 0, so their
+                     centres line up because they are in the same row rather than
+                     because a margin was guessed to make it look that way. The
+                     group label sits in row 1 under the job buttons only — putting
+                     it under the whole thing was what pushed the stop's centre
+                     lower than theirs. -->
+                <Grid Grid.Column="1" ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto"
+                      Margin="10,0,0,0">
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                                VerticalAlignment="Center">
+                        <Button Classes="job" Content="Frame" Command="{Binding FrameCommand}"
+                                ToolTip.Tip="Trace the job outline at pointer power so you can check where it will land before burning anything." />
+                        <Button Classes="job primary" Content="Start" Command="{Binding StartJobCommand}"
+                                IsVisible="{Binding !IsJobActive}" ToolTip.Tip="{Binding StartHint}" />
+                        <Button Classes="job" Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}"
+                                ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." />
+                        <Button Classes="job primary" Content="Resume" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}"
+                                ToolTip.Tip="Carry on from exactly where the job paused." />
+                        <Button Classes="job" Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}"
+                                ToolTip.Tip="End the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." />
                     </StackPanel>
 
-                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="JOB" Classes="sectionTitle"
+                               Margin="0" HorizontalAlignment="Center" />
 
-                    <Button Classes="estop" VerticalAlignment="Center"
+                    <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Width="1"
+                            Background="{DynamicResource Hairline}" Margin="10,4" />
+
+                    <Button Grid.Row="0" Grid.Column="2" Classes="estop" VerticalAlignment="Center"
                             Command="{Binding EmergencyStopCommand}"
                             AutomationProperties.Name="Emergency stop"
                             ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset. Escape does the same from anywhere in the window. This is not a substitute for the switch on the machine.">
@@ -235,7 +246,7 @@
                             <TextBlock Text="STOP" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                </StackPanel>
+                </Grid>
             </Grid>
         </Border>
 
