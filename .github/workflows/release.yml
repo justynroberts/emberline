@@ -18,7 +18,12 @@ jobs:
       matrix:
         include:
           - { os: macos-latest,   rid: osx-arm64, script: build/package-macos.sh,   arg: arm64 }
-          - { os: macos-13,       rid: osx-x64,   script: build/package-macos.sh,   arg: x86_64 }
+          # Cross-published from Apple Silicon. The macos-13 image is being
+          # retired, and a job asking for it never gets a runner — it sits queued
+          # for ever and holds the whole workflow at "queued" even though every
+          # other job has passed. dotnet publish -r osx-x64 produces a real
+          # x86_64 binary from an arm64 host, verified with file(1).
+          - { os: macos-latest,   rid: osx-x64,   script: build/package-macos.sh,   arg: x86_64 }
           - { os: windows-latest, rid: win-x64,   script: build/package-windows.sh, arg: win-x64 }
           - { os: ubuntu-latest,  rid: linux-x64, script: build/package-linux.sh,   arg: linux-x64 }
 
