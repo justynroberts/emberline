@@ -88,10 +88,16 @@ public sealed partial class MainViewModel
     /// produce one layer with six shapes on it, not six layers that each have to
     /// be given the same speed and power.
     /// </summary>
-    private Layer LayerFor(CatalogImportMode mode)
-    {
-        var wanted = mode == CatalogImportMode.Etch ? OperationKind.Fill : OperationKind.Cut;
+    private Layer LayerFor(CatalogImportMode mode) =>
+        LayerForOperation(mode == CatalogImportMode.Etch ? OperationKind.Fill : OperationKind.Cut);
 
+    /// <summary>
+    /// Find a layer that does what was asked, or make one. Shared by the artwork
+    /// import and the text tool, so both land on the same layer rather than
+    /// creating one each.
+    /// </summary>
+    public Layer LayerForOperation(OperationKind wanted)
+    {
         var existing = Design.Layers.FirstOrDefault(l => l.Operation == wanted);
         if (existing is not null) return existing;
 

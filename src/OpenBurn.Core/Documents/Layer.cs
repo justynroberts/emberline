@@ -47,6 +47,19 @@ public sealed class Layer : INotifyPropertyChanged
     public double LineIntervalMm { get => _lineIntervalMm; set => Set(ref _lineIntervalMm, Math.Clamp(value, 0.005, 5)); }
 
     public bool AirAssist { get => _airAssist; set => Set(ref _airAssist, value); }
+
+    private bool _mergeOverlaps = true;
+
+    /// <summary>
+    /// Merge shapes that overlap into their combined outline before cutting.
+    ///
+    /// On by default, because cutting overlapping shapes one at a time runs the
+    /// beam through the middle of the finished piece. Holes are unaffected: a
+    /// shape entirely inside another is a counter or a washer centre, and stays
+    /// one. Turn it off when the crossing lines are the point — a grid scored over
+    /// a panel, or a design meant to be cut into separate overlapping pieces.
+    /// </summary>
+    public bool MergeOverlaps { get => _mergeOverlaps; set => Set(ref _mergeOverlaps, value); }
     public bool Enabled { get => _enabled; set => Set(ref _enabled, value); }
 
     /// <summary>Output order. Lower runs first; engraves before cuts is the usual arrangement.</summary>

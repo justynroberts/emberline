@@ -307,6 +307,14 @@ public static class CamPipeline
     {
         var vectorOptions = VectorEngraver.OptionsFor(layer, machine);
 
+        // Overlapping shapes are merged into their combined outline first, or the
+        // beam runs through the middle of the finished piece. Skipped when nothing
+        // overlaps, which is the usual case and not worth the work.
+        if (layer.MergeOverlaps && PathBooleans.AnyOverlap(outlines))
+        {
+            outlines = PathBooleans.Union(outlines);
+        }
+
         if (layer.Operation != OperationKind.Fill)
         {
             return VectorEngraver.Generate(outlines, vectorOptions);

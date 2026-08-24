@@ -132,3 +132,65 @@ public class CatalogImportTests : ShellTest
         Assert.Empty(shell.Design.Shapes);
     }
 }
+
+/// <summary>
+/// Text has to make the same choice the artwork import does.
+///
+/// Letterforms are closed regions, so whether they are darkened or cut round is a
+/// real decision — not something to be settled by whichever layer happened to be
+/// selected. An outlined "A" burned where a filled one was meant looks like a
+/// mistake; a filled one where an outline was meant takes twenty times as long.
+/// </summary>
+public class TextFillTests : ShellTest
+{
+    [AvaloniaFact]
+    public void FilledTextGoesOnALayerThatFillsIt()
+    {
+        var shell = NewShell();
+        shell.TextInput = "Hello";
+        shell.TextFilled = true;
+
+        shell.AddTextCommand.Execute(null);
+
+        var shape = Assert.Single(shell.Design.Shapes);
+        var layer = shell.Design.FindLayer(shape.LayerId);
+        Assert.Equal(OperationKind.Fill, layer!.Operation);
+    }
+
+    [AvaloniaFact]
+    public void OutlineTextStaysOnTheSelectedLayer()
+    {
+        var shell = NewShell();
+        var engrave = shell.Design.Layers.First(l => l.Operation == OperationKind.Engrave);
+        shell.SelectedLayer = shell.Layers.First(l => l.Layer == engrave);
+
+        shell.TextInput = "Hello";
+        shell.TextFilled = false;
+        shell.AddTextCommand.Execute(null);
+
+        var shape = Assert.Single(shell.Design.Shapes);
+        Assert.Equal(engrave.Id, shape.LayerId);
+    }
+
+    [AvaloniaFact]
+    public void FilledIsTheDefaultBecauseThatIsWhatEngravedLetteringMeans()
+    {
+        Assert.True(NewShell().TextFilled);
+    }
+
+    [AvaloniaFact]
+    public void SeveralPiecesOfFilledTextShareOneLayer()
+    {
+        var shell = NewShell();
+        shell.TextFilled = true;
+
+        foreach (var word in new[] { "one", "two", "three" })
+        {
+            shell.TextInput = word;
+            shell.AddTextCommand.Execute(null);
+        }
+
+        Assert.Equal(3, shell.Design.Shapes.Count);
+        Assert.Equal(1, shell.Design.Layers.Count(l => l.Operation == OperationKind.Fill));
+    }
+}

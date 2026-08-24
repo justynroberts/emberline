@@ -75,6 +75,16 @@ public sealed partial class LayerViewModel : ObservableObject
         set { Layer.AirAssist = value; OnPropertyChanged(); _changed(); }
     }
 
+    /// <summary>
+    /// Merge shapes that overlap into their combined outline before cutting.
+    /// See <see cref="Layer.MergeOverlaps"/> for why this is on by default.
+    /// </summary>
+    public bool MergeOverlaps
+    {
+        get => Layer.MergeOverlaps;
+        set { Layer.MergeOverlaps = value; OnPropertyChanged(); _changed(); }
+    }
+
     public bool Enabled
     {
         get => Layer.Enabled;

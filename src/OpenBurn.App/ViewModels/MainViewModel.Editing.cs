@@ -448,15 +448,35 @@ public sealed partial class MainViewModel
 
         PlaceOnBed(shape);
 
+        // Filled or outline, said explicitly — the same choice the artwork import
+        // asks for, and for the same reason. Letterforms are closed regions, so
+        // whether they are darkened or cut round is not something to be decided by
+        // whichever layer happened to be selected at the time.
+        var layer = TextFilled ? LayerForOperation(OperationKind.Fill) : SelectedLayer?.Layer;
+
         EditDocument("Add text", () =>
         {
-            Design.AddShape(shape, SelectedLayer?.Layer);
+            Design.AddShape(shape, layer);
             Selection.Clear();
             Selection.Add(shape);
         });
 
-        Console.AppendInfo($"Added text in {result.ResolvedFamily}, {result.WidthMm:0.#} × {result.HeightMm:0.#} mm.");
+        var how = TextFilled ? "filled in" : $"as outlines on the {layer?.Name ?? "current"} layer";
+        Console.AppendInfo($"Added text in {result.ResolvedFamily}, " +
+                           $"{result.WidthMm:0.#} × {result.HeightMm:0.#} mm, {how}.");
     }
+
+    /// <summary>
+    /// Whether new text is darkened or just outlined.
+    ///
+    /// Filled is the usual wish — engraved lettering that reads as solid — and
+    /// outline is what you want to cut letters out or to score them. Getting this
+    /// wrong is not subtle: an outlined "A" burned where a filled one was meant
+    /// looks like a mistake, and a filled one where an outline was meant takes
+    /// twenty times as long.
+    /// </summary>
+    [ObservableProperty]
+    private bool _textFilled = true;
 
     /// <summary>Re-run the font engine after the selected text's properties change.</summary>
     [RelayCommand]

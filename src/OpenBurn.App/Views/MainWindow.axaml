@@ -702,6 +702,8 @@
                             </Grid>
 
                             <CheckBox ToolTip.Tip="Switch the air assist on for this layer. Air blows smoke away from the cut, which gives a cleaner edge and less scorching." Content="Air assist" IsChecked="{Binding AirAssist}" />
+                            <CheckBox Content="Merge overlapping shapes" IsChecked="{Binding MergeOverlaps}"
+                                      ToolTip.Tip="Cut the combined outline of shapes that overlap, rather than each one separately — otherwise the beam runs through the middle of the finished piece. Holes are unaffected: a shape entirely inside another stays a hole. Turn this off when the crossing lines are the point, such as a scored grid." />
 
                             <StackPanel Spacing="7" IsVisible="{Binding IsFill}">
                                 <TextBlock Classes="sectionTitle" Text="FILL" Margin="0,4,0,0" />
@@ -900,8 +902,10 @@
                                 <TextBlock Grid.Column="1" Text="mm" Classes="label" VerticalAlignment="Center" />
                                 <TextBox Grid.Column="2" Text="{Binding TextSizeMm}" />
                             </Grid>
+                            <CheckBox IsChecked="{Binding TextFilled}" Content="Filled"
+                                      ToolTip.Tip="On: the letterforms are darkened, which is what engraved lettering usually means. Off: only their outlines are followed, for cutting letters out or scoring them. Letters are closed shapes, so this is a real choice rather than a detail." />
                             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
-                                <Button ToolTip.Tip="Add this text to the design as cuttable outlines." Grid.Column="0" Content="Add" Command="{Binding AddTextCommand}" />
+                                <Button ToolTip.Tip="Add this text to the design. Filled or outline is set by the tick box above." Grid.Column="0" Content="Add" Command="{Binding AddTextCommand}" />
                                 <Button ToolTip.Tip="Rebuild the selected text after changing its wording or font." Grid.Column="1" Content="Update" Command="{Binding RefreshTextCommand}"
                                         IsEnabled="{Binding IsTextSelected}" />
                                 <Button Grid.Column="2" Content="To paths" Command="{Binding ConvertTextToPathsCommand}"
