@@ -9,6 +9,11 @@ namespace OpenBurn.App.Views;
 /// <summary>Search a public icon catalogue and bring artwork onto the bed.</summary>
 public partial class CatalogWindow : Window
 {
+    /// <summary>The XAML previewer needs a parameterless constructor.</summary>
+    public CatalogWindow() : this(new CatalogViewModel())
+    {
+    }
+
     public CatalogWindow(CatalogViewModel model)
     {
         InitializeComponent();

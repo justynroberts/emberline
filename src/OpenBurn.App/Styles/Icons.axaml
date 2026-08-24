@@ -1,0 +1,165 @@
+<!-- Interface icons.
+
+     Material Design Icons by Pictogrammers, Apache 2.0. The path data is embedded
+     rather than fetched, so the interface draws identically offline and does not
+     depend on a service staying up.
+
+     These replace the emoji the toolbar used to carry. Emoji are drawn by whichever
+     font the operating system picks, so the same button was a flat outline on one
+     machine and a full-colour cartoon hand on another — and the emergency stop, of
+     all controls, must look the same everywhere.
+
+     Every icon is 24 by 24. Colour comes from the control, so they follow the theme. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- mdi:information-outline -->
+    <StreamGeometry x:Key="IconAbout">M11 9h2V7h-2m1 13c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m-1 15h2v-6h-2z</StreamGeometry>
+
+    <!-- mdi:image-search-outline -->
+    <StreamGeometry x:Key="IconArtwork">M15.5 9c.7 0 1.29-.24 1.77-.73c.49-.48.73-1.07.73-1.77c0-.67-.24-1.27-.73-1.77c-.48-.5-1.07-.73-1.77-.73c-.67 0-1.27.23-1.77.73S13 5.83 13 6.5c0 .7.23 1.29.73 1.77c.5.49 1.1.73 1.77.73m3.81-.09l3.1 3.09L21 13.41l-3.14-3.1c-.78.47-1.58.69-2.39.69c-1.25 0-2.31-.42-3.17-1.3c-.85-.87-1.3-1.93-1.3-3.2c0-1.23.45-2.3 1.33-3.17C13.2 2.45 14.27 2 15.5 2c1.27 0 2.33.45 3.2 1.33c.88.87 1.3 1.94 1.3 3.17c0 .83-.22 1.63-.69 2.41M16.5 18h-11l2.75-3.5l1.97 2.33l2.72-3.52zm1.5-5l2 2v5c0 .55-.19 1-.59 1.4c-.41.39-.88.6-1.41.6H4c-.55 0-1-.21-1.4-.6c-.39-.4-.6-.85-.6-1.4V6c0-.53.21-1 .6-1.41C3 4.19 3.45 4 4 4h5.5c-.3.64-.47 1.31-.5 2H4v14h14z</StreamGeometry>
+
+    <!-- mdi:circle-outline -->
+    <StreamGeometry x:Key="IconCircle">M12 20a8 8 0 0 1-8-8a8 8 0 0 1 8-8a8 8 0 0 1 8 8a8 8 0 0 1-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2</StreamGeometry>
+
+    <!-- mdi:close -->
+    <StreamGeometry x:Key="IconClose">M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z</StreamGeometry>
+
+    <!-- mdi:console-line -->
+    <StreamGeometry x:Key="IconConsole">M13 19v-3h8v3zm-4.5-6L2.47 7h4.24l4.96 4.95c.58.59.58 1.55 0 2.12L6.74 19H2.5z</StreamGeometry>
+
+    <!-- mdi:trash-can-outline -->
+    <StreamGeometry x:Key="IconDelete">M9 3v1H4v2h1v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3zM7 6h10v13H7zm2 2v9h2V8zm4 0v9h2V8z</StreamGeometry>
+
+    <!-- mdi:content-duplicate -->
+    <StreamGeometry x:Key="IconDuplicate">M11 17H4a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h12v2H4v12h7v-2l4 3l-4 3zm8 4V7H8v6H6V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2h2v2z</StreamGeometry>
+
+    <!-- mdi:fit-to-page-outline -->
+    <StreamGeometry x:Key="IconFitBed">M20 2H4c-1.11 0-2 .89-2 2v16c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V4c0-1.11-.89-2-2-2m0 18H4V4h16m-7 4v2h-2V8H9l3-3l3 3m1 7v-2h-2v-2h2V9l3 3m-9 1H8v2l-3-3l3-3v2h2m5 5l-3 3l-3-3h2v-2h2v2</StreamGeometry>
+
+    <!-- mdi:image-filter-center-focus -->
+    <StreamGeometry x:Key="IconFitContent">M12 9a3 3 0 0 0-3 3a3 3 0 0 0 3 3a3 3 0 0 0 3-3a3 3 0 0 0-3-3m7 10h-4v2h4a2 2 0 0 0 2-2v-4h-2m0-12h-4v2h4v4h2V5a2 2 0 0 0-2-2M5 5h4V3H5a2 2 0 0 0-2 2v4h2m0 6H3v4a2 2 0 0 0 2 2h4v-2H5z</StreamGeometry>
+
+    <!-- mdi:code-braces -->
+    <StreamGeometry x:Key="IconGcode">M8 3a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2H3v2h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h2v-2H8v-5a2 2 0 0 0-2-2a2 2 0 0 0 2-2V5h2V3m6 0a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1v2h-1a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-2v-2h2v-5a2 2 0 0 1 2-2a2 2 0 0 1-2-2V5h-2V3z</StreamGeometry>
+
+    <!-- mdi:grid -->
+    <StreamGeometry x:Key="IconGrid">M10 4v4h4V4zm6 0v4h4V4zm0 6v4h4v-4zm0 6v4h4v-4zm-2 4v-4h-4v4zm-6 0v-4H4v4zm0-6v-4H4v4zm0-6V4H4v4zm2 6h4v-4h-4zM4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4c-1.08 0-2-.9-2-2V4a2 2 0 0 1 2-2</StreamGeometry>
+
+    <!-- mdi:history -->
+    <StreamGeometry x:Key="IconHistory">M13.5 8H12v5l4.28 2.54l.72-1.21l-3.5-2.08zM13 3a9 9 0 0 0-9 9H1l3.96 4.03L9 12H6a7 7 0 0 1 7-7a7 7 0 0 1 7 7a7 7 0 0 1-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.9 8.9 0 0 0 13 21a9 9 0 0 0 9-9a9 9 0 0 0-9-9</StreamGeometry>
+
+    <!-- mdi:file-outline -->
+    <StreamGeometry x:Key="IconNew">M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm4 18H6V4h7v5h5z</StreamGeometry>
+
+    <!-- mdi:folder-open-outline -->
+    <StreamGeometry x:Key="IconOpen">M6.1 10L4 18V8h17a2 2 0 0 0-2-2h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h15c.9 0 1.7-.6 1.9-1.5l2.3-8.5zM19 18H6l1.6-6h13z</StreamGeometry>
+
+    <!-- mdi:play -->
+    <StreamGeometry x:Key="IconPlay">M8 5.14v14l11-7z</StreamGeometry>
+
+    <!-- mdi:hexagon-outline -->
+    <StreamGeometry x:Key="IconPolygon">M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18s-.41-.06-.57-.18l-7.9-4.44A.99.99 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18s.41.06.57.18l7.9 4.44c.32.17.53.5.53.88zM12 4.15L5 8.09v7.82l7 3.94l7-3.94V8.09z</StreamGeometry>
+
+    <!-- mdi:rectangle-outline -->
+    <StreamGeometry x:Key="IconRectangle">M4 6v13h16V6zm14 11H6V8h12z</StreamGeometry>
+
+    <!-- mdi:redo-variant -->
+    <StreamGeometry x:Key="IconRedo">M10.5 7A6.5 6.5 0 0 0 4 13.5a6.5 6.5 0 0 0 6.5 6.5H14v-2h-3.5C8 18 6 16 6 13.5S8 9 10.5 9h5.67l-3.08 3.09l1.41 1.41L20 8l-5.5-5.5l-1.42 1.41L16.17 7zM18 18h-2v2h2z</StreamGeometry>
+
+    <!-- mdi:content-save-outline -->
+    <StreamGeometry x:Key="IconSave">M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V7zm2 16H5V5h11.17L19 7.83zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3s3-1.34 3-3s-1.34-3-3-3M6 6h9v4H6z</StreamGeometry>
+
+    <!-- mdi:cog-outline -->
+    <StreamGeometry x:Key="IconSettings">M12 8a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 2a2 2 0 0 0-2 2a2 2 0 0 0 2 2a2 2 0 0 0 2-2a2 2 0 0 0-2-2m-2 12c-.25 0-.46-.18-.5-.42l-.37-2.65c-.63-.25-1.17-.59-1.69-.99l-2.49 1.01c-.22.08-.49 0-.61-.22l-2-3.46a.493.493 0 0 1 .12-.64l2.11-1.66L4.5 12l.07-1l-2.11-1.63a.493.493 0 0 1-.12-.64l2-3.46c.12-.22.39-.31.61-.22l2.49 1c.52-.39 1.06-.73 1.69-.98l.37-2.65c.04-.24.25-.42.5-.42h4c.25 0 .46.18.5.42l.37 2.65c.63.25 1.17.59 1.69.98l2.49-1c.22-.09.49 0 .61.22l2 3.46c.13.22.07.49-.12.64L19.43 11l.07 1l-.07 1l2.11 1.63c.19.15.25.42.12.64l-2 3.46c-.12.22-.39.31-.61.22l-2.49-1c-.52.39-1.06.73-1.69.98l-.37 2.65c-.04.24-.25.42-.5.42zm1.25-18l-.37 2.61c-1.2.25-2.26.89-3.03 1.78L5.44 7.35l-.75 1.3L6.8 10.2a5.55 5.55 0 0 0 0 3.6l-2.12 1.56l.75 1.3l2.43-1.04c.77.88 1.82 1.52 3.01 1.76l.37 2.62h1.52l.37-2.61c1.19-.25 2.24-.89 3.01-1.77l2.43 1.04l.75-1.3l-2.12-1.55c.4-1.17.4-2.44 0-3.61l2.11-1.55l-.75-1.3l-2.41 1.04a5.42 5.42 0 0 0-3.03-1.77L12.75 4z</StreamGeometry>
+
+    <!-- mdi:hand-back-right -->
+    <StreamGeometry x:Key="IconStop">M13 24c-3.26 0-6.19-2-7.4-5l-3.03-7.63a1 1 0 0 1 1.24-1.32l.79.26c.56.19 1.02.61 1.24 1.16L7.25 15H8V3.25a1.25 1.25 0 0 1 2.5 0V12h1V1.25a1.25 1.25 0 0 1 2.5 0V12h1V2.75a1.25 1.25 0 0 1 2.5 0V12h1V5.75a1.25 1.25 0 0 1 2.5 0V16c0 4.42-3.58 8-8 8</StreamGeometry>
+
+    <!-- mdi:format-text -->
+    <StreamGeometry x:Key="IconText">m18.5 4l1.16 4.35l-.96.26c-.45-.87-.91-1.74-1.44-2.18C16.73 6 16.11 6 15.5 6H13v10.5c0 .5 0 1 .33 1.25c.34.25 1 .25 1.67.25v1H9v-1c.67 0 1.33 0 1.67-.25c.33-.25.33-.75.33-1.25V6H8.5c-.61 0-1.23 0-1.76.43c-.53.44-.99 1.31-1.44 2.18l-.96-.26L5.5 4z</StreamGeometry>
+
+    <!-- mdi:theme-light-dark -->
+    <StreamGeometry x:Key="IconTheme">M7.5 2c-1.79 1.15-3 3.18-3 5.5s1.21 4.35 3.03 5.5C4.46 13 2 10.54 2 7.5A5.5 5.5 0 0 1 7.5 2m11.57 1.5l1.43 1.43L4.93 20.5L3.5 19.07zm-6.18 2.43L11.41 5L9.97 6l.42-1.7L9 3.24l1.75-.12l.58-1.65L12 3.1l1.73.03l-1.35 1.13zm-3.3 3.61l-1.16-.73l-1.12.78l.34-1.32l-1.09-.83l1.36-.09l.45-1.29l.51 1.27l1.36.03l-1.05.87zM19 13.5a5.5 5.5 0 0 1-5.5 5.5c-1.22 0-2.35-.4-3.26-1.07l7.69-7.69c.67.91 1.07 2.04 1.07 3.26m-4.4 6.58l2.77-1.15l-.24 3.35zm4.33-2.7l1.15-2.77l2.2 2.54zm1.15-4.96l-1.14-2.78l3.34.24zM9.63 18.93l2.77 1.15l-2.53 2.19z</StreamGeometry>
+
+    <!-- mdi:vector-polyline -->
+    <StreamGeometry x:Key="IconTrace">M2 3v6h2.95l2 6H6v6h6v-4.59L17.41 11H22V5h-6v4.57L10.59 15H9.06l-2-6H8V3M4 5h2v2H4m14 0h2v2h-2M8 17h2v2H8Z</StreamGeometry>
+
+    <!-- mdi:vector-line -->
+    <StreamGeometry x:Key="IconTravel">M15 3v4.59L7.59 15H3v6h6v-4.58L16.42 9H21V3m-4 2h2v2h-2M5 17h2v2H5</StreamGeometry>
+
+    <!-- mdi:undo-variant -->
+    <StreamGeometry x:Key="IconUndo">M13.5 7a6.5 6.5 0 0 1 6.5 6.5a6.5 6.5 0 0 1-6.5 6.5H10v-2h3.5c2.5 0 4.5-2 4.5-4.5S16 9 13.5 9H7.83l3.08 3.09L9.5 13.5L4 8l5.5-5.5l1.42 1.41L7.83 7zM6 18h2v2H6z</StreamGeometry>
+
+    <!-- mdi:auto-fix -->
+    <StreamGeometry x:Key="IconWizard">M7.5 5.6L5 7l1.4-2.5L5 2l2.5 1.4L10 2L8.6 4.5L10 7zm12 9.8L22 14l-1.4 2.5L22 19l-2.5-1.4L17 19l1.4-2.5L17 14zM22 2l-1.4 2.5L22 7l-2.5-1.4L17 7l1.4-2.5L17 2l2.5 1.4zm-8.66 10.78l2.44-2.44l-2.12-2.12l-2.44 2.44zm1.03-5.49l2.34 2.34c.39.37.39 1.02 0 1.41L5.04 22.71c-.39.39-1.04.39-1.41 0l-2.34-2.34c-.39-.37-.39-1.02 0-1.41L12.96 7.29c.39-.39 1.04-.39 1.41 0</StreamGeometry>
+
+    <!-- mdi:alert-outline -->
+    <StreamGeometry x:Key="IconAlert">M12 2L1 21h22M12 6l7.53 13H4.47M11 10v4h2v-4m-2 6v2h2v-2</StreamGeometry>
+
+    <!-- mdi:align-vertical-bottom -->
+    <StreamGeometry x:Key="IconAlignBottom">M22 22H2v-2h20zM10 2H7v16h3zm7 6h-3v10h3z</StreamGeometry>
+
+    <!-- mdi:align-horizontal-center -->
+    <StreamGeometry x:Key="IconAlignCentreH">M11 2h2v5h8v3h-8v4h5v3h-5v5h-2v-5H6v-3h5v-4H3V7h8z</StreamGeometry>
+
+    <!-- mdi:align-vertical-center -->
+    <StreamGeometry x:Key="IconAlignCentreV">M22 11h-5V6h-3v5h-4V3H7v8H1.8v2H7v8h3v-8h4v5h3v-5h5z</StreamGeometry>
+
+    <!-- mdi:align-horizontal-left -->
+    <StreamGeometry x:Key="IconAlignLeft">M4 22H2V2h2zM22 7H6v3h16zm-6 7H6v3h10z</StreamGeometry>
+
+    <!-- mdi:align-horizontal-right -->
+    <StreamGeometry x:Key="IconAlignRight">M20 2h2v20h-2zM2 10h16V7H2zm6 7h10v-3H8z</StreamGeometry>
+
+    <!-- mdi:align-vertical-top -->
+    <StreamGeometry x:Key="IconAlignTop">M22 2v2H2V2zM7 22h3V6H7zm7-6h3V6h-3z</StreamGeometry>
+
+    <!-- mdi:home-outline -->
+    <StreamGeometry x:Key="IconHome">m12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81zM12 3L2 12h3v8h6v-6h2v6h6v-8h3</StreamGeometry>
+
+    <!-- mdi:arrow-down -->
+    <StreamGeometry x:Key="IconJogDown">M11 4h2v12l5.5-5.5l1.42 1.42L12 19.84l-7.92-7.92L5.5 10.5L11 16z</StreamGeometry>
+
+    <!-- mdi:arrow-bottom-left -->
+    <StreamGeometry x:Key="IconJogDownLeft">M19 6.41L17.59 5L7 15.59V9H5v10h10v-2H8.41z</StreamGeometry>
+
+    <!-- mdi:arrow-bottom-right -->
+    <StreamGeometry x:Key="IconJogDownRight">M5 6.41L6.41 5L17 15.59V9h2v10H9v-2h6.59z</StreamGeometry>
+
+    <!-- mdi:arrow-left -->
+    <StreamGeometry x:Key="IconJogLeft">M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z</StreamGeometry>
+
+    <!-- mdi:arrow-right -->
+    <StreamGeometry x:Key="IconJogRight">M4 11v2h12l-5.5 5.5l1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5L16 11z</StreamGeometry>
+
+    <!-- mdi:arrow-up -->
+    <StreamGeometry x:Key="IconJogUp">M13 20h-2V8l-5.5 5.5l-1.42-1.42L12 4.16l7.92 7.92l-1.42 1.42L13 8z</StreamGeometry>
+
+    <!-- mdi:arrow-top-left -->
+    <StreamGeometry x:Key="IconJogUpLeft">M19 17.59L17.59 19L7 8.41V15H5V5h10v2H8.41z</StreamGeometry>
+
+    <!-- mdi:arrow-top-right -->
+    <StreamGeometry x:Key="IconJogUpRight">M5 17.59L15.59 7H9V5h10v10h-2V8.41L6.41 19z</StreamGeometry>
+
+    <!-- mdi:minus -->
+    <StreamGeometry x:Key="IconMinus">M19 13H5v-2h14z</StreamGeometry>
+
+    <!-- mdi:dots-horizontal -->
+    <StreamGeometry x:Key="IconMore">M16 12a2 2 0 0 1 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2m-6 0a2 2 0 0 1 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2m-6 0a2 2 0 0 1 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2</StreamGeometry>
+
+    <!-- mdi:plus -->
+    <StreamGeometry x:Key="IconPlus">M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z</StreamGeometry>
+
+    <!-- mdi:refresh -->
+    <StreamGeometry x:Key="IconRefresh">M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 0 0-8 8a8 8 0 0 0 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18a6 6 0 0 1-6-6a6 6 0 0 1 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z</StreamGeometry>
+
+    <!-- mdi:arrow-expand-horizontal -->
+    <StreamGeometry x:Key="IconSpreadH">M9 11h6V8l4 4l-4 4v-3H9v3l-4-4l4-4zm-7 9V4h2v16zm18 0V4h2v16z</StreamGeometry>
+
+    <!-- mdi:arrow-expand-vertical -->
+    <StreamGeometry x:Key="IconSpreadV">M13 9v6h3l-4 4l-4-4h3V9H8l4-4l4 4zM4 2h16v2H4zm0 18h16v2H4z</StreamGeometry>
+
+    <!-- mdi:square-outline -->
+    <StreamGeometry x:Key="IconSquare">M3 3h18v18H3zm2 2v14h14V5z</StreamGeometry>
+</ResourceDictionary>

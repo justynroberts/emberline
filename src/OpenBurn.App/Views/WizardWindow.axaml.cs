@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using OpenBurn.App.ViewModels;
+using OpenBurn.Core;
 
 namespace OpenBurn.App.Views;
 
@@ -14,6 +15,11 @@ namespace OpenBurn.App.Views;
 /// </summary>
 public partial class WizardWindow : Window
 {
+    /// <summary>The XAML previewer needs a parameterless constructor.</summary>
+    public WizardWindow() : this(new WizardViewModel(new MainViewModel(Core.Storage.AppSettings.Default)))
+    {
+    }
+
     public WizardWindow(WizardViewModel model)
     {
         InitializeComponent();

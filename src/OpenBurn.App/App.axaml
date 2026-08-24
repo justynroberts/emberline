@@ -13,7 +13,13 @@
     </Application.Styles>
 
     <Application.Resources>
-        <FontFamily x:Key="DisplayFont">avares://OpenBurn/Assets/Fonts#Bricolage Grotesque</FontFamily>
-        <FontFamily x:Key="MonoFont">avares://OpenBurn/Assets/Fonts#Spline Sans Mono</FontFamily>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://OpenBurn/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <FontFamily x:Key="DisplayFont">avares://OpenBurn/Assets/Fonts#Bricolage Grotesque</FontFamily>
+            <FontFamily x:Key="MonoFont">avares://OpenBurn/Assets/Fonts#Spline Sans Mono</FontFamily>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

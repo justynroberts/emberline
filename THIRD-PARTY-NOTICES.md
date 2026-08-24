@@ -17,6 +17,17 @@ The full text is in `fonts/OFL.txt`.
 | Bricolage Grotesque | Copyright The Bricolage Project Authors |
 | Spline Sans Mono | Copyright The Spline Sans Mono Project Authors |
 
+## Bundled interface icons
+
+The toolbar and panel icons are **Material Design Icons** by Pictogrammers, under
+the **Apache License 2.0**. Their path data is embedded in
+`src/OpenBurn.App/Styles/Icons.axaml` — each geometry is commented with the icon it
+came from — so the interface draws identically offline and does not depend on any
+service staying up.
+
+<https://github.com/Templarian/MaterialDesign> ·
+<https://github.com/Templarian/MaterialDesign/blob/master/LICENSE>
+
 ## Artwork imported from catalogues
 
 OpenBurn can search public icon catalogues through the Iconify API. Nothing is

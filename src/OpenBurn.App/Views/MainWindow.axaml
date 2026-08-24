@@ -53,111 +53,171 @@
              hidden. Groups are separated by a rule and named underneath, so the
              icons are learnable rather than guessable. -->
         <Border Grid.Row="0" Classes="panel focusIn" Margin="12,12,12,0" Padding="12,8">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto">
+            <!-- Tools wrap; the job actions never do.
+                 Fixed columns across the whole width overflowed a narrow window and
+                 the emergency stop ended up underneath the group beside it. So the
+                 tool groups now wrap onto a second line when there is not room, and
+                 the job actions are pinned to the right where they cannot be pushed
+                 off, covered, or scrolled away. The stop must be in the same place
+                 every time it is reached for. -->
+            <Grid ColumnDefinitions="*,Auto">
 
-                <StackPanel Grid.Column="0" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Classes="tool" Content="⊞" ToolTip.Tip="Start a new, empty design." Command="{Binding NewDocumentCommand}" />
-                        <Button Classes="tool" Content="⤓" ToolTip.Tip="Open artwork — SVG, DXF, an image, or G-code." Command="{Binding OpenCommand}" />
-                        <Button Classes="tool" Content="⇪" ToolTip.Tip="Save the job as a .nc file you can run from an SD card or another sender." Command="{Binding ExportGcodeCommand}" />
+                <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+                    <StackPanel Spacing="2" Margin="0,2,10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="label" Command="{Binding NewDocumentCommand}"
+                                    ToolTip.Tip="Start a new, empty design." />
+                            <Button Classes="label primary" Command="{Binding OpenCommand}"
+                                    ToolTip.Tip="Open artwork — SVG, DXF, a photograph, or G-code. Also reachable with Cmd/Ctrl+O, and you can drag a file onto the window." />
+                            <Button Classes="label" Command="{Binding ExportGcodeCommand}"
+                                    ToolTip.Tip="Save the job as a .nc file you can run from an SD card or another sender." />
+                        </StackPanel>
+                        <TextBlock Text="FILE" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
                     </StackPanel>
-                    <TextBlock Text="FILE" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+
+                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4,10,4" />
+
+                    <StackPanel Spacing="2" Margin="0,2,10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="tool" ToolTip.Tip="Add a rectangle." Command="{Binding AddRectangleCommand}" >
+                                <PathIcon Data="{StaticResource IconRectangle}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Add a circle." Command="{Binding AddCircleCommand}" >
+                                <PathIcon Data="{StaticResource IconCircle}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Add a polygon." Command="{Binding AddPolygonCommand}" >
+                                <PathIcon Data="{StaticResource IconPolygon}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Add text, converted to cuttable outlines." Command="{Binding AddTextCommand}" >
+                                <PathIcon Data="{StaticResource IconText}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" Click="OnFindArtwork"
+                                    ToolTip.Tip="Search open artwork catalogues and bring a shape onto the bed — to etch, or to cut out. The licence is shown against every result." >
+                                <PathIcon Data="{StaticResource IconArtwork}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" Click="OnTraceImage"
+                                    ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file." >
+                                <PathIcon Data="{StaticResource IconTrace}" Width="18" Height="18" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="DRAW" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4,10,4" />
+
+                    <StackPanel Spacing="2" Margin="0,2,10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="tool" ToolTip.Tip="Undo the last change." Command="{Binding UndoEditCommand}" >
+                                <PathIcon Data="{StaticResource IconUndo}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Redo the change you just undid." Command="{Binding RedoEditCommand}" >
+                                <PathIcon Data="{StaticResource IconRedo}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Duplicate the selection." Command="{Binding DuplicateSelectedCommand}" >
+                                <PathIcon Data="{StaticResource IconDuplicate}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Delete the selection." Command="{Binding DeleteSelectedCommand}" >
+                                <PathIcon Data="{StaticResource IconDelete}" Width="18" Height="18" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="EDIT" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4,10,4" />
+
+                    <StackPanel Spacing="2" Margin="0,2,10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="tool" ToolTip.Tip="Zoom so the whole bed is in view." Click="OnZoomBed" >
+                                <PathIcon Data="{StaticResource IconFitBed}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Zoom so the artwork fills the view." Click="OnZoomContent" >
+                                <PathIcon Data="{StaticResource IconFitContent}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Show or hide the grid." Command="{Binding ToggleGridCommand}" >
+                                <PathIcon Data="{StaticResource IconGrid}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Show the rapid moves between cuts, so you can see the order and the wasted travel." Command="{Binding ToggleTravelCommand}" >
+                                <PathIcon Data="{StaticResource IconTravel}" Width="18" Height="18" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="VIEW" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4,10,4" />
+
+                    <StackPanel Spacing="2" Margin="0,2,10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="tool" ToolTip.Tip="Play the job on screen. This draws the toolpath and moves nothing." Command="{Binding PlaySimulationCommand}" >
+                                <PathIcon Data="{StaticResource IconPlay}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Inspect the exact G-code that will be sent." Command="{Binding ToggleGcodeCommand}" >
+                                <PathIcon Data="{StaticResource IconGcode}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Open the machine console to see and send raw commands." Command="{Binding ToggleConsoleCommand}" >
+                                <PathIcon Data="{StaticResource IconConsole}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Past jobs and the settings they ran with." Click="OnShowJobLibrary" >
+                                <PathIcon Data="{StaticResource IconHistory}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="The controller's $ settings, each one named and explained." Click="OnShowSettings" >
+                                <PathIcon Data="{StaticResource IconSettings}" Width="18" Height="18" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="INSPECT" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4,10,4" />
+
+                    <StackPanel Spacing="2" Margin="0,2,10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="tool" Click="OnShowWizard"
+                                    ToolTip.Tip="Walk me through it — machine, material, artwork, settings, then a check before you run anything." >
+                                <PathIcon Data="{StaticResource IconWizard}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" ToolTip.Tip="Switch between the light and dark themes." Command="{Binding CycleThemeCommand}" >
+                                <PathIcon Data="{StaticResource IconTheme}" Width="18" Height="18" />
+                            </Button>
+                            <Button Classes="tool" AutomationProperties.Name="About this app"
+                                    ToolTip.Tip="About OpenBurn." Click="OnShowAbout" >
+                                <PathIcon Data="{StaticResource IconAbout}" Width="18" Height="18" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="HELP" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </WrapPanel>
+
+                <!-- Pinned right, always on one line, never wrapped. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <StackPanel Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button Classes="job" Content="Frame" Command="{Binding FrameCommand}"
+                                    ToolTip.Tip="Trace the job outline at pointer power so you can check where it will land before burning anything." />
+                            <Button Classes="job primary" Content="Start" Command="{Binding StartJobCommand}"
+                                    IsVisible="{Binding !IsJobActive}" ToolTip.Tip="{Binding StartHint}" />
+                            <Button Classes="job" Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}"
+                                    ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." />
+                            <Button Classes="job primary" Content="Resume" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}"
+                                    ToolTip.Tip="Carry on from exactly where the job paused." />
+                            <Button Classes="job" Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}"
+                                    ToolTip.Tip="End the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." />
+                        </StackPanel>
+                        <TextBlock Text="JOB" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4" />
+
+                    <Button Classes="estop" VerticalAlignment="Center"
+                            Command="{Binding EmergencyStopCommand}"
+                            AutomationProperties.Name="Emergency stop"
+                            ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset. Escape does the same from anywhere in the window. This is not a substitute for the switch on the machine.">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <PathIcon Data="{StaticResource IconStop}" Width="22" Height="22"
+                                      Foreground="#FFFFFF" VerticalAlignment="Center" />
+                            <TextBlock Text="STOP" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
-
-                <Border Grid.Column="1" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
-
-                <StackPanel Grid.Column="2" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Classes="tool" Content="▭" ToolTip.Tip="Add a rectangle." Command="{Binding AddRectangleCommand}" />
-                        <Button Classes="tool" Content="◯" ToolTip.Tip="Add a circle." Command="{Binding AddCircleCommand}" />
-                        <Button Classes="tool" Content="⬡" ToolTip.Tip="Add a polygon." Command="{Binding AddPolygonCommand}" />
-                        <Button Classes="tool" Content="T" ToolTip.Tip="Add text, converted to cuttable outlines." Command="{Binding AddTextCommand}" />
-                        <Button Classes="tool" Content="✧" Click="OnFindArtwork"
-                                ToolTip.Tip="Search open artwork catalogues and bring a shape onto the bed — to etch, or to cut out. The licence is shown against every result." />
-                        <Button Classes="tool" Content="◈" Click="OnTraceImage"
-                                ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file." />
-                    </StackPanel>
-                    <TextBlock Text="DRAW" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
-                </StackPanel>
-
-                <Border Grid.Column="3" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
-
-                <StackPanel Grid.Column="4" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Classes="tool" Content="↺" ToolTip.Tip="Undo the last change." Command="{Binding UndoEditCommand}" />
-                        <Button Classes="tool" Content="↻" ToolTip.Tip="Redo the change you just undid." Command="{Binding RedoEditCommand}" />
-                        <Button Classes="tool" Content="⧉" ToolTip.Tip="Duplicate the selection." Command="{Binding DuplicateSelectedCommand}" />
-                        <Button Classes="tool" Content="␡" ToolTip.Tip="Delete the selection." Command="{Binding DeleteSelectedCommand}" />
-                    </StackPanel>
-                    <TextBlock Text="EDIT" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
-                </StackPanel>
-
-                <Border Grid.Column="5" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
-
-                <StackPanel Grid.Column="6" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Classes="tool" Content="⤢" ToolTip.Tip="Zoom so the whole bed is in view." Click="OnZoomBed" />
-                        <Button Classes="tool" Content="⌖" ToolTip.Tip="Zoom so the artwork fills the view." Click="OnZoomContent" />
-                        <Button Classes="tool" Content="▦" ToolTip.Tip="Show or hide the grid." Command="{Binding ToggleGridCommand}" />
-                        <Button Classes="tool" Content="⇢" ToolTip.Tip="Show the rapid moves between cuts, so you can see the order and the wasted travel." Command="{Binding ToggleTravelCommand}" />
-                    </StackPanel>
-                    <TextBlock Text="VIEW" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
-                </StackPanel>
-
-                <Border Grid.Column="7" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
-
-                <StackPanel Grid.Column="8" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Classes="tool" Content="▶" ToolTip.Tip="Play the job on screen. This draws the toolpath and moves nothing." Command="{Binding PlaySimulationCommand}" />
-                        <Button Classes="tool" Content="⌗" ToolTip.Tip="Inspect the exact G-code that will be sent." Command="{Binding ToggleGcodeCommand}" />
-                        <Button Classes="tool" Content="≣" ToolTip.Tip="Open the machine console to see and send raw commands." Command="{Binding ToggleConsoleCommand}" />
-                        <Button Classes="tool" Content="⧗" ToolTip.Tip="Past jobs and the settings they ran with." Click="OnShowJobLibrary" />
-                        <Button Classes="tool" Content="⚙" ToolTip.Tip="The controller's $ settings, each one named and explained." Click="OnShowSettings" />
-                    </StackPanel>
-                    <TextBlock Text="INSPECT" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
-                </StackPanel>
-
-                <Border Grid.Column="9" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
-
-                <StackPanel Grid.Column="10" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Classes="tool" Content="✦" Click="OnShowWizard"
-                                ToolTip.Tip="Walk me through it — machine, material, artwork, settings, then a check before you run anything." />
-                        <Button Classes="tool" Content="✧" ToolTip.Tip="Ask the assistant about settings, a fault or this job. It can also draw." Command="{Binding ToggleAssistantCommand}" />
-                        <Button Classes="tool" Content="◐" ToolTip.Tip="Switch between the light and dark themes." Command="{Binding CycleThemeCommand}" />
-                        <Button Classes="tool" Content="i" AutomationProperties.Name="About this app"
-                                ToolTip.Tip="About OpenBurn." Click="OnShowAbout" />
-                    </StackPanel>
-                    <TextBlock Text="HELP" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
-                </StackPanel>
-
-                <!-- Job actions sit apart, at the far end, because they are the ones
-                     that move a machine. -->
-                <StackPanel Grid.Column="12" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Button Classes="job" Content="Frame" Command="{Binding FrameCommand}"
-                                ToolTip.Tip="Trace the job outline at pointer power so you can check where it will land before burning anything." />
-                        <Button Classes="job primary" Content="Start" Command="{Binding StartJobCommand}"
-                                IsVisible="{Binding !IsJobActive}" ToolTip.Tip="{Binding StartHint}" />
-                        <Button Classes="job" Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}"
-                                ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." />
-                        <Button Classes="job primary" Content="Resume" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}"
-                                ToolTip.Tip="Carry on from exactly where the job paused." />
-                        <Button Classes="job" Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}"
-                                ToolTip.Tip="End the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." />
-                    </StackPanel>
-                    <TextBlock Text="JOB" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
-                </StackPanel>
-
-                <Button Grid.Column="14" Classes="estop" VerticalAlignment="Center"
-                        Command="{Binding EmergencyStopCommand}"
-                        AutomationProperties.Name="Emergency stop"
-                        ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset. Escape does the same from anywhere in the window. This is not a substitute for the switch on the machine.">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="✋" FontSize="22" VerticalAlignment="Center" />
-                        <TextBlock Text="STOP" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
             </Grid>
         </Border>
 
@@ -193,8 +253,8 @@
                 VerticalAlignment="Bottom" IsVisible="{Binding HasFault}"
                 BorderBrush="{DynamicResource StateAlarm}">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <TextBlock Grid.Column="0" Text="⚠" FontSize="18" Margin="0,0,12,0"
-                           Foreground="{DynamicResource StateAlarm}" VerticalAlignment="Center" />
+                <PathIcon Grid.Column="0" Data="{StaticResource IconAlert}" Width="20" Height="20" Margin="0,0,12,0"
+                          Foreground="{DynamicResource StateAlarm}" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1" Text="{Binding FaultText}" TextWrapping="Wrap" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <Button ToolTip.Tip="Clear the alarm so the machine accepts moves again. Find out why it alarmed before you do this; the position may no longer be trusted." Content="Unlock" Command="{Binding UnlockCommand}" />
@@ -247,8 +307,10 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                            <Button Grid.Column="1" Content="⋯" Width="34" Padding="0"
-                                    ToolTip.Tip="Add or edit machine profiles" Click="OnEditMachines" />
+                            <Button Grid.Column="1"  Width="34" Padding="0"
+                                    ToolTip.Tip="Add or edit machine profiles" Click="OnEditMachines" >
+                                <PathIcon Data="{StaticResource IconMore}" Width="16" Height="16" />
+                            </Button>
                         </Grid>
 
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
@@ -263,8 +325,10 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            <Button Grid.Column="1" Content="⟳" Width="34" Padding="0"
-                                    ToolTip.Tip="Rescan serial ports" Command="{Binding RefreshPortsCommand}" />
+                            <Button Grid.Column="1"  Width="34" Padding="0"
+                                    ToolTip.Tip="Rescan serial ports" Command="{Binding RefreshPortsCommand}" >
+                                <PathIcon Data="{StaticResource IconRefresh}" Width="16" Height="16" />
+                            </Button>
                         </Grid>
 
                         <TextBox Text="{Binding NetworkAddress}" PlaceholderText="192.168.1.42:23" />
@@ -303,15 +367,33 @@
                         <StackPanel Spacing="8">
                             <TextBlock Classes="sectionTitle" Text="JOG" />
                             <UniformGrid Rows="3" Columns="3" HorizontalAlignment="Center">
-                                <Button ToolTip.Tip="Move the head up and to the left by one step." Classes="jog" Content="↖" Command="{Binding JogCommand}" CommandParameter="upleft" />
-                                <Button ToolTip.Tip="Move the head away from you by one step." Classes="jog" Content="↑" Command="{Binding JogCommand}" CommandParameter="up" />
-                                <Button ToolTip.Tip="Move the head up and to the right by one step." Classes="jog" Content="↗" Command="{Binding JogCommand}" CommandParameter="upright" />
-                                <Button ToolTip.Tip="Move the head left by one step." Classes="jog" Content="←" Command="{Binding JogCommand}" CommandParameter="left" />
-                                <Button Classes="jog" Content="⌂" Command="{Binding HomeCommand}" ToolTip.Tip="Home ($H)" />
-                                <Button ToolTip.Tip="Move the head right by one step." Classes="jog" Content="→" Command="{Binding JogCommand}" CommandParameter="right" />
-                                <Button ToolTip.Tip="Move the head down and to the left by one step." Classes="jog" Content="↙" Command="{Binding JogCommand}" CommandParameter="downleft" />
-                                <Button ToolTip.Tip="Move the head towards you by one step." Classes="jog" Content="↓" Command="{Binding JogCommand}" CommandParameter="down" />
-                                <Button ToolTip.Tip="Move the head down and to the right by one step." Classes="jog" Content="↘" Command="{Binding JogCommand}" CommandParameter="downright" />
+                                <Button ToolTip.Tip="Move the head up and to the left by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="upleft" >
+                                <PathIcon Data="{StaticResource IconJogUpLeft}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move the head away from you by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="up" >
+                                <PathIcon Data="{StaticResource IconJogUp}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move the head up and to the right by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="upright" >
+                                <PathIcon Data="{StaticResource IconJogUpRight}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move the head left by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="left" >
+                                <PathIcon Data="{StaticResource IconJogLeft}" Width="16" Height="16" />
+                            </Button>
+                                <Button Classes="jog"  Command="{Binding HomeCommand}" ToolTip.Tip="Home ($H)" >
+                                <PathIcon Data="{StaticResource IconHome}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move the head right by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="right" >
+                                <PathIcon Data="{StaticResource IconJogRight}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move the head down and to the left by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="downleft" >
+                                <PathIcon Data="{StaticResource IconJogDownLeft}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move the head towards you by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="down" >
+                                <PathIcon Data="{StaticResource IconJogDown}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move the head down and to the right by one step." Classes="jog"  Command="{Binding JogCommand}" CommandParameter="downright" >
+                                <PathIcon Data="{StaticResource IconJogDownRight}" Width="16" Height="16" />
+                            </Button>
                             </UniformGrid>
 
                             <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="6">
@@ -347,8 +429,10 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
-                                <Button Grid.Column="1" Content="⟳" Width="34" Padding="0"
-                                        ToolTip.Tip="Rescan cameras" Command="{Binding RefreshCamerasCommand}" />
+                                <Button Grid.Column="1"  Width="34" Padding="0"
+                                        ToolTip.Tip="Rescan cameras" Command="{Binding RefreshCamerasCommand}" >
+                                <PathIcon Data="{StaticResource IconRefresh}" Width="16" Height="16" />
+                            </Button>
                             </Grid>
 
                             <TextBox Text="{Binding CameraAddress}"
@@ -404,10 +488,10 @@
 
                                 <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
                                       ColumnSpacing="10" RowSpacing="6">
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Workpiece ⌀" Classes="label" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Workpiece diameter" Classes="label" VerticalAlignment="Center" />
                                     <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding RotaryWorkpieceDiameterMm}" />
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Roller ⌀" Classes="label" VerticalAlignment="Center"
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Roller diameter" Classes="label" VerticalAlignment="Center"
                                                IsVisible="{Binding !IsChuck}" />
                                     <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding RotaryRollerDiameterMm}"
                                              IsVisible="{Binding !IsChuck}" />
@@ -527,10 +611,18 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
                                 <TextBlock Grid.Column="0" Classes="sectionTitle" Text="LAYERS" VerticalAlignment="Center" />
-                                <Button ToolTip.Tip="Move this layer earlier, so it burns before the ones below it." Grid.Column="1" Content="↑" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerUpCommand}" />
-                                <Button ToolTip.Tip="Move this layer later, so it burns after the ones above it." Grid.Column="2" Content="↓" Classes="ghost" Padding="6,2" Command="{Binding MoveLayerDownCommand}" />
-                                <Button ToolTip.Tip="Add another layer. Layers let one design engrave some parts and cut others." Grid.Column="3" Content="+" Classes="ghost" Padding="6,2" Command="{Binding AddLayerCommand}" />
-                                <Button ToolTip.Tip="Delete the selected layer. Anything on it moves to the layer above." Grid.Column="4" Content="−" Classes="ghost" Padding="6,2" Command="{Binding RemoveLayerCommand}" />
+                                <Button ToolTip.Tip="Move this layer earlier, so it burns before the ones below it." Grid.Column="1"  Classes="ghost" Padding="6,2" Command="{Binding MoveLayerUpCommand}" >
+                                <PathIcon Data="{StaticResource IconJogUp}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Move this layer later, so it burns after the ones above it." Grid.Column="2"  Classes="ghost" Padding="6,2" Command="{Binding MoveLayerDownCommand}" >
+                                <PathIcon Data="{StaticResource IconJogDown}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Add another layer. Layers let one design engrave some parts and cut others." Grid.Column="3"  Classes="ghost" Padding="6,2" Command="{Binding AddLayerCommand}" >
+                                <PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16" />
+                            </Button>
+                                <Button ToolTip.Tip="Delete the selected layer. Anything on it moves to the layer above." Grid.Column="4"  Classes="ghost" Padding="6,2" Command="{Binding RemoveLayerCommand}" >
+                                <PathIcon Data="{StaticResource IconMinus}" Width="16" Height="16" />
+                            </Button>
                             </Grid>
 
                             <ListBox ItemsSource="{Binding Layers}" SelectedItem="{Binding SelectedLayer}"
@@ -708,25 +800,37 @@
 
                             <TextBlock Classes="sectionTitle" Text="ALIGN" Margin="0,4,0,0" />
                             <UniformGrid Rows="1" Columns="6">
-                                <Button Content="⇤" ToolTip.Tip="Align left" Padding="0,5"
-                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Left" />
-                                <Button Content="↔" ToolTip.Tip="Centre horizontally" Padding="0,5"
-                                        Command="{Binding AlignSelectionCommand}" CommandParameter="HorizontalCentre" />
-                                <Button Content="⇥" ToolTip.Tip="Align right" Padding="0,5"
-                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Right" />
-                                <Button Content="⤒" ToolTip.Tip="Align top" Padding="0,5"
-                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Top" />
-                                <Button Content="↕" ToolTip.Tip="Centre vertically" Padding="0,5"
-                                        Command="{Binding AlignSelectionCommand}" CommandParameter="VerticalCentre" />
-                                <Button Content="⤓" ToolTip.Tip="Align bottom" Padding="0,5"
-                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Bottom" />
+                                <Button  ToolTip.Tip="Align left" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Left" >
+                                <PathIcon Data="{StaticResource IconAlignLeft}" Width="16" Height="16" />
+                            </Button>
+                                <Button  ToolTip.Tip="Centre horizontally" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="HorizontalCentre" >
+                                <PathIcon Data="{StaticResource IconAlignCentreH}" Width="16" Height="16" />
+                            </Button>
+                                <Button  ToolTip.Tip="Align right" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Right" >
+                                <PathIcon Data="{StaticResource IconAlignRight}" Width="16" Height="16" />
+                            </Button>
+                                <Button  ToolTip.Tip="Align top" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Top" >
+                                <PathIcon Data="{StaticResource IconAlignTop}" Width="16" Height="16" />
+                            </Button>
+                                <Button  ToolTip.Tip="Centre vertically" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="VerticalCentre" >
+                                <PathIcon Data="{StaticResource IconAlignCentreV}" Width="16" Height="16" />
+                            </Button>
+                                <Button  ToolTip.Tip="Align bottom" Padding="0,5"
+                                        Command="{Binding AlignSelectionCommand}" CommandParameter="Bottom" >
+                                <PathIcon Data="{StaticResource IconAlignBottom}" Width="16" Height="16" />
+                            </Button>
                             </UniformGrid>
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                                <Button Grid.Column="0" Content="Spread ↔"
+                                <Button Grid.Column="0" Content="Spread across"
                                         ToolTip.Tip="Even the horizontal gaps (needs three or more)"
                                         Command="{Binding DistributeSelectionCommand}" CommandParameter="Horizontal" />
-                                <Button ToolTip.Tip="Space the selected shapes evenly from top to bottom." Grid.Column="1" Content="Spread ↕"
+                                <Button ToolTip.Tip="Space the selected shapes evenly from top to bottom." Grid.Column="1" Content="Spread down"
                                         Command="{Binding DistributeSelectionCommand}" CommandParameter="Vertical" />
                             </Grid>
 
@@ -833,10 +937,12 @@
                             Classes="ghost" Padding="8,2"
                             IsVisible="{Binding Assistant.HasStoredKey}"
                             Command="{Binding Assistant.ChangeKeyCommand}" />
-                    <Button Grid.Column="5" Content="✕" Classes="ghost" Padding="8,2"
+                    <Button Grid.Column="5" Classes="ghost" Padding="6,2"
                             AutomationProperties.Name="Close the assistant"
                             Command="{Binding ToggleAssistantCommand}"
-                            ToolTip.Tip="Close the assistant. The conversation is kept, so reopening carries on where you left off." />
+                            ToolTip.Tip="Close the assistant. The conversation is kept, so reopening carries on where you left off." >
+                        <PathIcon Data="{StaticResource IconClose}" Width="13" Height="13" />
+                    </Button>
                 </Grid>
 
                 <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
@@ -942,9 +1048,11 @@
                 <Button ToolTip.Tip="Play or pause the preview. This draws the toolpath on screen and moves nothing." Grid.Column="0" Classes="primary" Width="40" Padding="0"
                         Content="{Binding PlayPauseGlyph}"
                         Command="{Binding PlaySimulationCommand}" />
-                <Button Grid.Column="1" Width="40" Padding="0" Content="■"
+                <Button Grid.Column="1" Width="40" Padding="0" 
                         ToolTip.Tip="Stop and rewind"
-                        Command="{Binding StopSimulationCommand}" />
+                        Command="{Binding StopSimulationCommand}" >
+                                <PathIcon Data="{StaticResource IconSquare}" Width="16" Height="16" />
+                            </Button>
 
                 <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Text="{Binding SimulationStatus}" Classes="mono" FontSize="11" />
@@ -973,10 +1081,12 @@
                             Click="OnShowSettings" />
                     <Button ToolTip.Tip="Clear the console messages." Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
                             Command="{Binding Console.ClearCommand}" />
-                    <Button Grid.Column="3" Content="✕" Classes="ghost" Padding="8,2"
+                    <Button Grid.Column="3" Classes="ghost" Padding="6,2"
                             AutomationProperties.Name="Close the console"
                             Command="{Binding ToggleConsoleCommand}"
-                            ToolTip.Tip="Close the console. The log is kept." />
+                            ToolTip.Tip="Close the console. The log is kept." >
+                        <PathIcon Data="{StaticResource IconClose}" Width="13" Height="13" />
+                    </Button>
                 </Grid>
 
                 <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,8,0,0">

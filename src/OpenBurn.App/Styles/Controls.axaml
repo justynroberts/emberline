@@ -250,6 +250,17 @@
     </Style>
 
     <!-- The job buttons sit beside it, so they share a height and read as a row. -->
+    <!-- Toolbar buttons that carry a word rather than a glyph. The file actions
+         use these: "Open" is the thing people look for by name, and an unlabelled
+         arrow among two dozen other glyphs is not findable. -->
+    <Style Selector="Button.label">
+        <Setter Property="Height" Value="38" />
+        <Setter Property="MinWidth" Value="62" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusControl}" />
+    </Style>
+
     <Style Selector="Button.job">
         <Setter Property="MinHeight" Value="38" />
         <Setter Property="MinWidth" Value="86" />
