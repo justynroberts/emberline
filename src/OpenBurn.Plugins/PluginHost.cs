@@ -57,7 +57,7 @@ public static class PluginHost
             try
             {
                 var context = new PluginLoadContext(path);
-                var assembly = context.LoadFromAssemblyPath(path);
+                var assembly = context.LoadFromFileWithoutLocking(path);
                 var found = RegisterFrom(assembly, registry, Path.GetFileName(path));
 
                 if (found.Count == 0)
@@ -155,6 +155,22 @@ public static class PluginHost
     {
         private readonly AssemblyDependencyResolver _resolver;
 
+        /// <summary>
+        /// Load an assembly by reading it, rather than by mapping the file.
+        ///
+        /// LoadFromAssemblyPath holds the file open for the life of the process.
+        /// On Unix that is invisible — an open file can still be deleted — but on
+        /// Windows it locks the DLL, so a plugin cannot be updated or removed
+        /// while OpenBurn is running, and the operator gets "access denied" with
+        /// nothing to explain it. Reading the bytes first costs a copy and leaves
+        /// nothing held.
+        /// </summary>
+        public Assembly LoadFromFileWithoutLocking(string path)
+        {
+            using var stream = new MemoryStream(File.ReadAllBytes(path));
+            return LoadFromStream(stream);
+        }
+
         public PluginLoadContext(string pluginPath) : base(isCollectible: false) =>
             _resolver = new AssemblyDependencyResolver(pluginPath);
 
@@ -164,7 +180,8 @@ public static class PluginHost
             if (assemblyName.Name?.StartsWith("OpenBurn", StringComparison.Ordinal) == true) return null;
 
             var path = _resolver.ResolveAssemblyToPath(assemblyName);
-            return path is null ? null : LoadFromAssemblyPath(path);
+            // Dependencies must not lock their files either.
+            return path is null ? null : LoadFromFileWithoutLocking(path);
         }
 
         protected override nint LoadUnmanagedDll(string unmanagedDllName)

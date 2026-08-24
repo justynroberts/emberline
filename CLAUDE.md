@@ -77,6 +77,19 @@ is, so that byte reaches a laser part-way through a job and ends the job. `$I`
 only, plus a listen for controllers that greet on connect. `DiscoveryTests` pins
 this; do not "improve" detection rates by putting the reset back.
 
+**Plugin assemblies must not be loaded by path.** `LoadFromAssemblyPath` holds the
+file open for the process lifetime, which on Windows locks the DLL so a plugin
+cannot be updated or removed while OpenBurn runs. Read the bytes and use
+`LoadFromStream` — `PluginLoadContext.LoadFromFileWithoutLocking` does this for the
+plugin and its dependencies. Only Windows can fail this, so the test for it earns
+its keep on a Mac by never failing.
+
+**Skia needs help on Linux.** `SkiaSharp.NativeAssets.Linux` ships the native
+library, and fontconfig has to be installed on the machine. Without either, every
+path touching text or image decoding throws `DllNotFoundException` — and macOS and
+Windows carry their natives in the main package, so this only ever shows up on one
+of the three platforms.
+
 **Tests must never touch the real application data folder.** `TestEnvironment`
 redirects `AppPaths` into a temporary directory from a module initialiser. That is
 one line, it fails silently if removed — nothing throws, the writes just go

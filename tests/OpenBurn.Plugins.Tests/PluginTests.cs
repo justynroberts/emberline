@@ -237,3 +237,39 @@ public class PluginRegistryTests
         }
     }
 }
+
+/// <summary>
+/// What loading a plugin does to the file it came from.
+/// </summary>
+public class PluginFileLockTests
+{
+    [Fact]
+    public void LoadingAPluginDoesNotLockItsFile()
+    {
+        // LoadFromAssemblyPath holds the file open for the life of the process.
+        // On Unix that is invisible, because an open file can still be deleted;
+        // on Windows it locks the DLL, so a plugin cannot be updated or removed
+        // while OpenBurn is running and the operator gets "access denied" with
+        // nothing to explain it. This can only fail on Windows, which is exactly
+        // why it has to exist — CI found it after a Mac never could.
+        var folder = Path.Combine(Path.GetTempPath(), "openburn-plugin-lock", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+
+        var source = typeof(PluginHost).Assembly.Location;
+        var target = Path.Combine(folder, Path.GetFileName(source));
+        File.Copy(source, target, overwrite: true);
+
+        try
+        {
+            PluginHost.Load(new PluginRegistry(), folder);
+
+            // The point: the file must still be replaceable and removable.
+            File.Delete(target);
+            Assert.False(File.Exists(target));
+        }
+        finally
+        {
+            if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true);
+        }
+    }
+}

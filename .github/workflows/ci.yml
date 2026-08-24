@@ -26,6 +26,12 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # Skia renders through fontconfig on Linux. The runners do not have it, and
+      # without it libSkiaSharp loads but cannot enumerate a single font.
+      - name: Linux font dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
       - name: Restore
         run: dotnet restore OpenBurn.slnx
 
@@ -56,6 +62,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
+      # The Linux self-test renders text, which needs fontconfig.
+      - name: Linux font dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
 
       - name: Package
         shell: bash
