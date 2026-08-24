@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using OpenBurn.Core.Storage;
+using Xunit;
 
 namespace OpenBurn.App.Tests;
 
@@ -25,5 +26,38 @@ public static class TestEnvironment
     [ModuleInitializer]
     public static void Initialise()
     {
+        AppPaths.OverrideRoot(Root);
+        AppPaths.EnsureCreated();
+    }
+}
+
+/// <summary>
+/// The tests must never write to the real application data folder.
+///
+/// They did, for most of this project's life: the machine editor tests duplicate
+/// profiles, and with no isolation every run left another copy in the user's
+/// OpenBurn folder. Hundreds accumulated before anyone looked at the machine
+/// dropdown and asked why it was full of copies of the same laser.
+///
+/// The isolation is one line in a module initialiser, which is exactly the kind
+/// of thing that can be deleted by accident and never noticed — it did not throw,
+/// it just quietly wrote somewhere else. So it is asserted rather than assumed.
+/// </summary>
+public class TestIsolationTests
+{
+    [Fact]
+    public void ApplicationDataIsRedirectedIntoATemporaryFolder()
+    {
+        Assert.StartsWith(Path.GetTempPath(), AppPaths.Root, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NothingWritesToTheRealApplicationDataFolder()
+    {
+        var real = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenBurn");
+
+        Assert.NotEqual(real, AppPaths.Root);
+        Assert.DoesNotContain("Application Support/OpenBurn", AppPaths.Root, StringComparison.Ordinal);
     }
 }

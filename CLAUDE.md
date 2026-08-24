@@ -77,6 +77,13 @@ is, so that byte reaches a laser part-way through a job and ends the job. `$I`
 only, plus a listen for controllers that greet on connect. `DiscoveryTests` pins
 this; do not "improve" detection rates by putting the reset back.
 
+**Tests must never touch the real application data folder.** `TestEnvironment`
+redirects `AppPaths` into a temporary directory from a module initialiser. That is
+one line, it fails silently if removed — nothing throws, the writes just go
+somewhere else — and it once got deleted by a bulk edit and left hundreds of
+duplicate machine profiles in the user's own folder before anybody noticed. Two
+tests assert the redirect is in place; do not delete them.
+
 **`TraceOptions` collides with `System.Diagnostics.TraceOptions`.** Any file that
 wants both needs a using alias — `SelfTest.cs` has one.
 
