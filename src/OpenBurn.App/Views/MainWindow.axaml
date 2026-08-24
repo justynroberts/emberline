@@ -67,13 +67,35 @@
                     <StackPanel Spacing="2" Margin="0,2,10,2">
                         <StackPanel Orientation="Horizontal" Spacing="4">
                             <Button Classes="label" Command="{Binding NewDocumentCommand}"
-                                    ToolTip.Tip="Start a new, empty design." />
+                                    ToolTip.Tip="Start a new, empty design.">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource IconNew}" Width="16" Height="16" />
+                                    <TextBlock Text="New" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                             <Button Classes="label primary" Command="{Binding OpenCommand}"
-                                    ToolTip.Tip="Open artwork — SVG, DXF, a photograph, or G-code. Also reachable with Cmd/Ctrl+O, and you can drag a file onto the window." />
+                                    ToolTip.Tip="Open a file from this computer — SVG, DXF, a photograph, or G-code. Cmd/Ctrl+O does the same, and you can drag a file straight onto the window.">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource IconOpen}" Width="16" Height="16" />
+                                    <TextBlock Text="Open" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="label" Click="OnFindArtwork"
+                                    ToolTip.Tip="Search open artwork catalogues — around 200,000 shapes across 150 free icon sets — and bring one onto the bed, to etch or to cut out. The licence is shown against every result.">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource IconArtwork}" Width="16" Height="16" />
+                                    <TextBlock Text="Artwork" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                             <Button Classes="label" Command="{Binding ExportGcodeCommand}"
-                                    ToolTip.Tip="Save the job as a .nc file you can run from an SD card or another sender." />
+                                    ToolTip.Tip="Save the job as a .nc file you can run from an SD card or another sender.">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource IconSave}" Width="16" Height="16" />
+                                    <TextBlock Text="Save" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
-                        <TextBlock Text="FILE" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                        <TextBlock Text="FILE &amp; ARTWORK" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
                     </StackPanel>
 
                     <Border Width="1" Background="{DynamicResource Hairline}" Margin="0,4,10,4" />
@@ -91,10 +113,6 @@
                             </Button>
                             <Button Classes="tool" ToolTip.Tip="Add text, converted to cuttable outlines." Command="{Binding AddTextCommand}" >
                                 <PathIcon Data="{StaticResource IconText}" Width="18" Height="18" />
-                            </Button>
-                            <Button Classes="tool" Click="OnFindArtwork"
-                                    ToolTip.Tip="Search open artwork catalogues and bring a shape onto the bed — to etch, or to cut out. The licence is shown against every result." >
-                                <PathIcon Data="{StaticResource IconArtwork}" Width="18" Height="18" />
                             </Button>
                             <Button Classes="tool" Click="OnTraceImage"
                                     ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file." >

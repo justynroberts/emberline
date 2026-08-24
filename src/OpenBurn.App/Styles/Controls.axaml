@@ -255,7 +255,7 @@
          arrow among two dozen other glyphs is not findable. -->
     <Style Selector="Button.label">
         <Setter Property="Height" Value="38" />
-        <Setter Property="MinWidth" Value="62" />
+        <Setter Property="MinWidth" Value="76" />
         <Setter Property="Padding" Value="12,0" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusControl}" />
