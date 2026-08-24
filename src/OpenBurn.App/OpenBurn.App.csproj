@@ -27,6 +27,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>fonts/%(Filename)%(Extension)</Link>
     </Content>
+
+    <!-- The Open Font License requires its text to travel with the fonts, so it
+         ships beside them rather than only in the repository. -->
+    <Content Include="Assets/Fonts/OFL.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>fonts/OFL.txt</Link>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

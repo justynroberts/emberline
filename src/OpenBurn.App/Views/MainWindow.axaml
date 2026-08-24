@@ -40,120 +40,114 @@
                             BedImage="{Binding BedImage}"
                             BedImageOpacity="{Binding BedImageOpacity}" />
 
-        <!-- ============================== Left tool rail ============================== -->
-        <Border Classes="panel focusIn" Width="60" Margin="12,12,0,12"
-                HorizontalAlignment="Left" VerticalAlignment="Stretch" Padding="8,12">
-            <DockPanel LastChildFill="True">
-                <!-- The bottom group is pinned first so it always has room; the tools
-                     above scroll if the window is short. The info button must stay
-                     reachable on every screen, and a rail that outgrows the window
-                     silently clips it. -->
-                <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,8,0,0">
-                    <Button Classes="tool" Content="◐" ToolTip.Tip="Switch theme" Command="{Binding CycleThemeCommand}" />
-                    <Button Classes="round" Content="i"
-                            HorizontalAlignment="Center"
-                            AutomationProperties.Name="About this app"
-                            ToolTip.Tip="About OpenBurn"
-                            Click="OnShowAbout" />
+        <!-- ================================ Top toolbar ================================ -->
+        <!-- Grouped by what you are doing rather than one long column. The rail this
+             replaces held twenty-odd buttons in a 60 px strip that scrolled on a short
+             window, which meant the tools at the bottom were both unlabelled and
+             hidden. Groups are separated by a rule and named underneath, so the
+             icons are learnable rather than guessable. -->
+        <Border Classes="panel focusIn" Margin="12,12,12,0" VerticalAlignment="Top" Padding="12,8">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto">
+
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="tool" Content="⊞" ToolTip.Tip="Start a new, empty design." Command="{Binding NewDocumentCommand}" />
+                        <Button Classes="tool" Content="⤓" ToolTip.Tip="Open artwork — SVG, DXF, an image, or G-code." Command="{Binding OpenCommand}" />
+                        <Button Classes="tool" Content="⇪" ToolTip.Tip="Save the job as a .nc file you can run from an SD card or another sender." Command="{Binding ExportGcodeCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="FILE" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
                 </StackPanel>
 
-                <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Spacing="6">
-                    <Button Classes="tool" Content="▭" ToolTip.Tip="Add rectangle" Command="{Binding AddRectangleCommand}" />
-                    <Button Classes="tool" Content="◯" ToolTip.Tip="Add circle" Command="{Binding AddCircleCommand}" />
-                    <Button Classes="tool" Content="⬡" ToolTip.Tip="Add polygon" Command="{Binding AddPolygonCommand}" />
-                    <Button Classes="tool" Content="T" ToolTip.Tip="Add text" Command="{Binding AddTextCommand}" />
-                    <Separator />
-                    <Button Classes="tool" Content="↺" ToolTip.Tip="Undo" Command="{Binding UndoEditCommand}" />
-                    <Button Classes="tool" Content="↻" ToolTip.Tip="Redo" Command="{Binding RedoEditCommand}" />
-                    <Separator />
-                    <Button Classes="tool" Content="⤓" ToolTip.Tip="Import artwork (SVG, image or G-code)" Command="{Binding OpenCommand}" />
-                    <Button Classes="tool" Content="✦" Click="OnShowWizard"
-                            ToolTip.Tip="Walk me through it — machine, material, artwork, settings, then a check before you run anything." />
-                    <Button Classes="tool" Content="◈" Click="OnTraceImage"
-                            ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file" />
-                    <Button Classes="tool" Content="⧉" ToolTip.Tip="Duplicate selection" Command="{Binding DuplicateSelectedCommand}" />
-                    <Button Classes="tool" Content="␡" ToolTip.Tip="Delete selection" Command="{Binding DeleteSelectedCommand}" />
-                    <Separator />
-                    <Button Classes="tool" Content="⤢" ToolTip.Tip="Zoom to fit the bed" Click="OnZoomBed" />
-                    <Button Classes="tool" Content="⌖" ToolTip.Tip="Zoom to fit the artwork" Click="OnZoomContent" />
-                    <Button Classes="tool" Content="▦" ToolTip.Tip="Toggle the grid"
-                            Command="{Binding ToggleGridCommand}" />
-                    <Button Classes="tool" Content="⇢" ToolTip.Tip="Show travel moves"
-                            Command="{Binding ToggleTravelCommand}" />
-                    <Separator />
-                    <Button Classes="tool" Content="▶" ToolTip.Tip="Simulate the job" Command="{Binding PlaySimulationCommand}" />
-                    <Button Classes="tool" Content="⌗" ToolTip.Tip="Inspect the G-code" Command="{Binding ToggleGcodeCommand}" />
-                    <Button Classes="tool" Content="⧗" ToolTip.Tip="Job history" Click="OnShowJobLibrary" />
-                    <Button Classes="tool" Content="⚙" ToolTip.Tip="Controller settings" Click="OnShowSettings" />
-                    <Separator />
-                    <Button Classes="tool" Content="≣" ToolTip.Tip="Machine console" Command="{Binding ToggleConsoleCommand}" />
-                    <Button Classes="tool" Content="✦" ToolTip.Tip="Assistant" Command="{Binding ToggleAssistantCommand}" />
-                </StackPanel>
-                </ScrollViewer>
-            </DockPanel>
-        </Border>
+                <Border Grid.Column="1" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
 
-        <!-- ============================== Top status bar ============================== -->
-        <Border Classes="panel focusInDelay1" Margin="84,12,352,0"
-                VerticalAlignment="Top" Padding="14,10">
-            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto">
-
-                <!-- Machine state -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
-                    <Ellipse Width="10" Height="10"
-                             Fill="{Binding StateColourKey, Converter={StaticResource ThemeBrush}}" />
-                    <StackPanel>
-                        <TextBlock Text="{Binding MachineStateName}" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding StatusText}" Classes="label" />
+                <StackPanel Grid.Column="2" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="tool" Content="▭" ToolTip.Tip="Add a rectangle." Command="{Binding AddRectangleCommand}" />
+                        <Button Classes="tool" Content="◯" ToolTip.Tip="Add a circle." Command="{Binding AddCircleCommand}" />
+                        <Button Classes="tool" Content="⬡" ToolTip.Tip="Add a polygon." Command="{Binding AddPolygonCommand}" />
+                        <Button Classes="tool" Content="T" ToolTip.Tip="Add text, converted to cuttable outlines." Command="{Binding AddTextCommand}" />
+                        <Button Classes="tool" Content="◈" Click="OnTraceImage"
+                                ToolTip.Tip="Trace an image to vectors — the selected one, or pick a file." />
                     </StackPanel>
+                    <TextBlock Text="DRAW" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
                 </StackPanel>
 
-                <Border Grid.Column="1" Width="1" Background="{DynamicResource Hairline}" Margin="16,2" />
+                <Border Grid.Column="3" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
 
-                <!-- Coordinates -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="24" VerticalAlignment="Center">
-                    <StackPanel>
-                        <TextBlock Text="WORK" Classes="sectionTitle" Margin="0" />
-                        <TextBlock Text="{Binding WorkPositionText}" Classes="readout" />
+                <StackPanel Grid.Column="4" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="tool" Content="↺" ToolTip.Tip="Undo the last change." Command="{Binding UndoEditCommand}" />
+                        <Button Classes="tool" Content="↻" ToolTip.Tip="Redo the change you just undid." Command="{Binding RedoEditCommand}" />
+                        <Button Classes="tool" Content="⧉" ToolTip.Tip="Duplicate the selection." Command="{Binding DuplicateSelectedCommand}" />
+                        <Button Classes="tool" Content="␡" ToolTip.Tip="Delete the selection." Command="{Binding DeleteSelectedCommand}" />
                     </StackPanel>
-                    <StackPanel>
-                        <TextBlock Text="MACHINE" Classes="sectionTitle" Margin="0" />
-                        <TextBlock Text="{Binding MachinePositionText}" Classes="mono"
-                                   Foreground="{DynamicResource InkMuted}" />
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock Text="FEED / POWER" Classes="sectionTitle" Margin="0" />
-                        <TextBlock Text="{Binding FeedPowerText}" Classes="mono" />
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock Text="BUFFER" Classes="sectionTitle" Margin="0" />
-                        <TextBlock Text="{Binding BufferText}" Classes="mono"
-                                   Foreground="{DynamicResource InkMuted}" />
-                    </StackPanel>
+                    <TextBlock Text="EDIT" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
                 </StackPanel>
 
-                <!-- Job actions -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Content="Frame" Command="{Binding FrameCommand}"
-                            ToolTip.Tip="Trace the job outline at pointer power so you can align the work" />
-                    <Button ToolTip.Tip="{Binding StartHint}" Content="Start" Classes="primary" Command="{Binding StartJobCommand}"
-                            IsVisible="{Binding !IsJobActive}" />
-                    <Button ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}" />
-                    <Button ToolTip.Tip="Carry on from exactly where the job paused." Content="Resume" Classes="primary" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}" />
-                    <Button ToolTip.Tip="Stop the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}" />
+                <Border Grid.Column="5" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
+
+                <StackPanel Grid.Column="6" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="tool" Content="⤢" ToolTip.Tip="Zoom so the whole bed is in view." Click="OnZoomBed" />
+                        <Button Classes="tool" Content="⌖" ToolTip.Tip="Zoom so the artwork fills the view." Click="OnZoomContent" />
+                        <Button Classes="tool" Content="▦" ToolTip.Tip="Show or hide the grid." Command="{Binding ToggleGridCommand}" />
+                        <Button Classes="tool" Content="⇢" ToolTip.Tip="Show the rapid moves between cuts, so you can see the order and the wasted travel." Command="{Binding ToggleTravelCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="VIEW" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
                 </StackPanel>
 
-                <Border Grid.Column="4" Width="1" Background="{DynamicResource Hairline}" Margin="12,2" />
+                <Border Grid.Column="7" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
 
-                <Button Grid.Column="5" Content="STOP" Classes="danger"
+                <StackPanel Grid.Column="8" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="tool" Content="▶" ToolTip.Tip="Play the job on screen. This draws the toolpath and moves nothing." Command="{Binding PlaySimulationCommand}" />
+                        <Button Classes="tool" Content="⌗" ToolTip.Tip="Inspect the exact G-code that will be sent." Command="{Binding ToggleGcodeCommand}" />
+                        <Button Classes="tool" Content="≣" ToolTip.Tip="Open the machine console to see and send raw commands." Command="{Binding ToggleConsoleCommand}" />
+                        <Button Classes="tool" Content="⧗" ToolTip.Tip="Past jobs and the settings they ran with." Click="OnShowJobLibrary" />
+                        <Button Classes="tool" Content="⚙" ToolTip.Tip="The controller's $ settings, each one named and explained." Click="OnShowSettings" />
+                    </StackPanel>
+                    <TextBlock Text="INSPECT" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <Border Grid.Column="9" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
+
+                <StackPanel Grid.Column="10" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="tool" Content="✦" Click="OnShowWizard"
+                                ToolTip.Tip="Walk me through it — machine, material, artwork, settings, then a check before you run anything." />
+                        <Button Classes="tool" Content="✧" ToolTip.Tip="Ask the assistant about settings, a fault or this job. It can also draw." Command="{Binding ToggleAssistantCommand}" />
+                        <Button Classes="tool" Content="◐" ToolTip.Tip="Switch between the light and dark themes." Command="{Binding CycleThemeCommand}" />
+                        <Button Classes="tool" Content="i" AutomationProperties.Name="About this app"
+                                ToolTip.Tip="About OpenBurn." Click="OnShowAbout" />
+                    </StackPanel>
+                    <TextBlock Text="HELP" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Job actions sit apart, at the far end, because they are the ones
+                     that move a machine. -->
+                <StackPanel Grid.Column="12" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Content="Frame" Command="{Binding FrameCommand}"
+                                ToolTip.Tip="Trace the job outline at pointer power so you can check where it will land before burning anything." />
+                        <Button ToolTip.Tip="{Binding StartHint}" Content="Start" Classes="primary" Command="{Binding StartJobCommand}"
+                                IsVisible="{Binding !IsJobActive}" />
+                        <Button ToolTip.Tip="Pause after the current move. The laser switches off and the head stays where it is, so you can resume in the same place." Content="Pause" Command="{Binding PauseJobCommand}" IsVisible="{Binding IsJobRunning}" />
+                        <Button ToolTip.Tip="Carry on from exactly where the job paused." Content="Resume" Classes="primary" Command="{Binding ResumeJobCommand}" IsVisible="{Binding IsJobPaused}" />
+                        <Button ToolTip.Tip="Stop the job and switch the laser off. This cannot be resumed — use Pause if you only need a moment." Content="Stop" Command="{Binding StopJobCommand}" IsVisible="{Binding IsJobActive}" />
+                    </StackPanel>
+                    <TextBlock Text="JOB" Classes="sectionTitle" Margin="0" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <Border Grid.Column="13" Width="1" Background="{DynamicResource Hairline}" Margin="10,4" />
+
+                <Button Grid.Column="14" Content="STOP" Classes="danger" VerticalAlignment="Center"
                         Command="{Binding EmergencyStopCommand}"
-                        ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset (Escape)" />
+                        ToolTip.Tip="Emergency stop — feed hold, beam off, controller reset. Escape does the same from anywhere." />
             </Grid>
         </Border>
 
         <!-- ============================ Job progress strip ============================ -->
-        <Border Classes="panel slideUp" Margin="84,0,352,0" Padding="14,10"
+        <Border Classes="panel slideUp" Margin="12,0,352,0" Padding="14,10"
                 VerticalAlignment="Top"
                 IsVisible="{Binding IsJobActive}">
             <Border.RenderTransform>
@@ -183,7 +177,7 @@
         </Border>
 
         <!-- ============================= Fault banner ================================= -->
-        <Border Classes="panel slideUp" Margin="84,0,352,20" Padding="14,11"
+        <Border Classes="panel slideUp" Margin="12,0,352,20" Padding="14,11"
                 VerticalAlignment="Bottom" IsVisible="{Binding HasFault}"
                 BorderBrush="{DynamicResource StateAlarm}">
             <Grid ColumnDefinitions="Auto,*,Auto">
@@ -806,7 +800,7 @@
         <!-- The two drawers share the bottom of the window. A stack keeps them
              clear of each other when both are open, which they often are while
              diagnosing something. -->
-        <StackPanel VerticalAlignment="Bottom" Margin="84,0,352,12" Spacing="10">
+        <StackPanel VerticalAlignment="Bottom" Margin="12,0,352,58" Spacing="10">
 
         <!-- =============================== Assistant ================================== -->
         <Border Classes="panel slideUp" Height="360" Width="620"
@@ -814,7 +808,7 @@
                 IsVisible="{Binding ShowAssistant}" Padding="14">
             <DockPanel LastChildFill="True">
 
-                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,10">
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,10">
                     <TextBlock Grid.Column="0" Classes="sectionTitle" Text="ASSISTANT" Margin="0" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="thinking…" Classes="label" Margin="10,0,0,0"
                                VerticalAlignment="Center" IsVisible="{Binding Assistant.IsThinking}" />
@@ -827,6 +821,10 @@
                             Classes="ghost" Padding="8,2"
                             IsVisible="{Binding Assistant.HasStoredKey}"
                             Command="{Binding Assistant.ChangeKeyCommand}" />
+                    <Button Grid.Column="5" Content="✕" Classes="ghost" Padding="8,2"
+                            AutomationProperties.Name="Close the assistant"
+                            Command="{Binding ToggleAssistantCommand}"
+                            ToolTip.Tip="Close the assistant. The conversation is kept, so reopening carries on where you left off." />
                 </Grid>
 
                 <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
@@ -956,13 +954,17 @@
         <Border Classes="panel slideUp" Height="240"
                 IsVisible="{Binding ShowConsole}" Padding="12">
             <DockPanel LastChildFill="True">
-                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,8">
                     <TextBlock Grid.Column="0" Classes="sectionTitle" Text="MACHINE CONSOLE" Margin="0" VerticalAlignment="Center" />
                     <Button Grid.Column="1" Content="Settings" Classes="ghost" Padding="8,2"
                             ToolTip.Tip="Open the controller settings editor"
                             Click="OnShowSettings" />
                     <Button ToolTip.Tip="Clear the console messages." Grid.Column="2" Content="Clear" Classes="ghost" Padding="8,2"
                             Command="{Binding Console.ClearCommand}" />
+                    <Button Grid.Column="3" Content="✕" Classes="ghost" Padding="8,2"
+                            AutomationProperties.Name="Close the console"
+                            Command="{Binding ToggleConsoleCommand}"
+                            ToolTip.Tip="Close the console. The log is kept." />
                 </Grid>
 
                 <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,8,0,0">
@@ -997,7 +999,7 @@
         </StackPanel>
 
         <!-- ============================== G-code panel ================================= -->
-        <Border Classes="panel focusIn" Width="520" Margin="84,84,0,0"
+        <Border Classes="panel focusIn" Width="520" Margin="12,104,0,0"
                 HorizontalAlignment="Left" VerticalAlignment="Stretch"
                 MaxHeight="620"
                 IsVisible="{Binding ShowGcode}" Padding="14">
@@ -1019,10 +1021,57 @@
             </DockPanel>
         </Border>
 
-        <!-- ============================ Cursor readout ================================= -->
-        <Border Classes="chip" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                Margin="84,0,0,18" Padding="10,4">
-            <TextBlock Text="{Binding CursorText}" Classes="mono" FontSize="11" />
+        <!-- =============================== Status bar ================================== -->
+        <!-- Along the bottom, where a status bar belongs. It used to run across the
+             top, competing with the job actions for the most valuable strip on the
+             screen — and readouts are glanced at, while the buttons beside them
+             were pressed. -->
+        <Border Classes="panel focusInDelay1" Margin="12,0,12,12"
+                VerticalAlignment="Bottom" Padding="14,8">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                    <Ellipse Width="10" Height="10"
+                             Fill="{Binding StateColourKey, Converter={StaticResource ThemeBrush}}" />
+                    <StackPanel>
+                        <TextBlock Text="{Binding MachineStateName}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding StatusText}" Classes="label" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Grid.Column="1" Width="1" Background="{DynamicResource Hairline}" Margin="16,2" />
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <TextBlock Text="WORK" Classes="sectionTitle" Margin="0" />
+                    <TextBlock Text="{Binding WorkPositionText}" Classes="readout" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <TextBlock Text="MACHINE" Classes="sectionTitle" Margin="0" />
+                    <TextBlock Text="{Binding MachinePositionText}" Classes="mono"
+                               Foreground="{DynamicResource InkMuted}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <TextBlock Text="FEED / POWER" Classes="sectionTitle" Margin="0" />
+                    <TextBlock Text="{Binding FeedPowerText}" Classes="mono" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="5" VerticalAlignment="Center">
+                    <TextBlock Text="BUFFER" Classes="sectionTitle" Margin="0" />
+                    <TextBlock Text="{Binding BufferText}" Classes="mono"
+                               Foreground="{DynamicResource InkMuted}" />
+                </StackPanel>
+
+                <!-- Where the pointer is, which belongs beside the other coordinates
+                     rather than floating over the canvas. -->
+                <StackPanel Grid.Column="7" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <TextBlock Text="POINTER" Classes="sectionTitle" Margin="0" HorizontalAlignment="Right" />
+                    <TextBlock Text="{Binding CursorText}" Classes="mono"
+                               Foreground="{DynamicResource InkMuted}" HorizontalAlignment="Right" />
+                </StackPanel>
+            </Grid>
         </Border>
+
     </Grid>
 </Window>
