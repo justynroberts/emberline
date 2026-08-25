@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- .NET compiles to machine code as it runs, which the hardened runtime
+         forbids by default. Without these three the application is signed and
+         notarised and then refuses to start, which is a worse outcome than not
+         signing it at all. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+
+    <!-- Skia, HarfBuzz and the SQLite provider ship as their own dylibs inside the
+         bundle and are signed separately from the host. -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+
+    <!-- The camera panel reads an IP or USB camera when the operator connects one. -->
+    <key>com.apple.security.device.camera</key>
+    <true/>
+</dict>
+</plist>

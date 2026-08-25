@@ -27,6 +27,9 @@ jobs:
           - { os: windows-latest, rid: win-x64,   script: build/package-windows.sh, arg: win-x64 }
           - { os: ubuntu-latest,  rid: linux-x64, script: build/package-linux.sh,   arg: linux-x64 }
 
+    env:
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+
     steps:
       - uses: actions/checkout@v5
 
@@ -34,24 +37,67 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # Signing, when the certificate is available.
+      #
+      # Without it the macOS builds are ad-hoc signed and Gatekeeper tells whoever
+      # downloads them that the application is damaged. The step is skipped rather
+      # than failed when the secrets are absent, so a fork can still build.
+      - name: Import the signing certificate
+        if: runner.os == 'macOS' && env.MACOS_CERTIFICATE != ''
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          PASSWORD=$(uuidgen)
+
+          security create-keychain -p "$PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 900 "$KEYCHAIN"
+          security unlock-keychain -p "$PASSWORD" "$KEYCHAIN"
+
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
+            -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$PASSWORD" "$KEYCHAIN"
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain
+
+          rm -f "$RUNNER_TEMP/cert.p12"
+
       - name: Package
         shell: bash
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
         run: bash ${{ matrix.script }} ${{ matrix.arg }}
 
+      # macOS gets a disk image, which is what a Mac user expects to download:
+      # a window with the application and a shortcut to Applications beside it.
+      # Everything else gets a zip.
       - name: Archive
         shell: bash
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
         run: |
-          cd dist
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            7z a "emberline-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            bash build/package-dmg.sh "${{ matrix.rid }}"
+          elif [ "${{ runner.os }}" = "Windows" ]; then
+            cd dist && 7z a "emberline-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
           else
-            zip -qry "emberline-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
+            cd dist && zip -qry "emberline-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
           fi
 
       - uses: actions/upload-artifact@v5
         with:
           name: emberline-${{ matrix.rid }}
-          path: dist/emberline-${{ matrix.rid }}.zip
+          path: |
+            dist/emberline-${{ matrix.rid }}.zip
+            dist/emberline-${{ matrix.rid }}.dmg
+          if-no-files-found: error
 
   release:
     needs: build
@@ -66,7 +112,9 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*.zip
+          files: |
+            artifacts/*.zip
+            artifacts/*.dmg
           generate_release_notes: true
           body: |
             > ### This drives a laser
@@ -87,8 +135,7 @@ jobs:
 
             ## Installing
 
-            **macOS** — unzip and move `Emberline.app` to Applications. The bundle is
-            ad-hoc signed, so the first launch needs right-click → Open.
+            **macOS** — open the `.dmg` and drag Emberline to Applications.
 
             **Windows** — unzip anywhere and run `Emberline.exe`. No installer, no runtime to install.
 
