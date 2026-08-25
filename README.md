@@ -24,6 +24,7 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Photo engraving** | Invert, brightness, contrast, gamma, sharpen, tone clipping and twelve dithering kernels, with a live preview of what will actually burn |
 | **CAM** | Raster engraving, vector cut/score/engrave, hatch and offset fills, text to outlines |
 | **Artwork search** | Search 150+ open icon sets, see each licence before importing, and bring a shape in to etch or to cut |
+| **Documents** | Designs save and reopen as a self-contained `.openburn` file — layers, artwork, workpiece and image adjustments, with photographs embedded |
 | **Overlaps** | Shapes that overlap are cut as their combined outline rather than each separately, with holes preserved |
 | **Tracing** | Bitmap to paths with a live preview — outlines or centrelines, threshold seeded from the image itself, simplify and smooth |
 | **Job engine** | Character-counting streaming, pause/resume/stop, resume-from-line after a dropped link, live progress and acceleration-aware time estimates |
@@ -316,7 +317,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 ## Testing
 
 ```bash
-dotnet test                     # 519 tests, no hardware required
+dotnet test                     # 541 tests, no hardware required
 OpenBurn --selftest             # headless end-to-end check of a built application
 ```
 
@@ -326,7 +327,7 @@ controller and checks every line was acknowledged, then exits with a status code
 It catches the class of problem the unit tests cannot — a build assembled wrongly
 rather than code written wrongly.
 
-519 tests, no hardware required. The ones that matter most run complete jobs
+541 tests, no hardware required. The ones that matter most run complete jobs
 through the real streamer against the virtual controller and assert the receive
 buffer is never overrun, because if character-counting streaming is wrong then
 every job on every machine is wrong.

@@ -80,6 +80,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         RebuildWorkpiecePresets();
         LoadPlugins();
         QueueRegenerate();
+
+        // Setting up is not editing. An empty document that claims unsaved changes
+        // teaches people to ignore the mark, which is the one thing it must not do.
+        HasUnsavedChanges = false;
         Console.AppendInfo("OpenBurn ready. Select a machine and connect, or pick the virtual laser to try it without hardware.");
     }
 
@@ -320,6 +324,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public void QueueRegenerate()
     {
         DocumentVersion++;
+        HasUnsavedChanges = true;
         _regeneratePending = true;
         if (_regenerateTimer is null) return;
         _regenerateTimer.Stop();

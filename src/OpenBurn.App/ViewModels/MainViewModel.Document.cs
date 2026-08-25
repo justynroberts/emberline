@@ -7,6 +7,7 @@ using OpenBurn.Cam.Import;
 using OpenBurn.Cam.Trace;
 using OpenBurn.Core.Documents;
 using OpenBurn.Core.Geometry;
+using OpenBurn.Core.Storage;
 using OpenBurn.Materials;
 
 namespace OpenBurn.App.ViewModels;
@@ -27,6 +28,8 @@ public sealed partial class MainViewModel
         Undo.Clear();
         RebuildLayers();
         QueueRegenerate();
+        HasUnsavedChanges = false;
+        OnPropertyChanged(nameof(DocumentTitle));
         Console.AppendInfo("New document.");
     }
 
@@ -43,9 +46,10 @@ public sealed partial class MainViewModel
             [
                 new FilePickerFileType("All supported")
                 {
-                    Patterns = ["*.svg", "*.dxf", "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp",
+                    Patterns = ["*.openburn", "*.svg", "*.dxf", "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp",
                                 "*.nc", "*.gcode", "*.gc", "*.tap", "*.ngc"],
                 },
+                new FilePickerFileType("OpenBurn design") { Patterns = ["*.openburn"] },
                 new FilePickerFileType("Vector") { Patterns = ["*.svg", "*.dxf"] },
                 new FilePickerFileType("Images") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp"] },
                 new FilePickerFileType("G-code") { Patterns = ["*.nc", "*.gcode", "*.gc", "*.tap", "*.ngc"] },
@@ -59,9 +63,110 @@ public sealed partial class MainViewModel
         }
     }
 
+    // ------------------------------------------------------- saving the design
+
+    /// <summary>True once the document has been changed since it was last saved.</summary>
+    [ObservableProperty]
+    private bool _hasUnsavedChanges;
+
+    public string DocumentTitle =>
+        (Design.FilePath is { } path ? Path.GetFileNameWithoutExtension(path) : Design.Name) +
+        (HasUnsavedChanges ? " •" : "");
+
+    partial void OnHasUnsavedChangesChanged(bool value) => OnPropertyChanged(nameof(DocumentTitle));
+
+    /// <summary>
+    /// Save over the file this design came from, or ask where to put it the first
+    /// time. Ctrl/Cmd+S, and it does not prompt again afterwards.
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveDesignAsync()
+    {
+        if (Design.FilePath is { Length: > 0 } existing)
+        {
+            WriteDesign(existing);
+            return;
+        }
+
+        await SaveDesignAsAsync();
+    }
+
+    [RelayCommand]
+    private async Task SaveDesignAsAsync()
+    {
+        if (TopLevel?.StorageProvider is not { } storage) return;
+
+        var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save design",
+            SuggestedFileName = Design.Name,
+            DefaultExtension = DesignFile.Extension.TrimStart('.'),
+            FileTypeChoices =
+            [
+                new FilePickerFileType("OpenBurn design") { Patterns = ["*" + DesignFile.Extension] },
+            ],
+        }).ConfigureAwait(true);
+
+        if (file?.TryGetLocalPath() is { } path) WriteDesign(path);
+    }
+
+    private void WriteDesign(string path)
+    {
+        try
+        {
+            DesignFile.Save(Design, path);
+            HasUnsavedChanges = false;
+            Settings = Settings.WithRecentFile(path);
+            OnPropertyChanged(nameof(DocumentTitle));
+            Console.AppendInfo($"Saved {Path.GetFileName(path)}.");
+        }
+        catch (Exception ex)
+        {
+            Console.AppendError($"Could not save: {ex.Message}");
+        }
+    }
+
+    /// <summary>Open a saved design, replacing what is on the bed.</summary>
+    public void OpenDesign(string path)
+    {
+        try
+        {
+            var loaded = DesignFile.Load(path);
+
+            Design = loaded;
+            Selection.Clear();
+            Undo.Clear();
+            RebuildLayers();
+            SelectedLayer = Layers.FirstOrDefault();
+            HasUnsavedChanges = false;
+
+            RaiseSelectionChanged();
+            AfterWorkpieceChange();
+            QueueRegenerate();
+            HasUnsavedChanges = false;
+
+            Settings = Settings.WithRecentFile(path);
+            OnPropertyChanged(nameof(DocumentTitle));
+
+            Console.AppendInfo($"Opened {Path.GetFileName(path)} — {loaded.Shapes.Count} shape(s) on " +
+                               $"{loaded.Layers.Count} layer(s).");
+        }
+        catch (Exception ex)
+        {
+            Console.AppendError($"Could not open {Path.GetFileName(path)}: {ex.Message}");
+        }
+    }
+
     /// <summary>Import one file, choosing the right pipeline from its extension.</summary>
     public void ImportFile(string path)
     {
+        // A saved design replaces the document; everything else is imported into it.
+        if (path.EndsWith(DesignFile.Extension, StringComparison.OrdinalIgnoreCase))
+        {
+            OpenDesign(path);
+            return;
+        }
+
         try
         {
             if (path.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))

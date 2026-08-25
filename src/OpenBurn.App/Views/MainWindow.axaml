@@ -87,11 +87,18 @@
                                     <TextBlock Text="Artwork" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <Button Classes="label" Command="{Binding ExportGcodeCommand}"
-                                    ToolTip.Tip="Save the job as a .nc file you can run from an SD card or another sender.">
+                            <Button Classes="label" Command="{Binding SaveDesignCommand}"
+                                    ToolTip.Tip="Save the design — layers, artwork, workpiece and image settings — so it can be reopened and changed later. Cmd/Ctrl+S. This is the document; Export writes the G-code the machine runs.">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <PathIcon Data="{StaticResource IconSave}" Width="16" Height="16" />
                                     <TextBlock Text="Save" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="label" Command="{Binding ExportGcodeCommand}"
+                                    ToolTip.Tip="Write the G-code for this job as a .nc file, to run from an SD card or another sender. That is the output — it cannot be reopened and edited, so save the design as well.">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource IconGcode}" Width="16" Height="16" />
+                                    <TextBlock Text="Export" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -1185,6 +1192,9 @@
             <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DocumentTitle}" VerticalAlignment="Center" FontWeight="Medium"
+                               ToolTip.Tip="The design you are working on. A dot means there are changes that have not been saved." />
+                    <Border Width="1" Background="{DynamicResource Hairline}" Margin="6,2" />
                     <Ellipse Width="10" Height="10"
                              Fill="{Binding StateColourKey, Converter={StaticResource ThemeBrush}}" />
                     <StackPanel>

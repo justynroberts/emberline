@@ -325,6 +325,14 @@ public partial class MainWindow : Window
                     Model.OpenCommand.Execute(null);
                     e.Handled = true;
                     return;
+                case Key.S when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                    Model.SaveDesignAsCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                case Key.S:
+                    Model.SaveDesignCommand.Execute(null);
+                    e.Handled = true;
+                    return;
                 case Key.N:
                     Model.NewDocumentCommand.Execute(null);
                     e.Handled = true;
