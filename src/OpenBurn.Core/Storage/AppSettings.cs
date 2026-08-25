@@ -48,6 +48,16 @@ public sealed record AppSettings
     /// </summary>
     public IReadOnlyList<SavedWorkpiece> SavedWorkpieces { get; init; } = [];
 
+    /// <summary>
+    /// The version whose safety notice has been acknowledged and silenced.
+    ///
+    /// Blank means show it. It is stored as a version rather than a yes/no so the
+    /// notice returns after an update — what it warns about can change, and a
+    /// warning silenced for ever is one nobody has read since the day they ticked
+    /// the box.
+    /// </summary>
+    public string? SafetyNoticeAcceptedFor { get; init; }
+
     /// <summary>Warn before starting a job when the machine has not been homed.</summary>
     public bool WarnWhenNotHomed { get; init; } = true;
 

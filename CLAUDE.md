@@ -77,6 +77,12 @@ is, so that byte reaches a laser part-way through a job and ends the job. `$I`
 only, plus a listen for controllers that greet on connect. `DiscoveryTests` pins
 this; do not "improve" detection rates by putting the reset back.
 
+**Counting build errors with `grep ': error'` misses XAML entirely.** Avalonia
+writes `Avalonia error AVLN2100`, with no colon before "error", so that idiom
+reports a clean build while the application is in fact broken — it shipped a
+package that could not start. Check `Error(s)` from the build summary, or grep for
+`AVLN` as well as `error CS`.
+
 **`async void` handlers are a loaded gun.** An exception in one is raised on the
 dispatcher after the handler has returned, finds no catch, and aborts the process
 — silently, mid-job. Every one in `MainWindow` goes through `GuardAsync`, which

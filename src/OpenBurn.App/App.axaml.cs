@@ -24,6 +24,48 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // The safety notice comes before the workspace. Shown as the main window
+            // first, because a modal over a window that does not exist yet has
+            // nothing to be modal to, and Avalonia needs a main window to run a
+            // message loop at all.
+            if (ShouldShowSafetyNotice(settings))
+            {
+                var splash = new SplashWindow();
+                desktop.MainWindow = splash;
+
+                splash.Closed += (_, _) =>
+                {
+                    if (!splash.Accepted)
+                    {
+                        desktop.Shutdown();
+                        return;
+                    }
+
+                    if (splash.DoNotShowAgain)
+                    {
+                        settings = settings with { SafetyNoticeAcceptedFor = SplashWindow.Version };
+                        settings.Save(AppPaths.SettingsFile);
+                    }
+
+                    OpenWorkspace(desktop, settings);
+                };
+
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
+
+            OpenWorkspace(desktop, settings);
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private static bool ShouldShowSafetyNotice(AppSettings settings) =>
+        !string.Equals(settings.SafetyNoticeAcceptedFor, SplashWindow.Version, StringComparison.Ordinal);
+
+    private static void OpenWorkspace(IClassicDesktopStyleApplicationLifetime desktop, AppSettings settings)
+    {
+        {
             var shell = new MainViewModel(settings);
             Shell = shell;
 
@@ -37,9 +79,9 @@ public partial class App : Application
                 if (arg.StartsWith('-') || !File.Exists(arg)) continue;
                 shell.ImportFile(Path.GetFullPath(arg));
             }
-        }
 
-        base.OnFrameworkInitializationCompleted();
+            desktop.MainWindow.Show();
+        }
     }
 
     /// <summary>
