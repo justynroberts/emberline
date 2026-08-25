@@ -816,7 +816,7 @@
                             <TextBlock Classes="sectionTitle" Text="SELECTION" />
                             <TextBlock Text="{Binding SelectionSummary}" Classes="mono" TextWrapping="Wrap" />
 
-                            <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto"
+                            <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto"
                                   ColumnSpacing="8" RowSpacing="6"
                                   IsVisible="{Binding HasSelection}">
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="X" Classes="label" VerticalAlignment="Center" />
@@ -825,9 +825,16 @@
                                 <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding SelectedYMm, StringFormat={}{0:0.##}}" />
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="W" Classes="label" VerticalAlignment="Center" />
-                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedWidthMm, StringFormat={}{0:0.##}}" />
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedWidthMm, StringFormat={}{0:0.##}}"
+                                         ToolTip.Tip="Width in millimetres. Typing one scales the selection to it." />
                                 <TextBlock Grid.Row="1" Grid.Column="2" Text="H" Classes="label" VerticalAlignment="Center" />
-                                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding SelectedHeightMm, StringFormat={}{0:0.##}}" />
+                                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding SelectedHeightMm, StringFormat={}{0:0.##}}"
+                                         ToolTip.Tip="Height in millimetres. Typing one scales the selection to it." />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Angle" Classes="label" VerticalAlignment="Center" />
+                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SelectedRotationDeg, StringFormat={}{0:0.##}}"
+                                         ToolTip.Tip="Rotation in degrees. This is the angle the selection ends up at, not an amount to turn it by — so typing 0 puts it back square. Dragging the round handle above the selection is the quick way; hold Shift while dragging to snap to fifteen degrees." />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="°" Classes="label" VerticalAlignment="Center" />
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">

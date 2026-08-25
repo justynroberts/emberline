@@ -23,6 +23,16 @@ public readonly record struct Matrix2D(double A, double B, double C, double D, d
         return new Matrix2D(c, s, -s, c, 0, 0);
     }
 
+    /// <summary>
+    /// The rotation this transform applies, in degrees.
+    ///
+    /// Read from where the x axis ends up, which is correct for any combination of
+    /// rotation, translation and uniform scale — the cases a design actually
+    /// contains. A non-uniform scale makes "the rotation" ambiguous, and this
+    /// reports the angle of the x axis rather than pretending otherwise.
+    /// </summary>
+    public double RotationDegrees => Math.Atan2(B, A) * 180 / Math.PI;
+
     public static Matrix2D RotateAbout(double degrees, Vec2 pivot) =>
         Translate(pivot) * Rotate(degrees) * Translate(-pivot);
 

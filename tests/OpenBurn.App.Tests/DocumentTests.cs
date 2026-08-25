@@ -186,3 +186,99 @@ public class DocumentTests : ShellTest
         }
     }
 }
+
+/// <summary>
+/// Transforming a selection by number rather than by drag.
+///
+/// The handles do freeform: eight for scale, one for rotation, Shift to snap the
+/// angle or hold the aspect. What they cannot do is "twelve degrees", which is a
+/// thing a drawing tells you.
+/// </summary>
+public class TransformTests : ShellTest
+{
+    private static PathShape Square(double size) => new([new Polyline(
+    [
+        new Vec2(0, 0), new Vec2(size, 0), new Vec2(size, size), new Vec2(0, size),
+    ], closed: true)]);
+
+    private MainViewModel WithSquare(out PathShape shape)
+    {
+        var shell = NewShell();
+        shape = Square(40);
+        shell.Design.AddShape(shape, shell.Design.Layers[0]);
+        shell.SetSelection([shape], additive: false);
+        return shell;
+    }
+
+    [AvaloniaFact]
+    public void AnUnrotatedShapeReadsAsZero()
+    {
+        var shell = WithSquare(out _);
+        Assert.Equal(0, shell.SelectedRotationDeg, 3);
+    }
+
+    [AvaloniaFact]
+    public void TypingAnAngleSetsItRatherThanAddingToIt()
+    {
+        // A number in a box is where the thing ends up, not how far to turn it.
+        var shell = WithSquare(out _);
+
+        shell.SelectedRotationDeg = 30;
+        Assert.Equal(30, shell.SelectedRotationDeg, 2);
+
+        shell.SelectedRotationDeg = 30;
+        Assert.Equal(30, shell.SelectedRotationDeg, 2);
+
+        shell.SelectedRotationDeg = 45;
+        Assert.Equal(45, shell.SelectedRotationDeg, 2);
+    }
+
+    [AvaloniaFact]
+    public void ZeroPutsItBackSquare()
+    {
+        var shell = WithSquare(out var shape);
+        var before = shape.Bounds;
+
+        shell.SelectedRotationDeg = 37;
+        shell.SelectedRotationDeg = 0;
+
+        Assert.Equal(0, shell.SelectedRotationDeg, 2);
+        Assert.Equal(before.Width, shape.Bounds.Width, 2);
+        Assert.Equal(before.Height, shape.Bounds.Height, 2);
+    }
+
+    [AvaloniaFact]
+    public void RotatingIsUndoable()
+    {
+        var shell = WithSquare(out _);
+        shell.SelectedRotationDeg = 25;
+
+        shell.UndoEditCommand.Execute(null);
+
+        Assert.Equal(0, shell.SelectedRotationDeg, 2);
+    }
+
+    [AvaloniaFact]
+    public void AnglesWrapRatherThanGrowing()
+    {
+        // -170 and 190 are the same place, and one of them reads badly.
+        var shell = WithSquare(out _);
+
+        shell.SelectedRotationDeg = 190;
+
+        Assert.InRange(shell.SelectedRotationDeg, -180, 180);
+        Assert.Equal(-170, shell.SelectedRotationDeg, 2);
+    }
+
+    [AvaloniaFact]
+    public void RotatingTurnsAboutTheMiddleOfTheSelection()
+    {
+        var shell = WithSquare(out var shape);
+        var centre = shape.Bounds.Center;
+
+        shell.SelectedRotationDeg = 90;
+
+        Assert.Equal(centre.X, shape.Bounds.Center.X, 2);
+        Assert.Equal(centre.Y, shape.Bounds.Center.Y, 2);
+    }
+}

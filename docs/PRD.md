@@ -276,7 +276,7 @@ MVP 0.1 in full, plus most of 0.2 and the generic half of 0.3.
   and checked during validation.
 - The assistant's API key can be set from the interface, stored outside settings.
 - The assistant can draw: SVG artwork added to the canvas as editable paths.
-- 541 tests, none requiring hardware, including headless UI tests that drive the
+- 547 tests, none requiring hardware, including headless UI tests that drive the
   real canvas with synthetic pointer input.
 
 ### Deferred, with reasons

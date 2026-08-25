@@ -83,6 +83,7 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(SelectedHeightMm));
         OnPropertyChanged(nameof(SelectedXMm));
         OnPropertyChanged(nameof(SelectedYMm));
+        OnPropertyChanged(nameof(SelectedRotationDeg));
         RaiseImageSelection();
     }
 
@@ -109,6 +110,7 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(SelectedHeightMm));
         OnPropertyChanged(nameof(SelectedXMm));
         OnPropertyChanged(nameof(SelectedYMm));
+        OnPropertyChanged(nameof(SelectedRotationDeg));
     }
 
     public void EndCanvasEdit()
@@ -319,6 +321,43 @@ public sealed partial class MainViewModel
     // --------------------------------------------------------- numeric entry
 
     /// <summary>Selection width in display units. Setting it resizes about the bottom-left.</summary>
+    /// <summary>
+    /// The rotation of the selection, in degrees, as a number rather than a drag.
+    ///
+    /// Dragging the rotate handle is the quick way and typing is the exact one:
+    /// "twelve degrees" is a thing people are told by a drawing, and hunting for it
+    /// with a mouse while watching a readout is a poor substitute. Setting it is
+    /// absolute — the selection ends up at this angle, not turned by it — because
+    /// that is what a number in a box means.
+    /// </summary>
+    public double SelectedRotationDeg
+    {
+        get => PrimarySelection is { } shape ? Math.Round(Normalise(shape.Transform.RotationDegrees), 2) : 0;
+        set
+        {
+            if (Selection.Count == 0) return;
+
+            var target = Normalise(value);
+            var current = Normalise(PrimarySelection?.Transform.RotationDegrees ?? 0);
+            var delta = target - current;
+            if (Math.Abs(delta) < 1e-6) return;
+
+            EditSelection($"Rotate to {target:0.##} degrees", () =>
+                ArrangeOps.RotateSelection(Selection, delta, ArrangeOps.Bounds(Selection).Center));
+
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Angles wrap; -170 and 190 are the same place and one of them reads badly.</summary>
+    private static double Normalise(double degrees)
+    {
+        var wrapped = degrees % 360;
+        if (wrapped > 180) wrapped -= 360;
+        if (wrapped < -180) wrapped += 360;
+        return wrapped;
+    }
+
     public double SelectedWidthMm
     {
         get => Core.Units.UnitConvert.FromMm(ArrangeOps.Bounds(Selection).Width, DisplayUnit);
