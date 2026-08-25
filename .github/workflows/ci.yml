@@ -33,15 +33,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libfontconfig1
 
       - name: Restore
-        run: dotnet restore OpenBurn.slnx
+        run: dotnet restore Emberline.slnx
 
       - name: Build
-        run: dotnet build OpenBurn.slnx -c Release --no-restore
+        run: dotnet build Emberline.slnx -c Release --no-restore
 
       # The whole suite runs against the in-process GRBL simulator and the
       # synthetic camera, so no hardware is needed on any runner.
       - name: Test
-        run: dotnet test OpenBurn.slnx -c Release --no-build --verbosity normal
+        run: dotnet test Emberline.slnx -c Release --no-build --verbosity normal
 
   package:
     name: Package ${{ matrix.rid }}
@@ -83,15 +83,15 @@ jobs:
         if: matrix.rid == 'linux-x64' || matrix.rid == 'osx-arm64'
         shell: bash
         run: |
-          if [ -d "dist/${{ matrix.rid }}/OpenBurn.app" ]; then
-            "dist/${{ matrix.rid }}/OpenBurn.app/Contents/MacOS/OpenBurn" --selftest
+          if [ -d "dist/${{ matrix.rid }}/Emberline.app" ]; then
+            "dist/${{ matrix.rid }}/Emberline.app/Contents/MacOS/Emberline" --selftest
           else
-            "dist/${{ matrix.rid }}/OpenBurn" --selftest
+            "dist/${{ matrix.rid }}/Emberline" --selftest
           fi
 
       - uses: actions/upload-artifact@v5
         with:
-          name: openburn-${{ matrix.rid }}
+          name: emberline-${{ matrix.rid }}
           path: dist/${{ matrix.rid }}
           if-no-files-found: error
           retention-days: 14

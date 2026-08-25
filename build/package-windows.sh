@@ -10,7 +10,7 @@ OUT="$ROOT/dist/$RID"
 
 echo "==> Publishing $RID"
 rm -rf "$OUT"
-dotnet publish "$ROOT/src/OpenBurn.App/OpenBurn.App.csproj" \
+dotnet publish "$ROOT/src/Emberline.App/Emberline.App.csproj" \
   -c Release -r "$RID" --self-contained true \
   -p:PublishSingleFile=false \
   -p:DebugType=none \

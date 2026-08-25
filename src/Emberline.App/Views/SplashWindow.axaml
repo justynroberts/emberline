@@ -1,0 +1,91 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:Emberline.App.Views"
+        x:Class="Emberline.App.Views.SplashWindow"
+        x:DataType="views:SplashWindow"
+        Title="Emberline"
+        Width="620" Height="620"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgSunken}">
+
+    <Border Classes="panel focusIn" Margin="16">
+        <DockPanel LastChildFill="True">
+
+            <StackPanel DockPanel.Dock="Top" Spacing="14" HorizontalAlignment="Center" Margin="0,10,0,0">
+
+                <!-- Logo placeholder.
+                     Swap the image at Assets/emberline.png, or replace this border
+                     with whatever artwork you want; nothing else depends on it. -->
+                <Border Width="96" Height="96" CornerRadius="22"
+                        Background="{DynamicResource EmberSoft}"
+                        BorderBrush="{DynamicResource EmberEdge}" BorderThickness="1.5"
+                        HorizontalAlignment="Center">
+                    <Image Source="avares://Emberline/Assets/emberline.png" Stretch="Uniform" Margin="14" />
+                </Border>
+
+                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                    <TextBlock Text="Emberline" FontSize="32" FontWeight="Bold"
+                               FontFamily="{DynamicResource DisplayFont}" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding VersionText}" Classes="mono" FontSize="11"
+                               Foreground="{DynamicResource InkMuted}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Spacing="12" Margin="0,16,0,4">
+                <CheckBox IsChecked="{Binding DoNotShowAgain}" HorizontalAlignment="Center"
+                          Content="I have read this — do not show it again for this version"
+                          ToolTip.Tip="The warning returns after an update, because the thing it warns about can change." />
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Grid.Column="0" Content="Quit" HorizontalAlignment="Stretch" Click="OnQuit"
+                            ToolTip.Tip="Close Emberline without going any further." />
+                    <Button Grid.Column="1" Content="I understand — continue" Classes="primary"
+                            HorizontalAlignment="Stretch" Click="OnAccept"
+                            ToolTip.Tip="Acknowledge the warning and open the workspace." />
+                </Grid>
+
+                <TextBlock HorizontalAlignment="Center" FontSize="11">
+                    <Run Text="Made by" Foreground="{DynamicResource InkFaint}" />
+                    <Run Text="FintonLabs" FontWeight="SemiBold" Foreground="{DynamicResource Ember}" />
+                    <Run Text="· GPLv3 · emberline" Foreground="{DynamicResource InkFaint}" />
+                </TextBlock>
+            </StackPanel>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,18,0,0">
+                <StackPanel Spacing="12">
+
+                    <Border Classes="card" BorderBrush="{DynamicResource StateAlarm}" BorderThickness="1.5">
+                        <StackPanel Spacing="9">
+                            <StackPanel Orientation="Horizontal" Spacing="9">
+                                <PathIcon Data="{StaticResource IconAlert}" Width="19" Height="19"
+                                          Foreground="{DynamicResource StateAlarm}" VerticalAlignment="Center" />
+                                <TextBlock Text="This drives a laser" FontWeight="Bold" FontSize="15"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <TextBlock TextWrapping="Wrap" LineHeight="19"
+                                       Text="Emberline connects to and commands a laser engraver or cutter. A laser powerful enough to mark wood is powerful enough to set it alight, to blind you, and to start a fire that spreads while you are looking at a screen." />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="BEFORE YOU RUN ANYTHING" Classes="sectionTitle" />
+                    <StackPanel Spacing="7">
+                        <TextBlock TextWrapping="Wrap" Text="• Never leave a running machine unattended. Most laser fires start during a job that was going fine." />
+                        <TextBlock TextWrapping="Wrap" Text="• Keep the means to put out a fire within reach, and know how to reach the machine's own power switch without crossing the beam path." />
+                        <TextBlock TextWrapping="Wrap" Text="• Wear eye protection rated for your laser's wavelength. Reflections count." />
+                        <TextBlock TextWrapping="Wrap" Text="• Extract the fumes. Some materials — PVC and anything chlorinated above all — give off gas that will injure you and corrode the machine. Know what you are cutting." />
+                        <TextBlock TextWrapping="Wrap" Text="• The emergency stop in this application is a convenience, not a safety device. The switch on the machine is the one that counts." />
+                    </StackPanel>
+
+                    <TextBlock Text="NO WARRANTY" Classes="sectionTitle" Margin="0,4,0,0" />
+                    <TextBlock TextWrapping="Wrap" LineHeight="19"
+                               Text="This software is provided as is, without warranty of any kind, express or implied. The authors and copyright holders accept no liability for any claim, damage, injury, fire, loss or other harm arising from its use — whether caused by a defect in this software, by a machine behaving unexpectedly, or by anything else. You use it entirely at your own risk, and you remain responsible for your machine, your material and your workshop." />
+
+                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource InkMuted}" LineHeight="18"
+                               Text="Some of this has never run against real hardware. Check what a job will do before it does it: preview the toolpath, frame the outline at pointer power, and start with settings you have tested on an offcut of the same material." />
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</Window>

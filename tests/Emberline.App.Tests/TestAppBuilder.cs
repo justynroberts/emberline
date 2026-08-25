@@ -1,0 +1,41 @@
+using Avalonia;
+using Avalonia.Headless;
+using Emberline.App;
+
+[assembly: AvaloniaTestApplication(typeof(Emberline.App.Tests.TestAppBuilder))]
+
+// Headless Avalonia tests all share one dispatcher and one UI thread, so running
+// classes in parallel lets an await in one test be starved by another's work. It
+// surfaces as an occasional failure in whichever test happened to be waiting on a
+// connection — the worst kind, since it looks real and passes when run alone.
+[assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
+
+namespace Emberline.App.Tests;
+
+/// <summary>
+/// Boots the real application into Avalonia's headless platform.
+///
+/// The whole point is that these tests drive the *actual* control with synthetic
+/// pointer input rather than calling its methods directly — so a regression in
+/// hit testing, capture or the drag state machine is caught, and not just a
+/// regression in the maths those things call.
+/// </summary>
+public static class TestAppBuilder
+{
+    public static AppBuilder BuildAvaloniaApp() =>
+        AppBuilder.Configure<App>()
+            .UseSkia()
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions
+            {
+                // Real drawing, not the null backend.
+                //
+                // The null backend is faster, and it is also inconsistent with what
+                // these tests do: the trace preview and the image panel build real
+                // Avalonia bitmaps. Asking a null drawing platform for those makes
+                // the compositor be constructed lazily, and under load that landed
+                // during test teardown on a different thread — an occasional
+                // "cleaning thread cannot access this object" reported against
+                // whichever unrelated test finished last.
+                UseHeadlessDrawing = false,
+            });
+}

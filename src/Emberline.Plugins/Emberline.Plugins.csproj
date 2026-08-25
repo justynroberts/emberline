@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberline.Core\Emberline.Core.csproj" />
+    <ProjectReference Include="..\Emberline.Cam\Emberline.Cam.csproj" />
+    <ProjectReference Include="..\Emberline.Devices\Emberline.Devices.csproj" />
+    <ProjectReference Include="..\Emberline.Transport\Emberline.Transport.csproj" />
+    <ProjectReference Include="..\Emberline.Camera\Emberline.Camera.csproj" />
+    <ProjectReference Include="..\Emberline.Materials\Emberline.Materials.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -1,8 +1,8 @@
-# OpenBurn
+# Emberline
 
 **Open-source laser cutting and engraving.** Windows, macOS and Linux.
 
-OpenBurn is a modern desktop application for designing, positioning, engraving and
+Emberline is a modern desktop application for designing, positioning, engraving and
 cutting with GRBL-compatible laser machines. It exists because the good open-source
 option — LaserGRBL — is Windows-only and speaks nothing but USB serial, and the
 good cross-platform option is proprietary.
@@ -24,7 +24,7 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 | **Photo engraving** | Invert, brightness, contrast, gamma, sharpen, tone clipping and twelve dithering kernels, with a live preview of what will actually burn |
 | **CAM** | Raster engraving, vector cut/score/engrave, hatch and offset fills, text to outlines |
 | **Artwork search** | Search 150+ open icon sets, see each licence before importing, and bring a shape in to etch or to cut |
-| **Documents** | Designs save and reopen as a self-contained `.openburn` file — layers, artwork, workpiece and image adjustments, with photographs embedded |
+| **Documents** | Designs save and reopen as a self-contained `.emberline` file — layers, artwork, workpiece and image adjustments, with photographs embedded |
 | **Overlaps** | Shapes that overlap are cut as their combined outline rather than each separately, with holes preserved |
 | **Tracing** | Bitmap to paths with a live preview — outlines or centrelines, threshold seeded from the image itself, simplify and smooth |
 | **Job engine** | Character-counting streaming, pause/resume/stop, resume-from-line after a dropped link, live progress and acceleration-aware time estimates |
@@ -46,13 +46,13 @@ Wi-Fi as the network protocol is confirmed. Nothing in the core assumes it.
 
 ```bash
 # macOS
-open dist/osx-arm64/OpenBurn.app
+open dist/osx-arm64/Emberline.app
 
 # Windows
-dist\win-x64\OpenBurn.exe
+dist\win-x64\Emberline.exe
 
 # Linux
-./dist/linux-x64/OpenBurn
+./dist/linux-x64/Emberline
 ```
 
 On macOS the bundle is ad-hoc signed, so the first launch needs
@@ -63,12 +63,12 @@ On macOS the bundle is ad-hoc signed, so the first launch needs
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
-git clone https://github.com/justynroberts/openburn
-cd openburn
-dotnet run --project src/OpenBurn.App
+git clone https://github.com/justynroberts/emberline
+cd emberline
+dotnet run --project src/Emberline.App
 
 # open a file at startup
-dotnet run --project src/OpenBurn.App -- samples/openburn-badge.svg
+dotnet run --project src/Emberline.App -- samples/emberline-badge.svg
 ```
 
 ### Building distributables
@@ -102,7 +102,7 @@ perspective correction and object detection can all be practised on a laptop.
 1. **Pick your machine** from the dropdown, or copy `devices/generic-grbl.json`
    and edit the bed size and wattage.
 2. **Connect** over USB, or type the address and press Wi-Fi.
-3. **Read `$$`** from the console drawer. OpenBurn checks the settings that matter
+3. **Read `$$`** from the console drawer. Emberline checks the settings that matter
    and tells you if `$30` disagrees with the profile or `$32` laser mode is off.
 4. **Home** the machine, then jog to your material and press **Zero XY**.
 5. **Import** artwork, choose a material, press **Apply**.
@@ -196,9 +196,9 @@ shape drops out.
 The geometry is identical either way — the difference is the layer, so you can
 change your mind afterwards by moving the shape rather than importing it again.
 
-The previews are rendered by OpenBurn's own importer, not by a browser engine, so
+The previews are rendered by Emberline's own importer, not by a browser engine, so
 what you see is what will land on the bed. This and the assistant are the only two
-things in OpenBurn that talk to the internet, and searching sends only the word
+things in Emberline that talk to the internet, and searching sends only the word
 you typed.
 
 ---
@@ -259,7 +259,7 @@ press a button.
 gantry. When it wants something to happen it produces a confirmation card and
 waits — that is enforced by the architecture, not by an instruction in a prompt.
 
-Everything else in OpenBurn works with the assistant switched off, offline, and
+Everything else in Emberline works with the assistant switched off, offline, and
 with no account of any kind.
 
 ---
@@ -284,29 +284,29 @@ reasonable way to build software that commands a ten-watt laser.
 ## Plugins
 
 New machines, transports, cameras, file formats and materials can be added without
-touching OpenBurn. See [`src/OpenBurn.Plugins/README.md`](src/OpenBurn.Plugins/README.md).
+touching Emberline. See [`src/Emberline.Plugins/README.md`](src/Emberline.Plugins/README.md).
 
 Loading is off by default and has to be turned on deliberately. A plugin is
-ordinary code running in the OpenBurn process with your permissions; there is no
-sandbox. What OpenBurn does guarantee is that a plugin cannot displace a built-in —
+ordinary code running in the Emberline process with your permissions; there is no
+sandbox. What Emberline does guarantee is that a plugin cannot displace a built-in —
 registering `.svg` or the `grbl` driver is refused and reported — and that a plugin
 which throws while registering is skipped rather than taking the application down.
 
 ## Architecture
 
 ```
-OpenBurn.App          Avalonia UI — canvas, panels, dialogs
-OpenBurn.Core         Document model, geometry, machine profiles, job contracts, storage
-OpenBurn.GCode        GRBL protocol, G-code interpreter, streamer, estimator, validator
-OpenBurn.Cam          Raster and vector CAM, importers, bitmap tracing
-OpenBurn.Devices      ILaserDevice, the GRBL driver, discovery, protocol probe
-OpenBurn.Transport    Serial, TCP, WebSocket, HTTP, virtual
-OpenBurn.Camera       Frame sources — MJPEG, snapshot, file
-OpenBurn.Vision       Lens correction, homography, bed rectification, detection
-OpenBurn.Materials    Material library
-OpenBurn.VirtualLaser An in-process GRBL 1.1 controller
-OpenBurn.Plugins      Plugin contracts, registry and load host
-OpenBurn.AI           The optional assistant
+Emberline.App          Avalonia UI — canvas, panels, dialogs
+Emberline.Core         Document model, geometry, machine profiles, job contracts, storage
+Emberline.GCode        GRBL protocol, G-code interpreter, streamer, estimator, validator
+Emberline.Cam          Raster and vector CAM, importers, bitmap tracing
+Emberline.Devices      ILaserDevice, the GRBL driver, discovery, protocol probe
+Emberline.Transport    Serial, TCP, WebSocket, HTTP, virtual
+Emberline.Camera       Frame sources — MJPEG, snapshot, file
+Emberline.Vision       Lens correction, homography, bed rectification, detection
+Emberline.Materials    Material library
+Emberline.VirtualLaser An in-process GRBL 1.1 controller
+Emberline.Plugins      Plugin contracts, registry and load host
+Emberline.AI           The optional assistant
 ```
 
 Core depends on nothing. The job engine has no idea whether it is talking to a USB
@@ -318,7 +318,7 @@ cable, a socket or a simulator. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 
 ```bash
 dotnet test                     # 554 tests, no hardware required
-OpenBurn --selftest             # headless end-to-end check of a built application
+Emberline --selftest             # headless end-to-end check of a built application
 ```
 
 `--selftest` is worth knowing about: it loads the device profiles from beside the
@@ -349,13 +349,13 @@ Software is not a safety system.
 - Camera monitoring is an aid, not a substitute for watching the machine.
 - Never cut PVC, vinyl, chrome-tanned leather or polycarbonate. They release
   chlorine or cyanide compounds that will damage your lungs and your machine.
-  OpenBurn will warn you; it cannot stop you.
+  Emberline will warn you; it cannot stop you.
 
 ---
 
 ## Licence
 
-GPLv3. OpenBurn incorporates algorithms derived from LaserGRBL, which is
+GPLv3. Emberline incorporates algorithms derived from LaserGRBL, which is
 GPL-licensed.
 
 Made by [FintonLabs](https://fintonlabs.com).

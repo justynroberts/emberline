@@ -9,11 +9,11 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <Company>FintonLabs</Company>
-    <Product>OpenBurn</Product>
+    <Product>Emberline</Product>
     <Version>0.1.0</Version>
     <Authors>Justyn Roberts</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/justynroberts/openburn</RepositoryUrl>
+    <RepositoryUrl>https://github.com/justynroberts/emberline</RepositoryUrl>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 </Project>

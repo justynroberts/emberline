@@ -43,15 +43,15 @@ jobs:
         run: |
           cd dist
           if [ "${{ runner.os }}" = "Windows" ]; then
-            7z a "openburn-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
+            7z a "emberline-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
           else
-            zip -qry "openburn-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
+            zip -qry "emberline-${{ matrix.rid }}.zip" "${{ matrix.rid }}"
           fi
 
       - uses: actions/upload-artifact@v5
         with:
-          name: openburn-${{ matrix.rid }}
-          path: dist/openburn-${{ matrix.rid }}.zip
+          name: emberline-${{ matrix.rid }}
+          path: dist/emberline-${{ matrix.rid }}.zip
 
   release:
     needs: build
@@ -71,11 +71,11 @@ jobs:
           body: |
             ## Installing
 
-            **macOS** — unzip and move `OpenBurn.app` to Applications. The bundle is
+            **macOS** — unzip and move `Emberline.app` to Applications. The bundle is
             ad-hoc signed, so the first launch needs right-click → Open.
 
-            **Windows** — unzip anywhere and run `OpenBurn.exe`. No installer, no runtime to install.
+            **Windows** — unzip anywhere and run `Emberline.exe`. No installer, no runtime to install.
 
-            **Linux** — unzip and run `./OpenBurn`.
+            **Linux** — unzip and run `./Emberline`.
 
             No account, no cloud, no telemetry. Press **Virtual** to try it without a machine.

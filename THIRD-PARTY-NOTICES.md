@@ -1,8 +1,8 @@
 # Third-party notices
 
-OpenBurn is original work. Nothing here is derived from LaserGRBL, LightBurn or
+Emberline is original work. Nothing here is derived from LaserGRBL, LightBurn or
 any other sender — the GRBL protocol it speaks is a published specification, not
-somebody's source. What follows is what OpenBurn *bundles* or depends on, and the
+somebody's source. What follows is what Emberline *bundles* or depends on, and the
 terms that come with each.
 
 ## Bundled fonts
@@ -21,7 +21,7 @@ The full text is in `fonts/OFL.txt`.
 
 The toolbar and panel icons are **Material Design Icons** by Pictogrammers, under
 the **Apache License 2.0**. Their path data is embedded in
-`src/OpenBurn.App/Styles/Icons.axaml` — each geometry is commented with the icon it
+`src/Emberline.App/Styles/Icons.axaml` — each geometry is commented with the icon it
 came from — so the interface draws identically offline and does not depend on any
 service staying up.
 
@@ -30,10 +30,10 @@ service staying up.
 
 ## Artwork imported from catalogues
 
-OpenBurn can search public icon catalogues through the Iconify API. Nothing is
+Emberline can search public icon catalogues through the Iconify API. Nothing is
 bundled: artwork is fetched only when you search and import, and each icon carries
 the licence of the set it came from — shown in the search window before import.
-Those licences are the sets' own, not OpenBurn's, and honouring them is the
+Those licences are the sets' own, not Emberline's, and honouring them is the
 responsibility of whoever burns the result. Sets that declare no licence are
 labelled as such rather than assumed permissive.
 
@@ -52,7 +52,7 @@ own notices come with the packages.
 | Anthropic | MIT |
 | xUnit, Avalonia.Headless.XUnit (tests only) | Apache-2.0 / MIT |
 
-## OpenBurn itself
+## Emberline itself
 
 Copyright Justyn Roberts. Released under the GNU General Public License v3, in
 `LICENSE`. GPLv3 is a choice, not an inheritance: no dependency requires it, so it

@@ -1,6 +1,6 @@
-# OpenBurn — Product Requirements Document
+# Emberline — Product Requirements Document
 
-**Product** OpenBurn · **Tagline** Open-source laser cutting and engraving
+**Product** Emberline · **Tagline** Open-source laser cutting and engraving
 **Version** 0.1 · **Platforms** Windows, macOS, Linux
 **Licence** GPLv3 while incorporating LaserGRBL-derived code
 
@@ -11,7 +11,7 @@
 
 ## 1. Product vision
 
-OpenBurn is a modern, open-source desktop application for designing, positioning,
+Emberline is a modern, open-source desktop application for designing, positioning,
 engraving and cutting using GRBL-compatible laser machines.
 
 The objective is an accessible alternative to proprietary laser software, improving
@@ -20,7 +20,7 @@ presets, device discovery, modern design workflows, extensible device support an
 cross-platform operation.
 
 The first reference machine is the **BlazeX M5 Pro 10 W**, supporting USB initially
-and native Wi-Fi once its network protocol has been documented. OpenBurn should
+and native Wi-Fi once its network protocol has been documented. Emberline should
 ultimately support a broad ecosystem of GRBL-compatible lasers.
 
 ## 2. Principles
@@ -51,26 +51,26 @@ JSON configuration.
 
 ## 5. Why C#
 
-OpenBurn should not transcode LaserGRBL wholesale. LaserGRBL already contains
+Emberline should not transcode LaserGRBL wholesale. LaserGRBL already contains
 mature implementations of GRBL communication, G-code handling, raster engraving,
 dithering, vectorisation, machine state, jogging and job execution. The strategy is
 to identify the reusable algorithms, port them to modern C#, and refactor them
-behind interfaces into `OpenBurn.Core`. The old LaserGRBL UI should not become
-OpenBurn's UI.
+behind interfaces into `Emberline.Core`. The old LaserGRBL UI should not become
+Emberline's UI.
 
 ## 6–7. Architecture and repository structure
 
 ```
-OpenBurn.UI      Canvas · Layers · Camera · Jobs · Devices · Materials · Console · Settings
-OpenBurn.Core    Document model · Geometry · CAM · G-code · Job engine · Material profiles
+Emberline.UI      Canvas · Layers · Camera · Jobs · Devices · Materials · Console · Settings
+Emberline.Core    Document model · Geometry · CAM · G-code · Job engine · Material profiles
 Transport        Serial · TCP · WebSocket            Camera   USB · RTSP · MJPEG · IP
                                     │
                                   GRBL → Laser machine
 ```
 
 ```
-src/OpenBurn.{App,Core,Cam,GCode,Devices,Transport,Camera,Vision,Materials}
-tests/OpenBurn.{Core,Cam,GCode,Transport}.Tests
+src/Emberline.{App,Core,Cam,GCode,Devices,Transport,Camera,Vision,Materials}
+tests/Emberline.{Core,Cam,GCode,Transport}.Tests
 devices/  materials/  docs/
 ```
 
@@ -183,8 +183,8 @@ unsupported commands, excessive speeds and missing homing state.
 
 ## 34. Application data
 
-`openburn/` containing machines, materials, cameras, jobs, plugins, settings.json
-and openburn.db. No cloud dependency.
+`emberline/` containing machines, materials, cameras, jobs, plugins, settings.json
+and emberline.db. No cloud dependency.
 
 ## 35. MVP staging
 
@@ -210,13 +210,13 @@ clean modern APIs around them; add compatibility tests against known LaserGRBL
 inputs and outputs; and only then take responsibility for real hardware.
 
 Hardware software needs considerably more testing than a normal desktop
-application, so OpenBurn includes a **virtual laser** simulating GRBL 1.1 — Idle,
+application, so Emberline includes a **virtual laser** simulating GRBL 1.1 — Idle,
 Run, Hold, Alarm, position, `ok`, `error` — so CI can test complete jobs with no
 laser attached.
 
 ## 38. Success criteria
 
-A new user can install OpenBurn, connect a GRBL laser, open an SVG or photograph,
+A new user can install Emberline, connect a GRBL laser, open an SVG or photograph,
 select a material, position it visually, preview the toolpath, frame the job, start
 engraving, monitor progress and reproduce the job later. With a camera installed
 they can additionally place a physical object anywhere in the working area and
@@ -228,7 +228,7 @@ An open laser platform rather than another G-code sender: design and CAM above,
 cameras, vision and materials beside it, a device layer below spanning USB, Wi-Fi
 and network, driving multiple lasers.
 
-**North star** — install OpenBurn, turn on the laser, OpenBurn finds it. Place an
+**North star** — install Emberline, turn on the laser, Emberline finds it. Place an
 object on the bed. The camera shows it. Drop artwork onto the object. Choose the
 material. Press Frame → Start. Everything underneath disappears for the normal user.
 

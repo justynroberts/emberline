@@ -3,27 +3,27 @@
 ## The shape of it
 
 ```
-                              OpenBurn.App
+                              Emberline.App
                        Avalonia UI — canvas, panels
                                    │
         ┌──────────────────────────┼──────────────────────────┐
         │                          │                          │
-  OpenBurn.Cam              OpenBurn.Devices           OpenBurn.Vision
+  Emberline.Cam              Emberline.Devices           Emberline.Vision
   raster · vector           ILaserDevice · GRBL        lens · homography
   importers · trace         discovery · probe          detection
         │                          │                          │
-  OpenBurn.GCode            OpenBurn.Transport         OpenBurn.Camera
+  Emberline.GCode            Emberline.Transport         Emberline.Camera
   protocol · interpreter    serial · tcp · ws          frame sources
   streamer · estimator      http · virtual
         │                          │
         └──────────┬───────────────┘
                    │
-             OpenBurn.Core
+             Emberline.Core
      document · geometry · machines
         jobs · units · storage
 ```
 
-`OpenBurn.Core` references nothing but the framework. Every arrow points inward.
+`Emberline.Core` references nothing but the framework. Every arrow points inward.
 
 ## Three decisions worth knowing about
 
@@ -66,7 +66,7 @@ prompt can be argued with; an absent code path cannot.
 
 ## Testing without hardware
 
-`OpenBurn.VirtualLaser` implements GRBL 1.1 in process: the receive buffer, the
+`Emberline.VirtualLaser` implements GRBL 1.1 in process: the receive buffer, the
 planner block queue, acknowledgement timing gated on planner capacity, real-time
 bytes, status reports, the settings table, homing, alarms and soft limits. Time is
 driven by `Tick()` rather than a wall clock, so a two-hour job runs in a
@@ -86,7 +86,7 @@ The suite is 196 tests and needs no laser, no camera and no network.
 | A connection type | Implement `ITransport`, register it in `DeviceFactory` |
 | Vendor-specific behaviour | Implement `ILaserDevice`, usually wrapping `GrblDevice`; register a `driverId` |
 | A camera | Implement `ICameraSource` |
-| An import format | Add an importer in `OpenBurn.Cam/Import` |
+| An import format | Add an importer in `Emberline.Cam/Import` |
 | A dithering kernel | Add its taps to `Dither.Kernels` and an entry to the catalogue |
 
-Nothing on that list requires touching `OpenBurn.Core`.
+Nothing on that list requires touching `Emberline.Core`.

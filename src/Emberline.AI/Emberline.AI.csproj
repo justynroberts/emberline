@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberline.Core\Emberline.Core.csproj" />
+    <ProjectReference Include="..\Emberline.GCode\Emberline.GCode.csproj" />
+    <ProjectReference Include="..\Emberline.Cam\Emberline.Cam.csproj" />
+    <ProjectReference Include="..\Emberline.Materials\Emberline.Materials.csproj" />
+    <ProjectReference Include="..\Emberline.Devices\Emberline.Devices.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Anthropic" Version="12.42.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

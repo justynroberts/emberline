@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Emberline.AI/Emberline.AI.csproj" />
+    <Project Path="src/Emberline.App/Emberline.App.csproj" />
+    <Project Path="src/Emberline.Cam/Emberline.Cam.csproj" />
+    <Project Path="src/Emberline.Camera/Emberline.Camera.csproj" />
+    <Project Path="src/Emberline.Catalog/Emberline.Catalog.csproj" />
+    <Project Path="src/Emberline.Core/Emberline.Core.csproj" />
+    <Project Path="src/Emberline.Devices/Emberline.Devices.csproj" />
+    <Project Path="src/Emberline.GCode/Emberline.GCode.csproj" />
+    <Project Path="src/Emberline.Materials/Emberline.Materials.csproj" />
+    <Project Path="src/Emberline.Plugins/Emberline.Plugins.csproj" />
+    <Project Path="src/Emberline.Transport/Emberline.Transport.csproj" />
+    <Project Path="src/Emberline.VirtualLaser/Emberline.VirtualLaser.csproj" />
+    <Project Path="src/Emberline.Vision/Emberline.Vision.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Emberline.App.Tests/Emberline.App.Tests.csproj" />
+    <Project Path="tests/Emberline.Cam.Tests/Emberline.Cam.Tests.csproj" />
+    <Project Path="tests/Emberline.Catalog.Tests/Emberline.Catalog.Tests.csproj" />
+    <Project Path="tests/Emberline.Core.Tests/Emberline.Core.Tests.csproj" />
+    <Project Path="tests/Emberline.Devices.Tests/Emberline.Devices.Tests.csproj" />
+    <Project Path="tests/Emberline.GCode.Tests/Emberline.GCode.Tests.csproj" />
+    <Project Path="tests/Emberline.Plugins.Tests/Emberline.Plugins.Tests.csproj" />
+    <Project Path="tests/Emberline.Transport.Tests/Emberline.Transport.Tests.csproj" />
+    <Project Path="tests/Emberline.Vision.Tests/Emberline.Vision.Tests.csproj" />
+  </Folder>
+</Solution>

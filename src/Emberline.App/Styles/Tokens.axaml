@@ -1,0 +1,149 @@
+<!-- Emberline design tokens.
+
+     Archetype: soft product. Layered translucency, generous radii, soft ambient
+     shadow — a creative tool, not the grey panel-and-hairline machine console
+     every other G-code sender reaches for.
+
+     Duotone accent with semantic assignment, never decoration:
+       ember  = laser, power, cut, danger
+       cyan   = motion, travel, connection, safe
+
+     Every token is defined in BOTH variants. A colour that exists in only one
+     theme is a bug waiting for the first person who toggles. -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+
+                <!-- ===================== LIGHT ===================== -->
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="BgBaseColor">#F6F5F3</Color>
+                    <Color x:Key="BgSunkenColor">#EDEBE7</Color>
+                    <Color x:Key="PanelColor">#FCFBFA</Color>
+                    <Color x:Key="PanelEdgeColor">#1A120C</Color>
+
+                    <SolidColorBrush x:Key="BgBase" Color="#F6F5F3" />
+                    <SolidColorBrush x:Key="BgSunken" Color="#EDEBE7" />
+                    <SolidColorBrush x:Key="Panel" Color="#FCFBFA" Opacity="0.86" />
+                    <SolidColorBrush x:Key="PanelSolid" Color="#FCFBFA" />
+                    <SolidColorBrush x:Key="PanelRaised" Color="#FFFFFF" Opacity="0.92" />
+                    <SolidColorBrush x:Key="Hairline" Color="#1A120C" Opacity="0.10" />
+                    <SolidColorBrush x:Key="HairlineStrong" Color="#1A120C" Opacity="0.18" />
+                    <SolidColorBrush x:Key="TopHighlight" Color="#FFFFFF" Opacity="0.75" />
+
+                    <SolidColorBrush x:Key="Ink" Color="#17120E" />
+                    <SolidColorBrush x:Key="InkMuted" Color="#17120E" Opacity="0.62" />
+                    <SolidColorBrush x:Key="InkFaint" Color="#17120E" Opacity="0.38" />
+                    <SolidColorBrush x:Key="InkOnAccent" Color="#FFFFFF" />
+
+                    <!-- Fluent's own accent, so checkboxes, list selection, sliders and
+                         focus rings stop coming out macOS blue in the middle of an
+                         ember-and-cyan panel. Overriding the accent colours reaches all
+                         of them at once; restyling each control's template does not. -->
+                    <Color x:Key="SystemAccentColor">#D9531E</Color>
+                    <Color x:Key="SystemAccentColorLight1">#E4703F</Color>
+                    <Color x:Key="SystemAccentColorLight2">#EE8C60</Color>
+                    <Color x:Key="SystemAccentColorLight3">#F5A883</Color>
+                    <Color x:Key="SystemAccentColorDark1">#BF4416</Color>
+                    <Color x:Key="SystemAccentColorDark2">#A0380F</Color>
+                    <Color x:Key="SystemAccentColorDark3">#7C2B0A</Color>
+
+                    <SolidColorBrush x:Key="Ember" Color="#D9531E" />
+                    <SolidColorBrush x:Key="EmberSoft" Color="#D9531E" Opacity="0.14" />
+                    <SolidColorBrush x:Key="EmberEdge" Color="#D9531E" Opacity="0.45" />
+                    <SolidColorBrush x:Key="Cyan" Color="#0E8FA3" />
+                    <SolidColorBrush x:Key="CyanSoft" Color="#0E8FA3" Opacity="0.14" />
+                    <SolidColorBrush x:Key="CyanEdge" Color="#0E8FA3" Opacity="0.45" />
+
+                    <SolidColorBrush x:Key="StateIdle" Color="#5C6670" />
+                    <SolidColorBrush x:Key="StateRun" Color="#0E8FA3" />
+                    <SolidColorBrush x:Key="StateHold" Color="#B8860B" />
+                    <SolidColorBrush x:Key="StateAlarm" Color="#C0342B" />
+                    <SolidColorBrush x:Key="StateJog" Color="#6D48C4" />
+                    <SolidColorBrush x:Key="StateOff" Color="#9AA0A6" />
+
+                    <SolidColorBrush x:Key="BedFill" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="BedEdge" Color="#17120E" Opacity="0.30" />
+                    <SolidColorBrush x:Key="GridMinor" Color="#17120E" Opacity="0.055" />
+                    <SolidColorBrush x:Key="GridMajor" Color="#17120E" Opacity="0.12" />
+                    <SolidColorBrush x:Key="Selection" Color="#0E8FA3" />
+                    <SolidColorBrush x:Key="Travel" Color="#0E8FA3" Opacity="0.35" />
+                    <SolidColorBrush x:Key="ShadowBrush" Color="#17120E" Opacity="0.10" />
+                </ResourceDictionary>
+
+                <!-- ===================== DARK ====================== -->
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="BgBaseColor">#14110F</Color>
+                    <Color x:Key="BgSunkenColor">#0D0B0A</Color>
+                    <Color x:Key="PanelColor">#211D1A</Color>
+                    <Color x:Key="PanelEdgeColor">#FFFFFF</Color>
+
+                    <SolidColorBrush x:Key="BgBase" Color="#14110F" />
+                    <SolidColorBrush x:Key="BgSunken" Color="#0D0B0A" />
+                    <SolidColorBrush x:Key="Panel" Color="#211D1A" Opacity="0.86" />
+                    <SolidColorBrush x:Key="PanelSolid" Color="#211D1A" />
+                    <SolidColorBrush x:Key="PanelRaised" Color="#2A2522" Opacity="0.92" />
+                    <SolidColorBrush x:Key="Hairline" Color="#FFFFFF" Opacity="0.10" />
+                    <SolidColorBrush x:Key="HairlineStrong" Color="#FFFFFF" Opacity="0.20" />
+                    <SolidColorBrush x:Key="TopHighlight" Color="#FFFFFF" Opacity="0.07" />
+
+                    <SolidColorBrush x:Key="Ink" Color="#F4F1EE" />
+                    <SolidColorBrush x:Key="InkMuted" Color="#F4F1EE" Opacity="0.66" />
+                    <SolidColorBrush x:Key="InkFaint" Color="#F4F1EE" Opacity="0.40" />
+                    <SolidColorBrush x:Key="InkOnAccent" Color="#14110F" />
+
+                    <!-- Same again for dark. See the note in the light dictionary. -->
+                    <Color x:Key="SystemAccentColor">#FF7A3D</Color>
+                    <Color x:Key="SystemAccentColorLight1">#FF9463</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FFAC86</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FFC3A8</Color>
+                    <Color x:Key="SystemAccentColorDark1">#E0621F</Color>
+                    <Color x:Key="SystemAccentColorDark2">#B84C15</Color>
+                    <Color x:Key="SystemAccentColorDark3">#8F390E</Color>
+
+                    <SolidColorBrush x:Key="Ember" Color="#FF7A3D" />
+                    <SolidColorBrush x:Key="EmberSoft" Color="#FF7A3D" Opacity="0.16" />
+                    <SolidColorBrush x:Key="EmberEdge" Color="#FF7A3D" Opacity="0.50" />
+                    <SolidColorBrush x:Key="Cyan" Color="#3FD0E3" />
+                    <SolidColorBrush x:Key="CyanSoft" Color="#3FD0E3" Opacity="0.16" />
+                    <SolidColorBrush x:Key="CyanEdge" Color="#3FD0E3" Opacity="0.50" />
+
+                    <SolidColorBrush x:Key="StateIdle" Color="#8A929A" />
+                    <SolidColorBrush x:Key="StateRun" Color="#3FD0E3" />
+                    <SolidColorBrush x:Key="StateHold" Color="#F0B429" />
+                    <SolidColorBrush x:Key="StateAlarm" Color="#FF5A52" />
+                    <SolidColorBrush x:Key="StateJog" Color="#A98BFF" />
+                    <SolidColorBrush x:Key="StateOff" Color="#5E6469" />
+
+                    <SolidColorBrush x:Key="BedFill" Color="#1B1815" />
+                    <SolidColorBrush x:Key="BedEdge" Color="#F4F1EE" Opacity="0.28" />
+                    <SolidColorBrush x:Key="GridMinor" Color="#F4F1EE" Opacity="0.055" />
+                    <SolidColorBrush x:Key="GridMajor" Color="#F4F1EE" Opacity="0.13" />
+                    <SolidColorBrush x:Key="Selection" Color="#3FD0E3" />
+                    <SolidColorBrush x:Key="Travel" Color="#3FD0E3" Opacity="0.32" />
+                    <SolidColorBrush x:Key="ShadowBrush" Color="#000000" Opacity="0.45" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Radius language: generous, mixed by role. -->
+            <CornerRadius x:Key="RadiusPanel">16</CornerRadius>
+            <CornerRadius x:Key="RadiusControl">10</CornerRadius>
+            <CornerRadius x:Key="RadiusInput">8</CornerRadius>
+            <CornerRadius x:Key="RadiusChip">999</CornerRadius>
+
+            <Thickness x:Key="PanelPadding">14</Thickness>
+            <Thickness x:Key="PanelMargin">10</Thickness>
+
+            <!-- Type scale: 1.25 ratio on a 13 px base. Dense enough for a pro tool,
+                 with one genuinely large size for the numbers that matter. -->
+            <x:Double x:Key="FontMicro">10</x:Double>
+            <x:Double x:Key="FontSmall">11.5</x:Double>
+            <x:Double x:Key="FontBody">13</x:Double>
+            <x:Double x:Key="FontMedium">16</x:Double>
+            <x:Double x:Key="FontLarge">20</x:Double>
+            <x:Double x:Key="FontDisplay">30</x:Double>
+        </ResourceDictionary>
+    </Styles.Resources>
+</Styles>

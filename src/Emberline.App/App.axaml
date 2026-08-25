@@ -1,0 +1,25 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Emberline.App"
+             x:Class="Emberline.App.App"
+             Name="Emberline"
+             RequestedThemeVariant="Default">
+
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://Emberline/Styles/Tokens.axaml" />
+        <StyleInclude Source="avares://Emberline/Styles/Controls.axaml" />
+        <StyleInclude Source="avares://Emberline/Styles/Motion.axaml" />
+    </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Emberline/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <FontFamily x:Key="DisplayFont">avares://Emberline/Assets/Fonts#Bricolage Grotesque</FontFamily>
+            <FontFamily x:Key="MonoFont">avares://Emberline/Assets/Fonts#Spline Sans Mono</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

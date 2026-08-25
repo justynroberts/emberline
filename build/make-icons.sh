@@ -3,9 +3,9 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ASSETS="$HERE/../src/OpenBurn.App/Assets"
-MASTER="$ASSETS/openburn.png"
-ICONSET="$HERE/openburn.iconset"
+ASSETS="$HERE/../src/Emberline.App/Assets"
+MASTER="$ASSETS/emberline.png"
+ICONSET="$HERE/emberline.iconset"
 
 [ -f "$MASTER" ] || { echo "missing $MASTER" >&2; exit 1; }
 
@@ -18,6 +18,6 @@ for size in 16 32 64 128 256 512; do
   sips -z $double $double "$MASTER" --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
 done
 
-iconutil -c icns "$ICONSET" -o "$ASSETS/openburn.icns"
+iconutil -c icns "$ICONSET" -o "$ASSETS/emberline.icns"
 rm -rf "$ICONSET"
-echo "wrote $ASSETS/openburn.icns"
+echo "wrote $ASSETS/emberline.icns"

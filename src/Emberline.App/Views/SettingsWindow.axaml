@@ -1,0 +1,102 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Emberline.App.ViewModels"
+        xmlns:conv="clr-namespace:Emberline.App.Converters"
+        x:Class="Emberline.App.Views.SettingsWindow"
+        x:DataType="vm:ControllerSettingsViewModel"
+        Title="Controller settings"
+        Width="880" Height="740"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgSunken}">
+
+    <Window.Resources>
+        <conv:ThemeBrushConverter x:Key="ThemeBrush" />
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="14">
+
+        <Border Grid.Row="0" Classes="panel focusIn" Margin="0,0,0,12">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="Controller settings" FontSize="{DynamicResource FontMedium}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Status}" Classes="label" TextWrapping="Wrap" />
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding Filter}" PlaceholderText="Search" MinWidth="180"
+                         VerticalAlignment="Center" />
+                <Button ToolTip.Tip="Read the current settings from the machine again, discarding anything typed here." Grid.Column="2" Content="Re-read" Command="{Binding ReloadCommand}" />
+                <Button ToolTip.Tip="Write the changed settings to the machine. Values that could drive the machine into itself will ask you to confirm." Grid.Column="3" Content="Apply changes" Classes="primary"
+                        Command="{Binding ApplyAllCommand}" IsEnabled="{Binding HasChanges}" />
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Classes="panel" Padding="6">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Groups}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SettingGroupViewModel">
+                            <StackPanel Margin="8,10,8,14" Spacing="6">
+                                <TextBlock Text="{Binding Name}" Classes="sectionTitle" Margin="0" />
+
+                                <ItemsControl ItemsSource="{Binding Settings}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:GrblSettingViewModel">
+                                            <Border Classes="card" Margin="0,0,0,6">
+                                                <Grid ColumnDefinitions="56,*,110,Auto" ColumnSpacing="10">
+                                                    <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="mono"
+                                                               Foreground="{DynamicResource InkMuted}"
+                                                               VerticalAlignment="Center" />
+
+                                                    <StackPanel Grid.Column="1" Spacing="2">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="{Binding Name}" FontWeight="Medium" />
+                                                            <Border Classes="chip" Background="{DynamicResource EmberSoft}"
+                                                                    IsVisible="{Binding IsDangerous}">
+                                                                <TextBlock Text="care" FontSize="10"
+                                                                           Foreground="{DynamicResource Ember}" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Description}" Classes="label"
+                                                                   TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding DangerNote}" TextWrapping="Wrap"
+                                                                   FontSize="{DynamicResource FontSmall}"
+                                                                   Foreground="{DynamicResource Ember}"
+                                                                   IsVisible="{Binding IsDangerous}" />
+                                                    </StackPanel>
+
+                                                    <TextBox Grid.Column="2" Text="{Binding EditedText}"
+                                                             VerticalAlignment="Center" />
+
+                                                    <StackPanel Grid.Column="3" VerticalAlignment="Center" MinWidth="120">
+                                                        <TextBlock Text="{Binding Unit}" Classes="label" />
+                                                        <TextBlock Text="{Binding Interpretation}" Classes="mono"
+                                                                   FontSize="10"
+                                                                   Foreground="{DynamicResource InkMuted}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Row="2" Classes="panel focusInDelay1" Margin="0,12,0,0">
+            <DockPanel LastChildFill="True">
+                <Button ToolTip.Tip="Close without writing anything further." DockPanel.Dock="Right" Content="Close" Click="OnClose" Margin="10,0,0,0" />
+                <ItemsControl ItemsSource="{Binding Warnings}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SettingWarningViewModel">
+                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="0,0,0,3"
+                                       FontSize="{DynamicResource FontSmall}"
+                                       Foreground="{Binding ColourKey, Converter={StaticResource ThemeBrush}}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

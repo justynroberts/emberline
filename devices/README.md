@@ -4,8 +4,8 @@ One JSON file per machine. Dropping a file in this folder is all it takes to add
 machine — no code, no rebuild. That is the "hardware agnostic" principle from the
 PRD made concrete.
 
-OpenBurn loads these at startup and merges them with any profiles the user has
-created in `~/.openburn/machines/`.
+Emberline loads these at startup and merges them with any profiles the user has
+created in `~/.emberline/machines/`.
 
 ## Fields
 

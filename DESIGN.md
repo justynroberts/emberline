@@ -1,4 +1,4 @@
-# OpenBurn — design record
+# Emberline — design record
 
 Written before the CSS, per the house-style rules. A later session should read
 this before changing the look, and pick differently again for the *next* project.
@@ -12,7 +12,7 @@ Recent siblings in `~/work/` used Editorial (`dontforget`, `newsfin`), Blueprint
 Every G-code sender in existence — LaserGRBL, LightBurn, Candle, UGS — is
 console/telemetry: grey panels, hairlines, dense rows, the look of a 2009 machine
 utility. Choosing Soft product is both the archetype not used recently here *and*
-the thing that stops OpenBurn looking like everything it is replacing. The user is
+the thing that stops Emberline looking like everything it is replacing. The user is
 making something, not administering a server, and the interface should agree.
 
 ## Axis picks

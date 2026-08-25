@@ -8,7 +8,7 @@ RID="${1:-linux-x64}"
 OUT="$ROOT/dist/$RID"
 
 rm -rf "$OUT"
-dotnet publish "$ROOT/src/OpenBurn.App/OpenBurn.App.csproj" \
+dotnet publish "$ROOT/src/Emberline.App/Emberline.App.csproj" \
   -c Release -r "$RID" --self-contained true -p:DebugType=none -o "$OUT"
 
 mkdir -p "$OUT/devices" "$OUT/samples"

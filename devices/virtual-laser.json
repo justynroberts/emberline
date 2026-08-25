@@ -1,6 +1,6 @@
 {
   "id": "virtual-laser",
-  "manufacturer": "OpenBurn",
+  "manufacturer": "Emberline",
   "model": "Virtual Laser",
   "displayName": "Virtual Laser (simulator)",
   "laserWatts": 10,

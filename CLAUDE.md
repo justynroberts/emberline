@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in the OpenBurn repository.
+Guidance for Claude Code when working in the Emberline repository.
 
 ## What this is
 
@@ -12,13 +12,13 @@ the visual decisions and why.
 ## Commands
 
 ```bash
-dotnet build OpenBurn.slnx          # whole solution
+dotnet build Emberline.slnx          # whole solution
 dotnet test                         # 352 tests, no hardware needed
-dotnet test tests/OpenBurn.Cam.Tests           # one project
+dotnet test tests/Emberline.Cam.Tests           # one project
 dotnet test --filter "FullyQualifiedName~Raster"   # one area
 
-dotnet run --project src/OpenBurn.App
-dotnet run --project src/OpenBurn.App -- samples/openburn-badge.svg
+dotnet run --project src/Emberline.App
+dotnet run --project src/Emberline.App -- samples/emberline-badge.svg
 
 ./build/package-macos.sh arm64
 ./build/package-windows.sh win-x64
@@ -29,7 +29,7 @@ before any `dotnet` command in a fresh shell.
 
 ## Layout
 
-Dependencies point inward. `OpenBurn.Core` references nothing but the framework.
+Dependencies point inward. `Emberline.Core` references nothing but the framework.
 
 ```
 Core        document model, geometry, machine profiles, job contracts, storage
@@ -54,9 +54,9 @@ camera lives in `Vision` for exactly this reason.
 repository: if it is wrong, every job on every machine is wrong. Two subtleties are
 load-bearing and both are commented in place — the re-entrancy guard on `Pump`, and
 recording the send *before* handing bytes to the transport. Do not "simplify"
-either without running `tests/OpenBurn.Transport.Tests`.
+either without running `tests/Emberline.Transport.Tests`.
 
-**The simulator is the test rig.** `OpenBurn.VirtualLaser` implements GRBL 1.1
+**The simulator is the test rig.** `Emberline.VirtualLaser` implements GRBL 1.1
 including planner back-pressure, and its acknowledgement timing is what makes the
 streaming tests meaningful. If you change when it emits `ok`, you are changing what
 the tests prove.
@@ -91,7 +91,7 @@ handler that awaits, and it needs the same treatment.
 
 **Plugin assemblies must not be loaded by path.** `LoadFromAssemblyPath` holds the
 file open for the process lifetime, which on Windows locks the DLL so a plugin
-cannot be updated or removed while OpenBurn runs. Read the bytes and use
+cannot be updated or removed while Emberline runs. Read the bytes and use
 `LoadFromStream` — `PluginLoadContext.LoadFromFileWithoutLocking` does this for the
 plugin and its dependencies. Only Windows can fail this, so the test for it earns
 its keep on a Mac by never failing.

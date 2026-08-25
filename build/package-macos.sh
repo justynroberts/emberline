@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build OpenBurn.app for macOS.
+# Build Emberline.app for macOS.
 #
 # Self-contained: the .NET runtime is bundled, so a user does not have to install
 # anything. That matters for a hobbyist tool — "install the .NET 10 runtime first"
@@ -17,11 +17,11 @@ esac
 
 VERSION="$(grep -o '<Version>[^<]*' "$ROOT/Directory.Build.props" | head -1 | cut -d'>' -f2)"
 OUT="$ROOT/dist/$RID"
-APP="$OUT/OpenBurn.app"
+APP="$OUT/Emberline.app"
 
 echo "==> Publishing $RID (version $VERSION)"
 rm -rf "$OUT"
-dotnet publish "$ROOT/src/OpenBurn.App/OpenBurn.App.csproj" \
+dotnet publish "$ROOT/src/Emberline.App/Emberline.App.csproj" \
   -c Release -r "$RID" --self-contained true \
   -p:PublishSingleFile=false \
   -p:DebugType=none \
@@ -37,10 +37,10 @@ mkdir -p "$APP/Contents/MacOS/devices" "$APP/Contents/MacOS/samples"
 cp "$ROOT/devices/"*.json "$APP/Contents/MacOS/devices/"
 cp "$ROOT/samples/"*.svg "$APP/Contents/MacOS/samples/" 2>/dev/null || true
 
-if [ -f "$ROOT/src/OpenBurn.App/Assets/openburn.icns" ]; then
-  cp "$ROOT/src/OpenBurn.App/Assets/openburn.icns" "$APP/Contents/Resources/openburn.icns"
+if [ -f "$ROOT/src/Emberline.App/Assets/emberline.icns" ]; then
+  cp "$ROOT/src/Emberline.App/Assets/emberline.icns" "$APP/Contents/Resources/emberline.icns"
 elif command -v iconutil >/dev/null 2>&1; then
-  "$HERE/make-icons.sh" && cp "$ROOT/src/OpenBurn.App/Assets/openburn.icns" "$APP/Contents/Resources/openburn.icns"
+  "$HERE/make-icons.sh" && cp "$ROOT/src/Emberline.App/Assets/emberline.icns" "$APP/Contents/Resources/emberline.icns"
 fi
 
 cat > "$APP/Contents/Info.plist" <<PLIST
@@ -48,18 +48,18 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>OpenBurn</string>
-    <key>CFBundleDisplayName</key><string>OpenBurn</string>
-    <key>CFBundleIdentifier</key><string>com.fintonlabs.openburn</string>
+    <key>CFBundleName</key><string>Emberline</string>
+    <key>CFBundleDisplayName</key><string>Emberline</string>
+    <key>CFBundleIdentifier</key><string>com.fintonlabs.emberline</string>
     <key>CFBundleVersion</key><string>$VERSION</string>
     <key>CFBundleShortVersionString</key><string>$VERSION</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleExecutable</key><string>OpenBurn</string>
-    <key>CFBundleIconFile</key><string>openburn</string>
+    <key>CFBundleExecutable</key><string>Emberline</string>
+    <key>CFBundleIconFile</key><string>emberline</string>
     <key>LSMinimumSystemVersion</key><string>12.0</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSCameraUsageDescription</key>
-    <string>OpenBurn uses a camera to show the laser bed so you can position artwork over your material.</string>
+    <string>Emberline uses a camera to show the laser bed so you can position artwork over your material.</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
@@ -77,7 +77,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-chmod +x "$APP/Contents/MacOS/OpenBurn"
+chmod +x "$APP/Contents/MacOS/Emberline"
 
 # Ad-hoc signing. Without it, Gatekeeper refuses to run an unsigned bundle at all
 # on Apple Silicon; with it the user still has to right-click-Open the first time,
