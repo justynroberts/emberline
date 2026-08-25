@@ -14,15 +14,11 @@
 
             <StackPanel DockPanel.Dock="Top" Spacing="14" HorizontalAlignment="Center" Margin="0,10,0,0">
 
-                <!-- Logo placeholder.
-                     Swap the image at Assets/emberline.png, or replace this border
-                     with whatever artwork you want; nothing else depends on it. -->
-                <Border Width="96" Height="96" CornerRadius="22"
-                        Background="{DynamicResource EmberSoft}"
-                        BorderBrush="{DynamicResource EmberEdge}" BorderThickness="1.5"
-                        HorizontalAlignment="Center">
-                    <Image Source="avares://Emberline/Assets/emberline.png" Stretch="Uniform" Margin="14" />
-                </Border>
+                <!-- The mark. It carries its own rounded ground, so it is shown as
+                     it is rather than framed again — swap Assets/emberline.png and
+                     nothing here needs touching. -->
+                <Image Source="avares://Emberline/Assets/emberline.png" Stretch="Uniform"
+                       Width="104" Height="104" HorizontalAlignment="Center" />
 
                 <StackPanel Spacing="2" HorizontalAlignment="Center">
                     <TextBlock Text="Emberline" FontSize="32" FontWeight="Bold"
