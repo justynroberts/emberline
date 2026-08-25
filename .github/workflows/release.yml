@@ -69,6 +69,22 @@ jobs:
           files: artifacts/*.zip
           generate_release_notes: true
           body: |
+            > ### This drives a laser
+            >
+            > Emberline connects to and commands a laser engraver or cutter. A laser
+            > powerful enough to mark wood is powerful enough to set it alight and to
+            > start a fire that spreads while you are looking at a screen. Never leave a
+            > running machine unattended, extract the fumes, wear eye protection rated
+            > for your wavelength, and treat the stop button in the application as a
+            > convenience rather than a safety device — the switch on the machine is the
+            > one that counts.
+            >
+            > Provided as is, without warranty of any kind. Use entirely at your own risk.
+            >
+            > **This release has never completed a job on real hardware.** Preview the
+            > toolpath, frame the outline at pointer power, and start from settings you
+            > have tested on an offcut.
+
             ## Installing
 
             **macOS** — unzip and move `Emberline.app` to Applications. The bundle is
