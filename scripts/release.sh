@@ -113,7 +113,7 @@ cd ..
 
 if [ "$DRY_RUN" = "1" ]; then
   printf '\n%s %s is built and verified. Nothing was tagged or published.\n  %s\n\n' \
-    "$(green ✓)" "$VERSION" "$(dim 'artifacts in dist/, version bumped in Directory.Build.props')"
+    "$(green ✓)" "$VERSION" "$(dim 'artifacts in dist/, tree left untouched')"
   exit 0
 fi
 
