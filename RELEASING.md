@@ -2,15 +2,35 @@
 
 ## Cutting a release
 
-Tag and push. The workflow in `.github/workflows/release.yml` builds all four
-platforms, signs the macOS builds if the certificate secrets are present, and
-attaches the results to a GitHub release.
-
 ```bash
-git tag v0.2.0 && git push origin v0.2.0
+scripts/release.sh 0.2.0 --dry-run    # build and verify, publish nothing
+scripts/release.sh 0.2.0
 ```
 
-macOS ships as a signed `.dmg`; Windows and Linux ship as zips.
+That script is the only thing here that ships anything. It runs the tests,
+builds all four platforms, signs, notarises and staples the macOS images, checks
+that Gatekeeper actually accepts them, and only then tags and publishes.
+
+It refuses rather than guesses: a dirty tree, an existing version, a missing
+certificate, missing notarytool credentials, a failing test, or a disk image
+Gatekeeper rejects all stop it before anything becomes visible. The credential
+checks run first, so a missing profile costs a second rather than a ten-minute
+build.
+
+macOS ships as a notarised `.dmg` per architecture; Windows and Linux ship as
+zips, cross-published from the same machine.
+
+## Releases are built locally, not in CI
+
+This looks backwards and is deliberate. Signing needs the Developer ID
+certificate and notarising needs the notarytool keychain profile, and both live
+on the release machine. A GitHub runner has neither, so anything it builds is
+ad-hoc signed — which tells whoever downloads it that the application is
+damaged. A tag-triggered release workflow would also race the local one and
+overwrite good images with broken ones, so there isn't one.
+
+CI still builds and tests every platform on push, which is what catches a
+cross-platform break. It just does not publish.
 
 ## macOS signing
 
@@ -63,13 +83,3 @@ spctl -a -vvv -t install dist/emberline-osx-arm64.dmg
 Anything other than `Notarized Developer ID` means the download is broken for
 everyone but you.
 
-## CI
-
-GitHub runners have no keychain, so the workflow falls back to explicit secrets:
-`MACOS_CERTIFICATE` (the Developer ID cert exported as `.p12`, base64-encoded),
-`MACOS_CERTIFICATE_PASSWORD`, `NOTARY_APPLE_ID`, `NOTARY_PASSWORD`,
-`NOTARY_TEAM_ID`. Export the certificate from Keychain Access → right-click the
-*Developer ID Application* entry → Export, then `base64 -i cert.p12 | pbcopy`.
-
-Until those are set, tagged builds still succeed but produce ad-hoc signed
-images. Releasing from a local machine gives a properly notarised one.
