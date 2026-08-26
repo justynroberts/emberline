@@ -68,6 +68,10 @@ step "Running the tests"
 dotnet test --nologo -v q || die "tests failed" "a release with failing tests is not a release"
 
 step "Setting the version to $VERSION"
+# A dry run has to leave the tree exactly as it found it. Without this the bump
+# survives, the next dry run sees a dirty tree, and refuses — so the rehearsal
+# can only be performed once.
+[ "$DRY_RUN" = "1" ] && trap 'git checkout -- Directory.Build.props 2>/dev/null || true' EXIT
 sed -i '' "s|<Version>[^<]*</Version>|<Version>$VERSION</Version>|" Directory.Build.props
 
 step "Building, signing, notarising and stapling"
