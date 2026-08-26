@@ -41,11 +41,18 @@ if [ -n "$IDENTITY" ] && command -v codesign >/dev/null 2>&1; then
   # The image needs its own notarisation ticket. It does not inherit the one
   # stapled to the application inside it — notarising the app and assuming the
   # download is covered produces a dmg Gatekeeper still refuses.
-  if [ -n "${NOTARY_APPLE_ID:-}" ] && [ -n "${NOTARY_PASSWORD:-}" ] && [ -n "${NOTARY_TEAM_ID:-}" ]; then
+  PROFILE="${NOTARY_KEYCHAIN_PROFILE:-notarytool}"
+  NOTARY_ARGS=""
+
+  if xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1; then
+    NOTARY_ARGS="--keychain-profile $PROFILE"
+  elif [ -n "${NOTARY_APPLE_ID:-}" ] && [ -n "${NOTARY_PASSWORD:-}" ] && [ -n "${NOTARY_TEAM_ID:-}" ]; then
+    NOTARY_ARGS="--apple-id $NOTARY_APPLE_ID --password $NOTARY_PASSWORD --team-id $NOTARY_TEAM_ID"
+  fi
+
+  if [ -n "$NOTARY_ARGS" ]; then
     echo "==> Notarising the image"
-    if xcrun notarytool submit "$DMG" \
-        --apple-id "$NOTARY_APPLE_ID" --password "$NOTARY_PASSWORD" --team-id "$NOTARY_TEAM_ID" \
-        --wait; then
+    if xcrun notarytool submit "$DMG" $NOTARY_ARGS --wait; then
       xcrun stapler staple "$DMG" && echo "==> Notarised and stapled the image"
     else
       echo "==> WARNING: image notarisation failed; Gatekeeper will refuse this download" >&2

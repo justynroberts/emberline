@@ -112,25 +112,39 @@ if [ -n "$IDENTITY" ] && command -v codesign >/dev/null 2>&1; then
     echo "==> WARNING: signature did not verify" >&2
   fi
 
-  # Notarisation, when credentials are supplied. Without it Gatekeeper still
-  # refuses the bundle on another machine — signing alone is not enough, and
-  # saying otherwise would set somebody up to be told their download is damaged.
-  if [ -n "${NOTARY_APPLE_ID:-}" ] && [ -n "${NOTARY_PASSWORD:-}" ] && [ -n "${NOTARY_TEAM_ID:-}" ]; then
-    echo "==> Notarising (this takes a few minutes)"
+  # Notarisation. Signing alone is not distributable: without a ticket
+  # Gatekeeper reports "Unnotarized Developer ID" and refuses the bundle on any
+  # Mac other than the one that built it.
+  #
+  # Credentials come from a keychain profile by preference, so the password
+  # never appears in a script, an environment variable or a shell history. Set
+  # one up once with:
+  #   xcrun notarytool store-credentials "notarytool" --apple-id <id> --team-id <team>
+  # CI has no keychain, so explicit variables are the fallback there.
+  PROFILE="${NOTARY_KEYCHAIN_PROFILE:-notarytool}"
+  NOTARY_ARGS=""
+
+  if xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1; then
+    NOTARY_ARGS="--keychain-profile $PROFILE"
+  elif [ -n "${NOTARY_APPLE_ID:-}" ] && [ -n "${NOTARY_PASSWORD:-}" ] && [ -n "${NOTARY_TEAM_ID:-}" ]; then
+    NOTARY_ARGS="--apple-id $NOTARY_APPLE_ID --password $NOTARY_PASSWORD --team-id $NOTARY_TEAM_ID"
+  fi
+
+  if [ -n "$NOTARY_ARGS" ]; then
+    echo "==> Notarising the application (a few minutes)"
     ZIP="$OUT/notarise.zip"
     ditto -c -k --keepParent "$APP" "$ZIP"
 
-    if xcrun notarytool submit "$ZIP" \
-        --apple-id "$NOTARY_APPLE_ID" --password "$NOTARY_PASSWORD" --team-id "$NOTARY_TEAM_ID" \
-        --wait; then
+    if xcrun notarytool submit "$ZIP" $NOTARY_ARGS --wait; then
+      # Stapling attaches the ticket to the bundle so the check works offline.
       xcrun stapler staple "$APP" && echo "==> Notarised and stapled"
     else
       echo "==> WARNING: notarisation failed; the bundle is signed but Gatekeeper will refuse it" >&2
     fi
     rm -f "$ZIP"
   else
-    echo "==> Not notarised. Set NOTARY_APPLE_ID, NOTARY_PASSWORD and NOTARY_TEAM_ID to notarise."
-    echo "    Without it, opening this on another Mac needs right-click then Open."
+    echo "==> No notarytool credentials. Signed but not notarised — other Macs will refuse it."
+    echo "    xcrun notarytool store-credentials \"notarytool\" --apple-id <id> --team-id <team>"
   fi
 elif command -v codesign >/dev/null 2>&1; then
   echo "==> No Developer ID certificate; ad-hoc signing only (not distributable)"

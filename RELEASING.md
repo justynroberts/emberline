@@ -31,27 +31,45 @@ executable.
 
 **Signing alone is not enough to distribute.** A signed but un-notarised build
 reports `source=Unnotarized Developer ID` and is refused on any Mac other than
-the one that built it. Opening it needs right-click → Open, which is not
-something to ask a user to do.
+the one that built it.
 
-Notarisation needs three values, as environment variables locally and as
-repository secrets in CI:
+Credentials are already stored in a keychain profile named `notarytool`, so the
+scripts notarise automatically with no configuration and no password anywhere in
+the environment. Check it rather than assuming it is missing:
 
-| Secret | What it is |
-|---|---|
-| `NOTARY_APPLE_ID` | The Apple ID email on the developer account |
-| `NOTARY_PASSWORD` | An **app-specific password** from appleid.apple.com — not the account password |
-| `NOTARY_TEAM_ID` | The ten-character team identifier |
-| `MACOS_CERTIFICATE` | The Developer ID cert exported as `.p12`, base64-encoded |
-| `MACOS_CERTIFICATE_PASSWORD` | The password set when exporting that `.p12` |
+```bash
+xcrun notarytool history --keychain-profile notarytool
+```
 
-Generate the app-specific password at appleid.apple.com → Sign-In and Security →
-App-Specific Passwords. Export the certificate from Keychain Access → right-click
-the *Developer ID Application* entry → Export, then
-`base64 -i cert.p12 | pbcopy`.
+If that ever needs recreating, the app-specific password comes from
+appleid.apple.com → Sign-In and Security → App-Specific Passwords:
 
-The application and the disk image are notarised separately — the image does not
-inherit the app's ticket. Both are stapled, so the check works offline.
+```bash
+xcrun notarytool store-credentials "notarytool" --apple-id <id> --team-id 2H574B6N62
+```
 
-Without these set, the build still succeeds and still signs; it just prints that
-it did not notarise rather than pretending it did.
+The application and the disk image are notarised **separately** — the image does
+not inherit the app's ticket. Both are stapled, so the check works offline. The
+order is sign → notarise → staple, and it matters.
+
+Verify before publishing. This is the only check that reflects what a user sees:
+
+```bash
+spctl -a -vvv -t install dist/emberline-osx-arm64.dmg
+# accepted
+# source=Notarized Developer ID
+```
+
+Anything other than `Notarized Developer ID` means the download is broken for
+everyone but you.
+
+## CI
+
+GitHub runners have no keychain, so the workflow falls back to explicit secrets:
+`MACOS_CERTIFICATE` (the Developer ID cert exported as `.p12`, base64-encoded),
+`MACOS_CERTIFICATE_PASSWORD`, `NOTARY_APPLE_ID`, `NOTARY_PASSWORD`,
+`NOTARY_TEAM_ID`. Export the certificate from Keychain Access → right-click the
+*Developer ID Application* entry → Export, then `base64 -i cert.p12 | pbcopy`.
+
+Until those are set, tagged builds still succeed but produce ad-hoc signed
+images. Releasing from a local machine gives a properly notarised one.
