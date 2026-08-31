@@ -33,7 +33,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # enablement turns Pages on if it is off, rather than failing and waiting
+      # for somebody to find the setting. Without it the first run on a fresh
+      # clone or a fork dies on "Get Pages site failed".
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v4
         with:
