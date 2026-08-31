@@ -1,0 +1,377 @@
+<!-- MIT License - Copyright (c) fintonlabs.com -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emberline — open-source laser cutting and engraving</title>
+<meta name="description" content="A cross-platform desktop application for GRBL laser cutters and engravers. Windows, macOS and Linux. Import, engrave, cut and stream jobs — with a built-in simulator so you can try it without a machine.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Emberline — open-source laser cutting and engraving">
+<meta property="og:description" content="Design, position, engrave and cut with GRBL-compatible laser machines. Windows, macOS and Linux. GPLv3.">
+<meta property="og:url" content="https://justynroberts.github.io/emberline/">
+<meta property="og:image" content="https://justynroberts.github.io/emberline/img/emberline.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="img/emberline.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<!-- The reveal starts masked and is opened by script. With no script there is no
+     observer to open it, so the page would render entirely blank. -->
+<noscript><style>.reveal { -webkit-mask-image: none; mask-image: none; opacity: 1; }</style></noscript>
+
+<script>
+  // Applied before first paint so the stored theme never flashes the other one.
+  (function () {
+    try {
+      var t = localStorage.getItem('emberline-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap site-head__inner">
+    <a class="wordmark" href="#top">
+      <svg class="mark" viewBox="168 336 688 480" aria-hidden="true">
+        <!-- The beam converging to a point on the work, cyan ahead of it and ember
+             behind: the mark the application ships, cropped to the artwork, because
+             the 1024 square it renders is mostly padding and reads as a dash at 20px.
+             Inlined rather than referenced through <use> — a gradient reached from
+             inside a use-element's shadow tree does not resolve reliably in Chrome,
+             and the beam silently vanishes leaving only the flat-filled parts. -->
+        <defs>
+          <linearGradient id="mkBeam" x1="0" y1="168" x2="0" y2="660" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FF7A3D" stop-opacity=".45"/>
+            <stop offset=".5" stop-color="#FF8A4D" stop-opacity=".9"/>
+            <stop offset="1" stop-color="#FFC79B"/>
+          </linearGradient>
+          <linearGradient id="mkHot" x1="168" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#A33A14"/>
+            <stop offset=".6" stop-color="#F0601F"/>
+            <stop offset="1" stop-color="#FFD1A8"/>
+          </linearGradient>
+          <radialGradient id="mkGlow" cx="512" cy="660" r="132" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FFD9B0" stop-opacity=".82"/>
+            <stop offset=".35" stop-color="#FF7A3D" stop-opacity=".35"/>
+            <stop offset="1" stop-color="#FF7A3D" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path d="M362 168 L662 168 L519 660 L505 660 Z" fill="url(#mkBeam)"/>
+        <rect x="512" y="643" width="344" height="34" rx="17" fill="#3FD0E3"/>
+        <rect x="168" y="643" width="361" height="34" rx="17" fill="url(#mkHot)"/>
+        <circle cx="512" cy="660" r="132" fill="url(#mkGlow)"/>
+        <circle cx="512" cy="660" r="26" fill="#FFF3E6"/>
+      </svg>
+      Emberline
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a class="hide-sm" href="#tour">Tour</a>
+      <a class="hide-sm" href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/justynroberts/emberline">GitHub</a>
+      <button class="icon-btn" id="theme-toggle" aria-label="Switch colour theme" title="Switch colour theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>
+          <circle cx="12" cy="12" r="4"/>
+        </svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============================ Hero ============================ -->
+  <section class="hero" id="top">
+    <div class="wrap hero__inner">
+      <p class="eyebrow reveal">Windows · macOS · Linux · GPLv3</p>
+      <h1 class="reveal">Open-source laser cutting and <em>engraving</em>.</h1>
+      <p class="hero__lede reveal">
+        A desktop application for designing, positioning, engraving and cutting with
+        GRBL-compatible machines. It exists because the good open-source option is
+        Windows-only and speaks nothing but USB serial, and the good cross-platform
+        option is proprietary.
+      </p>
+      <div class="hero__actions reveal">
+        <a class="btn btn--primary" href="#download">Download</a>
+        <a class="btn" href="https://github.com/justynroberts/emberline">Source on GitHub</a>
+      </div>
+      <p class="hero__meta reveal">
+        <span>v0.1.0</span><span>.NET 10 · Avalonia</span><span>self-contained — no runtime to install</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== Safety, stated up front ===================== -->
+  <section class="safety">
+    <div class="wrap">
+      <div class="safety__inner reveal">
+        <h2>This drives a laser</h2>
+        <div>
+          <p>
+            A laser powerful enough to mark wood is powerful enough to set it alight and
+            start a fire that spreads while you are looking at a screen. Never leave a
+            running machine unattended, extract the fumes, wear eye protection rated for
+            your wavelength, and treat the stop button in the application as a convenience
+            rather than a safety device — the switch on the machine is the one that counts.
+          </p>
+          <p>
+            Provided as is, without warranty of any kind. Use entirely at your own risk.
+            <strong>No release so far has completed a job on real hardware.</strong>
+            Preview the toolpath, frame the outline at pointer power, and start from
+            settings you have tested on an offcut.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ Tour ============================ -->
+  <section class="band" id="tour">
+    <div class="wrap band__grid reveal">
+      <figure class="shot">
+        <img class="shot__light" src="img/workspace-light.png" width="1480" height="940" loading="lazy"
+             alt="The Emberline workspace: artwork centred on a 400 by 400 millimetre bed, a floating toolbar above and a layers and material inspector to the right.">
+        <img class="shot__dark" src="img/workspace-dark.png" width="1480" height="940" loading="lazy"
+             alt="The Emberline workspace in dark theme: artwork centred on the bed, floating toolbar and inspector.">
+      </figure>
+      <div class="band__text">
+        <p class="eyebrow">The workspace</p>
+        <h2>The bed, not a file browser.</h2>
+        <p>
+          The machine bed fills the window and every panel floats over it. Drag, scale and
+          rotate on the canvas, snap and align, group and array — with undo across all of
+          it. Layers carry their own speed, power and pass count, so one design can cut and
+          engrave in a single job.
+        </p>
+        <p class="band__note">Millimetres everywhere, Y up. Inches exist only in the view layer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--flip">
+    <div class="wrap band__grid reveal">
+      <figure class="shot">
+        <img class="shot__light" src="img/machine-light.png" width="1480" height="940" loading="lazy"
+             alt="The machine panel: profile and port selectors, USB, Wi-Fi and Virtual connection buttons, a jog pad with step and feed, and camera controls.">
+        <img class="shot__dark" src="img/machine-dark.png" width="1480" height="940" loading="lazy"
+             alt="The machine panel in dark theme, showing connection, jog and camera controls.">
+      </figure>
+      <div class="band__text">
+        <p class="eyebrow">Connection</p>
+        <h2>USB, Wi-Fi, or nothing at all.</h2>
+        <p>
+          Serial, TCP, WebSocket and HTTP, plus an opt-in network scan that probes for GRBL
+          controllers. Nothing above the transport knows what it is talking to, so the job
+          engine drives a USB cable, a WebSocket and the simulator through one code path.
+        </p>
+        <p class="band__note">Discovery uses <code>$I</code> only. A soft reset would find more controllers and end somebody's job doing it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap band__grid reveal">
+      <figure class="shot">
+        <img class="shot__light" src="img/gcode-light.png" width="1480" height="940" loading="lazy"
+             alt="The G-code panel open over the workspace, listing the generated program line by line with a summary of 308 lines, 282 moves, 1.03 metres cutting and 0.6 metres travel.">
+        <img class="shot__dark" src="img/gcode-dark.png" width="1480" height="940" loading="lazy"
+             alt="The G-code panel in dark theme showing the generated program and its summary.">
+      </figure>
+      <div class="band__text">
+        <p class="eyebrow">Nothing hidden</p>
+        <h2>The exact lines that will be sent.</h2>
+        <p>
+          Every job can be read before it runs, simulated with a scrubber, and framed at
+          pointer power so the head traces the outline on the real material first. Time
+          estimates are acceleration-aware rather than a length divided by a feed rate.
+        </p>
+        <p class="band__note">Streaming keeps GRBL's 128-byte buffer full by character count, so the planner never starves and raster engraves do not band.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--flip">
+    <div class="wrap band__grid reveal">
+      <figure class="shot shot--narrow">
+        <img class="shot__light" src="img/wizard-light.png" width="900" height="500" loading="lazy"
+             alt="Step one of the guided setup: choosing a laser and connecting, with a note explaining that Virtual runs the whole job against a simulator.">
+        <img class="shot__dark" src="img/wizard-dark.png" width="900" height="500" loading="lazy"
+             alt="Step one of the guided setup in dark theme.">
+      </figure>
+      <div class="band__text">
+        <p class="eyebrow">First time</p>
+        <h2>If you have never used a laser.</h2>
+        <p>
+          Five steps: which machine, what is on the bed, what you are burning onto it, how
+          hard and how fast, and a check of the result. It sets up the same objects the
+          panels do, so nothing it does is trapped inside the wizard.
+        </p>
+        <p class="band__note">It stops short of starting the job. Pressing Start is a decision to take while looking at the bed, not at a dialog.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ Features ============================ -->
+  <section class="features" id="features">
+    <div class="wrap">
+      <div class="features__head reveal">
+        <p class="eyebrow">What is in it</p>
+        <h2>Built for the whole job.</h2>
+        <p class="lede">From the artwork landing on the bed to the last line acknowledged by the controller.</p>
+      </div>
+
+      <div class="feature-list reveal">
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Try it without a laser</h3>
+          <p>A complete in-process GRBL 1.1 controller — receive buffer, planner queue, status reports, alarms and soft limits. The same simulator the test suite runs jobs against.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Import</h3>
+          <p>SVG with nested transforms and real-world sizing, DXF with bulges and splines, PNG, JPEG, BMP, GIF, WebP, and existing G-code.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Photo engraving</h3>
+          <p>Invert, brightness, contrast, gamma, sharpen, tone clipping and twelve dithering kernels — with a live preview of what will actually burn.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Raster and vector CAM</h3>
+          <p>Engrave, score and cut; hatch and offset fills; text to outlines. Overlapping shapes are cut as their combined outline, with holes preserved.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Tracing</h3>
+          <p>Bitmap to paths with a live preview — outlines or centrelines, threshold seeded from the image itself, simplify and smooth.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Camera</h3>
+          <p>MJPEG and HTTP snapshot sources, lens and perspective correction, bed overlay, workpiece detection, fiducial re-registration, and a live view while a job runs.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Materials</h3>
+          <p>A library keyed by laser wattage with hazard warnings — and a test grid that burns a power-versus-speed matrix so you get numbers true for your machine.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Artwork search</h3>
+          <p>150-odd open icon sets, around 200,000 shapes, with the licence shown against every result. Import to etch, or import to cut.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Recovery</h3>
+          <p>Pause, resume and stop; resume-from-line after a dropped link; and every job recorded locally with its settings, so "what worked last time" is answerable.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Rotary</h3>
+          <p>Roller and chuck attachments, with the axis rescaled from the real steps-per-millimetre rather than a guess.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>Controller settings</h3>
+          <p>A <code>$</code> editor with every value named, explained and unit-labelled, and confirmation on the ones that can drive a machine into itself.</p>
+        </div>
+        <div class="feature">
+          <span class="feature__mark"></span>
+          <h3>An assistant that cannot move the machine</h3>
+          <p>Optional help with settings, faults and job setup. It can draw, and it can propose — it has no method that starts, jogs or homes anything. That is architectural, not a prompt rule.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ Download ============================ -->
+  <section class="download" id="download">
+    <div class="wrap">
+      <div class="download__head reveal">
+        <p class="eyebrow">Latest release — v0.1.0</p>
+        <h2>Download.</h2>
+        <p class="lede">Self-contained builds. The .NET runtime is bundled, so there is nothing to install first.</p>
+      </div>
+
+      <div class="platforms reveal">
+        <div class="platform">
+          <h3>macOS</h3>
+          <p>Signed and notarised disk image. Apple Silicon and Intel.</p>
+          <div class="platform__actions">
+            <a class="btn btn--primary" href="https://github.com/justynroberts/emberline/releases/latest/download/emberline-osx-arm64.dmg">Apple Silicon .dmg</a>
+            <a class="btn" href="https://github.com/justynroberts/emberline/releases/latest/download/emberline-osx-x64.dmg">Intel .dmg</a>
+          </div>
+        </div>
+        <div class="platform">
+          <h3>Windows</h3>
+          <p>Unzip and run <code class="mono">Emberline.exe</code>. Unsigned, so SmartScreen will ask.</p>
+          <div class="platform__actions">
+            <a class="btn btn--primary" href="https://github.com/justynroberts/emberline/releases/latest/download/emberline-win-x64.zip">Windows x64 .zip</a>
+          </div>
+        </div>
+        <div class="platform">
+          <h3>Linux</h3>
+          <p>Unzip and run <code class="mono">./Emberline</code>. Needs <code class="mono">libfontconfig1</code> installed.</p>
+          <div class="platform__actions">
+            <a class="btn btn--primary" href="https://github.com/justynroberts/emberline/releases/latest/download/emberline-linux-x64.zip">Linux x64 .zip</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="source reveal">
+        <h3>Or build it</h3>
+        <pre><code><span class="c"># needs the .NET 10 SDK</span>
+git clone https://github.com/justynroberts/emberline
+cd emberline
+dotnet run --project src/Emberline.App</code></pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap site-foot__inner">
+    <p>
+      GPLv3. Emberline incorporates algorithms derived from
+      <a href="https://github.com/arkypita/LaserGRBL">LaserGRBL</a>, which is GPL-licensed.
+    </p>
+    <p>
+      <a href="https://github.com/justynroberts/emberline">Source</a> ·
+      <a href="https://github.com/justynroberts/emberline/issues">Issues</a> ·
+      Made by <a href="https://fintonlabs.com" target="_blank" rel="noopener">FintonLabs</a>
+    </p>
+  </div>
+</footer>
+
+<button class="info-fab" id="info-open" aria-label="About this app" title="About this app">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+    <circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.75" r=".9" fill="currentColor" stroke="none"/>
+  </svg>
+</button>
+
+<dialog class="info" id="info-dialog" aria-labelledby="info-title">
+  <div class="info__body">
+    <h2 id="info-title">Emberline</h2>
+    <p class="info__ver">v0.1.0 · GPLv3</p>
+    <p>Open-source laser cutting and engraving for GRBL-compatible machines, on Windows, macOS and Linux.</p>
+    <p class="info__made">
+      Made by <a href="https://fintonlabs.com" target="_blank" rel="noopener">FintonLabs</a>
+    </p>
+    <button class="btn info__close" id="info-close" autofocus>Close</button>
+  </div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
