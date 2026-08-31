@@ -12,20 +12,50 @@ the visual decisions and why.
 ## Commands
 
 ```bash
-dotnet build Emberline.slnx          # whole solution
-dotnet test                         # 352 tests, no hardware needed
-dotnet test tests/Emberline.Cam.Tests           # one project
+dotnet build Emberline.slnx                        # whole solution
+dotnet test                                        # 557 tests, no hardware needed
+dotnet test tests/Emberline.Cam.Tests              # one project
 dotnet test --filter "FullyQualifiedName~Raster"   # one area
 
 dotnet run --project src/Emberline.App
 dotnet run --project src/Emberline.App -- samples/emberline-badge.svg
 
-./build/package-macos.sh arm64
-./build/package-windows.sh win-x64
+./build/package-macos.sh arm64      # or x86_64 — cross-publishes from Apple Silicon
+./build/package-windows.sh win-x64  # both cross-publish from any host
+./build/package-linux.sh linux-x64
+./build/package-dmg.sh osx-arm64    # signs and notarises; macOS only
+
+dist/osx-arm64/Emberline.app/Contents/MacOS/Emberline --selftest
+scripts/release.sh 0.2.0 --dry-run
+
+EMBERLINE_SCREENSHOTS=site/img dotnet test tests/Emberline.App.Tests \
+  --filter "FullyQualifiedName~Screenshots"      # regenerate the website's screenshots
 ```
 
 The SDK lives in `~/.dotnet` on this machine, so `export PATH="$HOME/.dotnet:$PATH"`
 before any `dotnet` command in a fresh shell.
+
+`--selftest` is a headless end-to-end run of the *packaged* application: fonts
+register, machine profiles load from beside the executable, a document becomes
+G-code and streams to completion. It catches the class of failure the unit tests
+cannot see — a build that compiled but was assembled without its `devices/` JSON.
+CI runs it on the linux-x64 and osx-arm64 packages.
+
+The website in `site/` is plain static HTML published to GitHub Pages by
+`.github/workflows/pages.yml` on any push that touches it. Its screenshots are
+not curated files: `Screenshots.cs` drives the real `MainWindow` on the headless
+Skia backend and captures rendered frames in both themes, so they can be
+regenerated when the UI moves instead of quietly going stale. The test writes
+nothing unless `EMBERLINE_SCREENSHOTS` names an output directory. `site/DESIGN.md`
+records the page's design decisions; `DESIGN.md` at the root is the application's.
+
+`scripts/release.sh` is the only thing here that ships anything, and it runs on
+this machine rather than in CI, because signing and notarising need the Developer
+ID certificate and notarytool keychain profile that live locally — a runner build
+is ad-hoc signed, which tells the downloader the application is damaged. It
+refuses on a dirty tree, an existing tag, a failing test or an unstapled disk
+image. `--dry-run` builds and verifies everything, then restores
+`Directory.Build.props` so the rehearsal can be repeated.
 
 ## Layout
 
@@ -40,6 +70,7 @@ Devices     ILaserDevice, GRBL driver, discovery, probe                  ← Cor
 Camera      frame sources                                                ← Core
 Vision      lens, homography, rectification, detection                   ← Core, Camera
 Materials   material library                                             ← Core
+Catalog     open icon-set search and SVG fetch (network)                 ← nothing
 Plugins     plugin contracts, registry, load host                       ← Core, Cam, Devices, Transport, Camera, Materials
 AI          the optional assistant                                       ← Core, GCode, Cam, Materials, Devices
 App         Avalonia UI                                                  ← everything
@@ -120,6 +151,19 @@ walk goes quadratic — ninety seconds on a three-megapixel image, against under
 
 **Millimetres everywhere, Y up.** Inches exist only in the view layer. The SVG
 importer performs the single Y flip at the boundary; nothing downstream flips again.
+
+**The App tests are xunit v3; every other test project is xunit v2.**
+`Avalonia.Headless.XUnit` targets v3, whose runner executes the assembly as a
+process — so `Emberline.App.Tests` alone is `OutputType=Exe` with `xunit.v3`,
+while the other eight reference plain `xunit` 2.9.3. Copying a `.csproj` from the
+wrong side gives a project that restores and then finds no tests. UI tests belong
+in App.Tests behind `TestAppBuilder`; anything headless belongs in a v2 project.
+
+**Nullable warnings fail the build.** `Directory.Build.props` sets
+`WarningsAsErrors=nullable` (with `TreatWarningsAsErrors=false`), so a stray
+possible-null dereference stops the build while ordinary warnings do not. It also
+pins `LangVersion=preview` and holds the `<Version>` that `scripts/release.sh`
+rewrites — do not bump that by hand.
 
 **Avalonia 12, not 11.** `DataFormats` is obsolete (`DataFormat`), drag events
 carry `DataTransfer` not `Data`, `Window.SystemDecorations` is `WindowDecorations`,
