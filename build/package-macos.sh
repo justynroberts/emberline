@@ -95,8 +95,13 @@ chmod +x "$APP/Contents/MacOS/Emberline"
 IDENTITY="${MACOS_SIGN_IDENTITY:-}"
 
 if [ -z "$IDENTITY" ] && command -v security >/dev/null 2>&1; then
+  # `|| true` is load-bearing. On a machine with no Developer ID — every CI
+  # runner — grep matches nothing and exits 1, and under `set -e` with
+  # `pipefail` that ends the script here: no message, because find-identity's
+  # stderr is discarded and grep says nothing when it does not match. Having no
+  # certificate is not an error; it is the ad-hoc branch below.
   IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null \
-    | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+    | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/' || true)
 fi
 
 if [ -n "$IDENTITY" ] && command -v codesign >/dev/null 2>&1; then
