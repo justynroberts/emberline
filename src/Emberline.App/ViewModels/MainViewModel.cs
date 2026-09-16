@@ -168,7 +168,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public bool IsJobRunning => JobState is JobState.Running;
     public bool IsJobPaused => JobState is JobState.Paused;
     public bool IsJobActive => JobState.IsActive();
-    public bool CanStartJob => IsConnected && !IsJobActive && _cam is { CanRun: true };
+    public bool CanStartJob => IsConnected && !IsJobActive && _cam is { CanRun: true } && _device is not { CanStreamJobs: false };
 
     /// <summary>
     /// Why Start is greyed out, in words, shown as its tooltip.
@@ -190,6 +190,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 return "Not connected to a machine yet. Press USB or Wi-Fi in the machine panel — " +
                        "or Virtual, which runs the whole job against a built-in simulator so you can " +
                        "try everything without hardware.";
+            }
+
+            if (_device is { CanStreamJobs: false })
+            {
+                return "Jobs cannot run over this Wi-Fi connection: the controller takes each line as a " +
+                       "separate web request, which cannot stream a job reliably. Jogging, framing and " +
+                       "settings work here; connect over USB to run the job.";
             }
 
             if (Design.Shapes.Count == 0)

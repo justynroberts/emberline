@@ -74,7 +74,7 @@ public sealed partial class MainViewModel
     private Task ConnectSerialAsync() => ConnectAsync(ConnectionKind.Serial);
 
     [RelayCommand]
-    private Task ConnectNetworkAsync() => ConnectAsync(ConnectionKind.Tcp);
+    private Task ConnectNetworkAsync() => ConnectAsync(SelectedMachine.NetworkConnection);
 
     [RelayCommand]
     private Task ConnectVirtualAsync() => ConnectAsync(ConnectionKind.Virtual);
@@ -85,6 +85,7 @@ public sealed partial class MainViewModel
         TransportKind.WebSocket => ConnectionKind.WebSocket,
         TransportKind.Http => ConnectionKind.Http,
         TransportKind.Virtual => ConnectionKind.Virtual,
+        TransportKind.Esp3d => ConnectionKind.Esp3d,
         _ => ConnectionKind.Tcp,
     });
 
@@ -119,7 +120,7 @@ public sealed partial class MainViewModel
                 Console.AppendError("Choose a serial port first.");
                 return;
             }
-            if (kind is ConnectionKind.Tcp or ConnectionKind.WebSocket or ConnectionKind.Http &&
+            if (kind is ConnectionKind.Tcp or ConnectionKind.WebSocket or ConnectionKind.Http or ConnectionKind.Esp3d &&
                 string.IsNullOrWhiteSpace(address))
             {
                 Console.AppendError("Enter the machine's address, or run a network scan.");
@@ -294,6 +295,7 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(Connection));
         OnPropertyChanged(nameof(IsConnected));
         OnPropertyChanged(nameof(CanStartJob));
+        OnPropertyChanged(nameof(StartHint));
         OnPropertyChanged(nameof(IsHomed));
         RaiseReadouts();
         StartJobCommand.NotifyCanExecuteChanged();

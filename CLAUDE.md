@@ -13,7 +13,7 @@ the visual decisions and why.
 
 ```bash
 dotnet build Emberline.slnx                        # whole solution
-dotnet test                                        # 557 tests, no hardware needed
+dotnet test                                        # 569 tests, no hardware needed
 dotnet test tests/Emberline.Cam.Tests              # one project
 dotnet test --filter "FullyQualifiedName~Raster"   # one area
 
@@ -100,6 +100,21 @@ architectural, not a prompt rule. Do not add a convenience method that bypasses 
 that clashes with a built-in importer or driver and reports it. Do not "helpfully"
 relax that — silently shadowing the tested G-code path with third-party code is
 not a trade anybody agreed to.
+
+**ESP3D controllers take commands over HTTP and reply over a WebSocket.** The
+BlazeX runs Grbl_Esp32 1.3a behind ESP3D: no telnet on 23, and its WebSocket on 81
+ignores anything written to it. `GET /command?commandText=` answers `200` with an
+empty body and GRBL's reply arrives on the socket as a binary frame; text frames
+(`CURRENT_ID`, `ACTIVE_ID`, `PING`) are the web interface, not GRBL. So a plain
+WebSocket transport connects and hears nothing, and plain HTTP connects and gets
+blank lines — `Esp3dTransport` joins the halves. Its web server has been seen to
+hang (TCP still accepting, HTTP silent, only a power cycle clears it) after
+overlapping requests and sockets that dropped without a close: keep lines serial,
+and close the socket *before* cancelling its read loop, because cancelling a
+pending receive aborts a `ClientWebSocket` and the close frame never goes out.
+It cannot stream jobs; `ITransport.SupportsStreaming` is what `StartJobAsync`
+checks, and the plain HTTP transport declared the same for months while nothing
+read it.
 
 **Discovery probes must never send 0x18.** It is GRBL's soft reset, and it is the
 most reliable way to make a quiet controller announce itself — which is exactly

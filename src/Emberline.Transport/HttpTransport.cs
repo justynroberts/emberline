@@ -31,7 +31,7 @@ public sealed class HttpTransport : TransportBase
     public override bool IsConnected => _connected;
 
     /// <summary>Streaming a job one HTTP request per line is not viable; the job engine checks this.</summary>
-    public static bool SupportsStreaming => false;
+    public override bool SupportsStreaming => false;
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {

@@ -65,6 +65,8 @@ public sealed class GrblDevice : ILaserDevice
     /// <summary>Line to resume from after a link drop or a stop. -1 when there is nothing to resume.</summary>
     public int ResumeLine { get; private set; } = -1;
 
+    public bool CanStreamJobs => _transport?.SupportsStreaming ?? true;
+
     /// <summary>Status poll rate. Six hertz keeps the readout live without flooding a slow link.</summary>
     public double StatusPollHz { get; set; } = 6;
 
@@ -529,6 +531,17 @@ public sealed class GrblDevice : ILaserDevice
     {
         var transport = _transport ?? throw new InvalidOperationException("Not connected.");
         if (JobState.IsActive()) throw new InvalidOperationException("A job is already running.");
+
+        // Checked here, in the one place every job passes through, rather than
+        // trusted to the UI. The plain HTTP transport declared this for months and
+        // nothing read it, so a job would have streamed one web request per line.
+        if (!transport.SupportsStreaming)
+        {
+            throw new NotSupportedException(
+                $"Jobs cannot run over this connection ({transport.Description}): it sends each line as a " +
+                "separate web request, which cannot stream a job reliably. Connecting, jogging, framing and " +
+                "settings all work. To run a job, connect over USB.");
+        }
 
         SetJobState(JobState.Preparing);
         _job = job;

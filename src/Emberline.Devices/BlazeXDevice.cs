@@ -10,15 +10,14 @@ namespace Emberline.Devices;
 /// starts as <see cref="GrblDevice"/> plus the small handling differences the
 /// board actually needs. Phase 2 is native Wi-Fi.
 ///
-/// **On the Wi-Fi protocol.** Emberline does not ship a reverse-engineered BlazeX
-/// network protocol, because guessing at an undocumented protocol that commands a
-/// ten-watt laser is not a reasonable thing to do. What it ships instead is the
-/// generic network path — TCP console on 23 and WebSocket on 81, which is what
-/// the ESP32-class controller in these machines almost always exposes — and
-/// <see cref="ProtocolProbe"/>, which records exactly what the machine says so the
-/// protocol can be documented from evidence. Any BlazeX-specific behaviour that
-/// probe uncovers belongs in this class and nowhere else, so that Core never
-/// learns a vendor's name.
+/// **On the Wi-Fi protocol.** Nothing here is reverse-engineered guesswork about a
+/// machine that commands a ten-watt laser. It was the plan to assume telnet on 23
+/// and a WebSocket on 81, and that assumption was wrong: probing a real unit found
+/// Grbl_Esp32 1.3a behind ESP3D, no telnet console, and a WebSocket that only
+/// carries replies. The network path is therefore <see cref="Esp3dTransport"/>,
+/// which is generic ESP3D rather than anything BlazeX-specific. Any behaviour that
+/// genuinely is BlazeX-specific belongs in this class and nowhere else, so that
+/// Core never learns a vendor's name.
 /// </summary>
 public sealed class BlazeXDevice : ILaserDevice
 {
@@ -33,6 +32,7 @@ public sealed class BlazeXDevice : ILaserDevice
     public Core.Jobs.JobProgress Progress => _inner.Progress;
     public IReadOnlyDictionary<int, double> Settings => _inner.Settings;
     public bool IsHomed => _inner.IsHomed;
+    public bool CanStreamJobs => _inner.CanStreamJobs;
     public int ResumeLine => _inner.ResumeLine;
     public string? FirmwareVersion => _inner.FirmwareVersion;
 
@@ -76,6 +76,13 @@ public sealed class BlazeXDevice : ILaserDevice
             // request competes with job data for the same TCP window, and on a busy
             // 2.4 GHz network six hertz is already enough to cause visible stutter.
             _inner.StatusPollHz = 4;
+        }
+        else if (transport.Kind is TransportKind.Esp3d)
+        {
+            // Over ESP3D each poll is a whole web request to a server that handles
+            // one at a time, on a link measured at hundreds of milliseconds a round
+            // trip. Twice a second keeps the position readout live without queueing.
+            _inner.StatusPollHz = 2;
         }
     }
 

@@ -31,6 +31,13 @@ public interface ILaserDevice : IAsyncDisposable
     /// <summary>True once the machine has completed a homing cycle this session.</summary>
     bool IsHomed { get; }
 
+    /// <summary>
+    /// Whether the current link can stream a job, so the UI can say why Start is
+    /// unavailable instead of letting the press fail. A default so a plugin driver
+    /// written before this existed keeps compiling.
+    /// </summary>
+    bool CanStreamJobs => true;
+
     event Action<ConnectionState>? ConnectionChanged;
     event Action<GrblStatus>? StatusChanged;
     event Action<JobProgress>? ProgressChanged;

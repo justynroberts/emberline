@@ -126,7 +126,7 @@ public sealed partial class WizardViewModel : ObservableObject
     [RelayCommand]
     private async Task ConnectNetworkAsync()
     {
-        await _shell.ConnectAsync(ConnectionKind.Tcp);
+        await _shell.ConnectAsync(_shell.SelectedMachine.NetworkConnection);
         RaiseAll();
     }
 

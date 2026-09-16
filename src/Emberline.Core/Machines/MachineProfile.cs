@@ -19,6 +19,12 @@ public enum ConnectionKind
     WebSocket,
     Http,
     Virtual,
+
+    /// <summary>
+    /// ESP3D's web interface, as built into Grbl_Esp32: commands over HTTP, replies
+    /// over a WebSocket. Neither the Tcp nor the WebSocket kind works with it.
+    /// </summary>
+    Esp3d,
 }
 
 [Flags]
@@ -60,6 +66,16 @@ public sealed record MachineProfile
     public string Firmware { get; init; } = "GRBL 1.1";
 
     public IReadOnlyList<ConnectionKind> Connections { get; init; } = [ConnectionKind.Serial];
+
+    /// <summary>
+    /// What the Wi-Fi button connects with: the first network kind the profile
+    /// lists. A fixed choice of raw TCP used to live in the button, which meant a
+    /// machine with no telnet console could not be reached over Wi-Fi at all.
+    /// </summary>
+    [JsonIgnore]
+    public ConnectionKind NetworkConnection =>
+        Connections.FirstOrDefault(k => k is ConnectionKind.Esp3d or ConnectionKind.Tcp or ConnectionKind.WebSocket or ConnectionKind.Http,
+                                   ConnectionKind.Tcp);
 
     /// <summary>mm/min.</summary>
     public double MaxSpeedMmMin { get; init; } = 12000;
@@ -124,8 +140,13 @@ public sealed record MachineProfile
     };
 
     /// <summary>
-    /// The reference machine for Emberline 0.1. USB first; Wi-Fi is added once the
-    /// network protocol is confirmed against real hardware.
+    /// The reference machine for Emberline 0.1.
+    ///
+    /// Its Wi-Fi was confirmed against a real unit rather than assumed: the board
+    /// runs Grbl_Esp32 1.3a with ESP3D, has no telnet console on 23, and ignores
+    /// commands written to its WebSocket — so the network connection is Esp3d.
+    /// Saying ESP32 in <see cref="Firmware"/> also matters over USB: it stops the
+    /// serial port pulsing DTR on connect, which resets an ESP32.
     /// </summary>
     public static MachineProfile BlazeXM5Pro() => new()
     {
@@ -137,8 +158,8 @@ public sealed record MachineProfile
         BedWidthMm = 400,
         BedHeightMm = 400,
         Origin = BedOrigin.FrontLeft,
-        Firmware = "GRBL 1.1 compatible",
-        Connections = [ConnectionKind.Serial, ConnectionKind.Tcp, ConnectionKind.WebSocket],
+        Firmware = "Grbl_Esp32 1.3a (ESP3D)",
+        Connections = [ConnectionKind.Serial, ConnectionKind.Esp3d],
         MaxSpeedMmMin = 24000,
         TravelSpeedMmMin = 12000,
         MaxSpindleValue = 1000,

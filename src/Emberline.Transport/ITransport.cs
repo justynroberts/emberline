@@ -1,6 +1,6 @@
 namespace Emberline.Transport;
 
-public enum TransportKind { Serial, Tcp, WebSocket, Http, Virtual }
+public enum TransportKind { Serial, Tcp, WebSocket, Http, Virtual, Esp3d }
 
 /// <summary>
 /// A byte pipe to a controller.
@@ -18,6 +18,20 @@ public interface ITransport : IAsyncDisposable
     string Description { get; }
 
     bool IsConnected { get; }
+
+    /// <summary>
+    /// Whether a job can be streamed down this link.
+    ///
+    /// The streamer counts characters into GRBL's receive buffer and pushes the
+    /// next line the moment an acknowledgement frees room. That only means
+    /// anything on a byte pipe. A link that carries each line as its own web
+    /// request has no shared buffer to count into, and at Wi-Fi latencies a
+    /// raster of thousands of lines would take hours and stutter the whole way.
+    /// Such a link is fine for connecting, jogging, framing and settings; it must
+    /// say no to jobs rather than let one start. A default so a plugin transport
+    /// written before this existed keeps compiling and keeps streaming.
+    /// </summary>
+    bool SupportsStreaming => true;
 
     /// <summary>Raw bytes as they arrive. Chunk boundaries are arbitrary — the caller must reassemble lines.</summary>
     event Action<ReadOnlyMemory<byte>>? DataReceived;
@@ -48,6 +62,7 @@ public abstract class TransportBase : ITransport
     public abstract TransportKind Kind { get; }
     public abstract string Description { get; }
     public abstract bool IsConnected { get; }
+    public virtual bool SupportsStreaming => true;
 
     public event Action<ReadOnlyMemory<byte>>? DataReceived;
     public event Action<Exception?>? Disconnected;

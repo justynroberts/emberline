@@ -67,6 +67,15 @@ public static class DeviceFactory
                 return new HttpTransport(host, port);
             }
 
+            case ConnectionKind.Esp3d:
+            {
+                // The address is the web interface; the reply socket's port comes
+                // from the controller's own [ESP800] report, with the profile's as a
+                // fallback.
+                var (host, port) = SplitAddress(address ?? profile.Host, 80);
+                return new Esp3dTransport(host, port, profile.WebSocketPort);
+            }
+
             case ConnectionKind.Virtual:
                 return new VirtualTransport(new VirtualLaserOptions
                 {
